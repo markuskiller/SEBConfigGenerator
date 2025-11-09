@@ -5,55 +5,343 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SEB Konfigurations-Generator</title>
     <style>
+        /* ============================================================================
+           COLOR PALETTE - Marine Blue Theme (#0B173C)
+           ============================================================================
+           Primary: #0B173C (Navy Dark), #1a2b5e (Navy Medium), #4A90E2 (Sky Blue)
+           Accent: #3DD5F3 (Cyan), #2dce89 (Success Green), #fb6340 (Warning Orange)
+           Neutrals: #ffffff (White), #f8f9fa (Light Gray), #8898aa (Medium Gray)
+           ============================================================================ */
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%); color: white; padding: 40px 30px; text-align: center; position: relative; }
-        .language-toggle { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; }
-        .lang-btn { background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
-        .lang-btn:hover { background: rgba(255,255,255,0.3); }
-        .lang-btn.active { background: white; color: #5e72e4; }
-        .header h1 { font-size: 2em; margin-bottom: 10px; }
-        .header p { opacity: 0.9; font-size: 1.1em; }
-        .content { padding: 40px 30px; }
-        .section { margin-bottom: 40px; }
-        .section h2 { color: #5e72e4; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #e9ecef; }
-        .form-group { margin-bottom: 25px; }
-        label { display: block; font-weight: 600; color: #32325d; margin-bottom: 8px; }
-        input[type="text"], input[type="url"], textarea, select { width: 100%; padding: 12px 15px; border: 2px solid #e9ecef; border-radius: 6px; font-size: 14px; transition: border-color 0.3s; }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: #5e72e4; }
-        textarea { min-height: 150px; font-family: 'Courier New', monospace; resize: vertical; }
-        .preset-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
-        .preset-btn { padding: 15px; border: 2px solid #e9ecef; border-radius: 8px; background: white; cursor: pointer; transition: all 0.3s; text-align: left; }
-        .preset-btn:hover { border-color: #5e72e4; background: #f7f8fc; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(94,114,228,0.15); }
-        .preset-btn.active { border-color: #5e72e4; background: #f0f3ff; }
-        .preset-btn h3 { color: #5e72e4; margin-bottom: 5px; font-size: 1.1em; }
-        .preset-btn p { color: #8898aa; font-size: 0.9em; }
-        .checkbox-group { display: flex; align-items: center; margin-bottom: 15px; }
-        .checkbox-group input[type="checkbox"] { width: 20px; height: 20px; margin-right: 10px; cursor: pointer; }
-        .security-level { display: flex; gap: 15px; margin-top: 15px; }
-        .security-option { flex: 1; padding: 20px; border: 2px solid #e9ecef; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
-        .security-option:hover { border-color: #5e72e4; }
-        .security-option.active { border-color: #5e72e4; background: #f0f3ff; }
-        .security-option h4 { color: #5e72e4; margin-bottom: 8px; }
-        .security-option p { color: #8898aa; font-size: 0.9em; }
-        .btn { padding: 15px 30px; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 10px; }
-        .btn-primary { background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%); color: white; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(94,114,228,0.3); }
-        .btn-secondary { background: #f7f8fc; color: #5e72e4; border: 2px solid #e9ecef; }
-        .btn-secondary:hover { background: #e9ecef; }
-        .actions { display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap; }
-        .info-box { background: #f0f3ff; border-left: 4px solid #5e72e4; padding: 15px; margin-top: 20px; border-radius: 4px; }
-        .info-box h4 { color: #5e72e4; margin-bottom: 8px; }
-        .info-box p { color: #525f7f; font-size: 0.95em; line-height: 1.6; }
-        .preview { background: #f7f8fc; padding: 20px; border-radius: 8px; margin-top: 20px; }
-        .preview h3 { color: #32325d; margin-bottom: 15px; }
-        .domain-list { font-family: 'Courier New', monospace; font-size: 0.9em; color: #525f7f; line-height: 1.8; max-height: 300px; overflow-y: auto; }
-        .domain-item { padding: 5px 0; border-bottom: 1px solid #e9ecef; }
-        .badge { display: inline-block; padding: 4px 10px; background: #5e72e4; color: white; border-radius: 12px; font-size: 0.85em; margin-left: 10px; }
-        .doc-link { transition: all 0.3s; }
-        .doc-link:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(94,114,228,0.3); opacity: 1 !important; }
-        @media (max-width: 768px) { .security-level, .actions { flex-direction: column; } .language-toggle { position: static; margin-bottom: 20px; justify-content: center; } }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
+            background: linear-gradient(135deg, #0B173C 0%, #1a2856 100%); 
+            min-height: 100vh; 
+            padding: 20px; 
+        }
+        
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 20px 60px rgba(11, 23, 60, 0.4); 
+            overflow: hidden; 
+        }
+        
+        .header { 
+            background: linear-gradient(135deg, #0B173C 0%, #1a2b5e 100%); 
+            color: white; 
+            padding: 40px 30px; 
+            text-align: center; 
+            position: relative; 
+        }
+        
+        .language-toggle { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            display: flex; 
+            gap: 10px; 
+        }
+        
+        .lang-btn { 
+            background: rgba(255,255,255,0.15); 
+            border: 2px solid rgba(255,255,255,0.4); 
+            color: white; 
+            padding: 8px 15px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            transition: all 0.3s; 
+        }
+        
+        .lang-btn:hover { 
+            background: rgba(255,255,255,0.25); 
+            border-color: rgba(255,255,255,0.6); 
+        }
+        
+        .lang-btn.active { 
+            background: #3DD5F3; 
+            color: #0B173C; 
+            border-color: #3DD5F3; 
+        }
+        
+        .header h1 { 
+            font-size: 2em; 
+            margin-bottom: 10px; 
+        }
+        
+        .header p { 
+            opacity: 0.9; 
+            font-size: 1.1em; 
+        }
+        
+        .content { 
+            padding: 40px 30px; 
+        }
+        
+        .section { 
+            margin-bottom: 40px; 
+        }
+        
+        .section h2 { 
+            color: #0B173C; 
+            margin-bottom: 20px; 
+            padding-bottom: 10px; 
+            border-bottom: 2px solid #3DD5F3; 
+        }
+        
+        .form-group { 
+            margin-bottom: 25px; 
+        }
+        
+        label { 
+            display: block; 
+            font-weight: 600; 
+            color: #0B173C; 
+            margin-bottom: 8px; 
+        }
+        
+        input[type="text"], 
+        input[type="url"], 
+        textarea, 
+        select { 
+            width: 100%; 
+            padding: 12px 15px; 
+            border: 2px solid #e9ecef; 
+            border-radius: 6px; 
+            font-size: 14px; 
+            transition: border-color 0.3s; 
+        }
+        
+        input:focus, 
+        textarea:focus, 
+        select:focus { 
+            outline: none; 
+            border-color: #4A90E2; 
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1); 
+        }
+        
+        textarea { 
+            min-height: 150px; 
+            font-family: 'Courier New', monospace; 
+            resize: vertical; 
+        }
+        
+        .preset-buttons { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 15px; 
+            margin-top: 15px; 
+        }
+        
+        .preset-btn { 
+            padding: 15px; 
+            border: 2px solid #e9ecef; 
+            border-radius: 8px; 
+            background: white; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            text-align: left; 
+        }
+        
+        .preset-btn:hover { 
+            border-color: #4A90E2; 
+            background: #f8faff; 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2); 
+        }
+        
+        .preset-btn.active { 
+            border-color: #3DD5F3; 
+            background: linear-gradient(135deg, #e8f7fc 0%, #f0f9ff 100%); 
+            box-shadow: 0 0 0 3px rgba(61, 213, 243, 0.1); 
+        }
+        
+        .preset-btn h3 { 
+            color: #0B173C; 
+            margin-bottom: 5px; 
+            font-size: 1.1em; 
+        }
+        
+        .preset-btn p { 
+            color: #8898aa; 
+            font-size: 0.9em; 
+        }
+        
+        .checkbox-group { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 15px; 
+        }
+        
+        .checkbox-group input[type="checkbox"] { 
+            width: 20px; 
+            height: 20px; 
+            margin-right: 10px; 
+            cursor: pointer; 
+            accent-color: #4A90E2; 
+        }
+        
+        .security-level { 
+            display: flex; 
+            gap: 15px; 
+            margin-top: 15px; 
+        }
+        
+        .security-option { 
+            flex: 1; 
+            padding: 20px; 
+            border: 2px solid #e9ecef; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            background: white; 
+        }
+        
+        .security-option:hover { 
+            border-color: #4A90E2; 
+            background: #f8faff; 
+        }
+        
+        .security-option.active { 
+            border-color: #3DD5F3; 
+            background: linear-gradient(135deg, #e8f7fc 0%, #f0f9ff 100%); 
+            box-shadow: 0 0 0 3px rgba(61, 213, 243, 0.1); 
+        }
+        
+        .security-option h4 { 
+            color: #0B173C; 
+            margin-bottom: 8px; 
+        }
+        
+        .security-option p { 
+            color: #8898aa; 
+            font-size: 0.9em; 
+        }
+        
+        .btn { 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 6px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        
+        .btn-primary { 
+            background: linear-gradient(135deg, #4A90E2 0%, #3DD5F3 100%); 
+            color: white; 
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3); 
+        }
+        
+        .btn-primary:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.4); 
+        }
+        
+        .btn-secondary { 
+            background: #f8f9fa; 
+            color: #0B173C; 
+            border: 2px solid #e9ecef; 
+        }
+        
+        .btn-secondary:hover { 
+            background: #e9ecef; 
+            border-color: #4A90E2; 
+        }
+        
+        .actions { 
+            display: flex; 
+            gap: 15px; 
+            margin-top: 30px; 
+            flex-wrap: wrap; 
+        }
+        
+        .info-box { 
+            background: linear-gradient(135deg, #e8f7fc 0%, #f0f9ff 100%); 
+            border-left: 4px solid #3DD5F3; 
+            padding: 15px; 
+            margin-top: 20px; 
+            border-radius: 4px; 
+        }
+        
+        .info-box h4 { 
+            color: #0B173C; 
+            margin-bottom: 8px; 
+        }
+        
+        .info-box p { 
+            color: #1a2b5e; 
+            font-size: 0.95em; 
+            line-height: 1.6; 
+        }
+        
+        .preview { 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-top: 20px; 
+            border: 1px solid #e9ecef; 
+        }
+        
+        .preview h3 { 
+            color: #0B173C; 
+            margin-bottom: 15px; 
+        }
+        
+        .domain-list { 
+            font-family: 'Courier New', monospace; 
+            font-size: 0.9em; 
+            color: #1a2b5e; 
+            line-height: 1.8; 
+            max-height: 300px; 
+            overflow-y: auto; 
+        }
+        
+        .domain-item { 
+            padding: 5px 0; 
+            border-bottom: 1px solid #e9ecef; 
+        }
+        
+        .badge { 
+            display: inline-block; 
+            padding: 4px 10px; 
+            background: linear-gradient(135deg, #4A90E2 0%, #3DD5F3 100%); 
+            color: white; 
+            border-radius: 12px; 
+            font-size: 0.85em; 
+            margin-left: 10px; 
+        }
+        
+        .doc-link { 
+            transition: all 0.3s; 
+        }
+        
+        .doc-link:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 12px rgba(61, 213, 243, 0.4); 
+            opacity: 1 !important; 
+        }
+        
+        @media (max-width: 768px) { 
+            .security-level, 
+            .actions { 
+                flex-direction: column; 
+            } 
+            .language-toggle { 
+                position: static; 
+                margin-bottom: 20px; 
+                justify-content: center; 
+            } 
+        }
     </style>
 </head>
 <body>
@@ -177,6 +465,9 @@
                 </div>
             </div>
         </div>
+        <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.7); font-size: 0.85em;">
+            <span id="versionInfo"></span>
+        </div>
     </div>
     <script>
 // ============================================================================
@@ -253,7 +544,11 @@ const TRANSLATIONS = {
         
         // Messages
         copiedMsg: "✓ Kopiert!",
-        configNamePlaceholder: "Meine_Schule_"
+        configNamePlaceholder: "Meine_Schule_",
+        
+        // Version info
+        versionLabel: "Version",
+        buildLabel: "Build"
     },
     en: {
         title: "SEB Config Generator",
@@ -325,7 +620,11 @@ const TRANSLATIONS = {
         
         // Messages
         copiedMsg: "✓ Copied!",
-        configNamePlaceholder: "My_School_"
+        configNamePlaceholder: "My_School_",
+        
+        // Version info
+        versionLabel: "Version",
+        buildLabel: "Build"
     }
 };
 
@@ -384,6 +683,26 @@ const SECURITY_LEVELS = {
 };
 
 // ============================================================================
+// VERSION & BUILD INFO
+// ============================================================================
+const APP_VERSION = 'v0.1';
+const BUILD_DATE = new Date('2025-11-09T21:11:00'); // Format: YYYY-MM-DDTHH:mm:ss
+
+function formatBuildDate(lang) {
+    const day = String(BUILD_DATE.getDate()).padStart(2, '0');
+    const month = String(BUILD_DATE.getMonth() + 1).padStart(2, '0');
+    const year = BUILD_DATE.getFullYear();
+    const hours = String(BUILD_DATE.getHours()).padStart(2, '0');
+    const minutes = String(BUILD_DATE.getMinutes()).padStart(2, '0');
+    
+    if (lang === 'de') {
+        return `${day}.${month}.${year} ${hours}:${minutes}`;
+    } else {
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    }
+}
+
+// ============================================================================
 // STATE
 // ============================================================================
 let currentLang = 'de';
@@ -425,12 +744,25 @@ function setLanguage(lang) {
     // Update documentation links based on language
     updateDocLinks(lang);
     
+    // Update version info
+    updateVersionInfo(lang);
+    
     // Re-render dynamic content
     renderPresets();
     renderSecurityLevels();
     
     // Save language preference
     localStorage.setItem('sebConfigLang', lang);
+}
+
+function updateVersionInfo(lang) {
+    const versionInfo = document.getElementById('versionInfo');
+    if (versionInfo) {
+        const versionLabel = t('versionLabel');
+        const buildLabel = t('buildLabel');
+        const buildDate = formatBuildDate(lang);
+        versionInfo.innerHTML = `${versionLabel}: ${APP_VERSION} | ${buildLabel}: ${buildDate}`;
+    }
 }
 
 function updateDocLinks(lang) {
@@ -652,9 +984,12 @@ function generateConfigXML() {
 `;
     });
     
-    // Generate complete plist XML
+    // Generate complete plist XML with version info
+    const buildDateFormatted = formatBuildDate('en'); // Use international format for file
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Generated by SEB Config Generator ${APP_VERSION} (Build: ${buildDateFormatted}) -->
+<!-- https://github.com/markuskiller/SEBConfigGenerator -->
 <plist version="1.0">
 <dict>
 \t<key>URLFilterEnable</key>
@@ -707,7 +1042,7 @@ ${urlFilterRulesXML}\t</array>
 \t<key>newBrowserWindowAllowReload</key>
 \t<${document.getElementById('showReloadButton').checked ? 'true' : 'false'}/>
 \t<key>originatorVersion</key>
-\t<string>SEB_Generator_1.0</string>
+\t<string>SEB_Config_Generator_${APP_VERSION}_${buildDateFormatted.replace(/[/:]/g, '-').replace(/ /g, '_')}</string>
 \t<key>removeBrowserProfile</key>
 \t<false/>
 \t<key>showMenuBar</key>
