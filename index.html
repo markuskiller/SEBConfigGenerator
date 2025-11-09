@@ -854,13 +854,16 @@ function updateVersionInfo(lang) {
 }
 
 function updateDocLinks(lang) {
+    // Base GitHub URL for rendered markdown
+    const baseGitHubUrl = 'https://github.com/markuskiller/SEBConfigGenerator/blob/main/';
+    
     // Main documentation link in header
     const mainDocLink = document.getElementById('mainDocLink');
     if (mainDocLink) {
         if (lang === 'de') {
-            mainDocLink.href = 'docs/de/SCHNELLSTART_ANLEITUNG.md';
+            mainDocLink.href = baseGitHubUrl + 'docs/de/SCHNELLSTART_ANLEITUNG.md';
         } else {
-            mainDocLink.href = 'docs/en/TEACHER_GUIDE.md';
+            mainDocLink.href = baseGitHubUrl + 'docs/en/TEACHER_GUIDE.md';
         }
     }
     
@@ -868,9 +871,9 @@ function updateDocLinks(lang) {
     const browserCaptureLink = document.getElementById('browserCaptureLink');
     if (browserCaptureLink) {
         if (lang === 'de') {
-            browserCaptureLink.href = 'docs/de/BROWSER_CAPTURE_ANLEITUNG.md';
+            browserCaptureLink.href = baseGitHubUrl + 'docs/de/BROWSER_CAPTURE_ANLEITUNG.md';
         } else {
-            browserCaptureLink.href = 'docs/en/BROWSER_CAPTURE_GUIDE.md';
+            browserCaptureLink.href = baseGitHubUrl + 'docs/en/BROWSER_CAPTURE_GUIDE.md';
         }
     }
     
@@ -878,9 +881,9 @@ function updateDocLinks(lang) {
     const quickstartLink = document.getElementById('quickstartLink');
     if (quickstartLink) {
         if (lang === 'de') {
-            quickstartLink.href = 'docs/de/SCHNELLSTART_ANLEITUNG.md';
+            quickstartLink.href = baseGitHubUrl + 'docs/de/SCHNELLSTART_ANLEITUNG.md';
         } else {
-            quickstartLink.href = 'docs/en/TEACHER_GUIDE.md';
+            quickstartLink.href = baseGitHubUrl + 'docs/en/TEACHER_GUIDE.md';
         }
     }
     
@@ -888,9 +891,9 @@ function updateDocLinks(lang) {
     const quickRefLink = document.getElementById('quickRefLink');
     if (quickRefLink) {
         if (lang === 'de') {
-            quickRefLink.href = 'docs/de/SCHNELLREFERENZ.txt';
+            quickRefLink.href = baseGitHubUrl + 'docs/de/SCHNELLREFERENZ.txt';
         } else {
-            quickRefLink.href = 'docs/en/QUICK_REFERENCE.txt';
+            quickRefLink.href = baseGitHubUrl + 'docs/en/QUICK_REFERENCE.txt';
         }
     }
 }
@@ -1530,7 +1533,7 @@ function showBrowserHelper() {
         </div>
         
         <div style="display:flex;gap:10px;justify-content:space-between;margin-top:20px;">
-            <a href="docs/${currentLang}/BROWSER_CAPTURE_${currentLang === 'de' ? 'ANLEITUNG' : 'GUIDE'}.md" target="_blank" rel="noopener noreferrer" style="padding:12px 24px;background:#f7f8fc;color:#5e72e4;border:2px solid #e9ecef;border-radius:6px;text-decoration:none;font-weight:600;">${instructions.fullGuide}</a>
+            <a href="https://github.com/markuskiller/SEBConfigGenerator/blob/main/docs/${currentLang}/BROWSER_CAPTURE_${currentLang === 'de' ? 'ANLEITUNG' : 'GUIDE'}.md" target="_blank" rel="noopener noreferrer" style="padding:12px 24px;background:#f7f8fc;color:#5e72e4;border:2px solid #e9ecef;border-radius:6px;text-decoration:none;font-weight:600;">${instructions.fullGuide}</a>
             <button id="closeBrowserHelperBtn" style="padding:12px 24px;background:#e9ecef;color:#32325d;border:none;border-radius:6px;cursor:pointer;font-weight:600;">${instructions.close}</button>
         </div>
     `;
