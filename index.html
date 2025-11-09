@@ -772,8 +772,8 @@ const SECURITY_LEVELS = {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.6';
-const BUILD_DATE = new Date('2025-11-09T23:10:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.7';
+const BUILD_DATE = new Date('2025-11-09T23:20:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -793,7 +793,7 @@ function formatBuildDate(lang) {
 // STATE
 // ============================================================================
 let currentLang = 'de';
-let selectedPresets = ['onenote']; // Changed to array for multiple selection
+let selectedPresets = []; // Start with no preset selected - user must choose
 let currentSecurityLevel = 'balanced';
 let currentSelectedSubject = ''; // Track selected subject for allowed tools
 
@@ -1029,9 +1029,10 @@ function togglePreset(key) {
         selectedPresets.splice(index, 1);
     }
     
-    // Ensure at least one main preset is selected (not counting allowed tools)
+    // Ensure at least one main preset is selected when deselecting (not counting allowed tools)
     const mainPresets = selectedPresets.filter(p => !Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
-    if (mainPresets.length === 0 && !isAllowedTool) {
+    if (mainPresets.length === 0 && !isAllowedTool && index !== -1) {
+        // Only restore if we were deselecting (index !== -1)
         selectedPresets = [key];
     }
     
@@ -1039,6 +1040,8 @@ function togglePreset(key) {
     const firstMainPreset = selectedPresets.find(p => !Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
     if (firstMainPreset && PRESETS[firstMainPreset]) {
         document.getElementById('startUrl').value = PRESETS[firstMainPreset].startUrl;
+    } else {
+        document.getElementById('startUrl').value = '';
     }
     
     // Update config name
@@ -1048,6 +1051,8 @@ function togglePreset(key) {
         document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config`;
     } else if (mainPresetsForName.length > 1) {
         document.getElementById('configName').value = `Multi_Service_Config`;
+    } else {
+        document.getElementById('configName').value = '';
     }
     
     renderPresets();
