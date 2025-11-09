@@ -483,6 +483,8 @@ const TRANSLATIONS = {
         title: "SEB Konfigurations-Generator",
         subtitle: "Erstellen Sie Safe Exam Browser Konfigurationen für Fokus-Modus im Bildungsbereich",
         step1: "1. Dienst auswählen",
+        groupNoLogin: "Ohne Anmeldung",
+        groupWithLogin: "Mit Anmeldung",
         step2: "2. Konfigurationseinstellungen",
         step3: "3. Benutzerdefinierte Domains (Optional)",
         step4: "4. Vorschau & Download",
@@ -538,6 +540,8 @@ const TRANSLATIONS = {
         presetSlidoDesc: "Live Q&A und Umfragen",
         presetEtherpad: "Etherpad",
         presetEtherpadDesc: "Kollaboratives Textdokument",
+        presetForms: "Microsoft Forms",
+        presetFormsDesc: "Umfragen und Formulare (öffentlich)",
         
         // Security levels
         securityRelaxed: "Locker",
@@ -559,6 +563,8 @@ const TRANSLATIONS = {
         title: "SEB Config Generator",
         subtitle: "Create Safe Exam Browser configurations for educational focus mode",
         step1: "1. Choose Service",
+        groupNoLogin: "No Login Required",
+        groupWithLogin: "Login Required",
         step2: "2. Configuration Settings",
         step3: "3. Custom Domains (Optional)",
         step4: "4. Preview & Download",
@@ -614,6 +620,8 @@ const TRANSLATIONS = {
         presetSlidoDesc: "Live Q&A and polls",
         presetEtherpad: "Etherpad",
         presetEtherpadDesc: "Collaborative text document",
+        presetForms: "Microsoft Forms",
+        presetFormsDesc: "Surveys and forms (public)",
         
         // Security levels
         securityRelaxed: "Relaxed",
@@ -672,7 +680,16 @@ const PRESETS = {
     etherpad: {
         startUrl: "https://etherpad.org",
         domains: ["etherpad.org","*.etherpad.org"]
+    },
+    forms: {
+        startUrl: "https://forms.office.com",
+        domains: ["forms.office.com","*.forms.office.com","*.microsoft.com","*.microsoftonline.com","*.office.com","*.office365.com","*.msocdn.com","*.msecnd.net","*.azureedge.net"]
     }
+};
+
+const PRESET_GROUPS = {
+    noLogin: ['whiteboard', 'kahoot', 'mentimeter', 'slido', 'forms'],
+    withLogin: ['onenote', 'word', 'teams', 'padlet', 'miro', 'etherpad']
 };
 
 const SECURITY_LEVELS = {
@@ -823,9 +840,30 @@ function renderPresets() {
     const container = document.getElementById('presetButtons');
     container.innerHTML = '';
     
-    const presetKeys = ['onenote', 'word', 'whiteboard', 'padlet', 'kahoot', 'mentimeter', 'miro', 'slido', 'etherpad'];
+    // Group 1: No Login Required
+    const group1Title = document.createElement('h3');
+    group1Title.style.cssText = 'color: #2c3e5a; margin: 20px 0 15px 0; font-size: 1.1em; grid-column: 1 / -1;';
+    group1Title.innerHTML = `🌐 ${t('groupNoLogin')}`;
+    container.appendChild(group1Title);
     
-    presetKeys.forEach(key => {
+    PRESET_GROUPS.noLogin.forEach(key => {
+        const btn = document.createElement('button');
+        btn.className = `preset-btn ${selectedPresets.includes(key) ? 'active' : ''}`;
+        btn.innerHTML = `
+            <h3>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1))}</h3>
+            <p>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1) + 'Desc')}</p>
+        `;
+        btn.onclick = () => togglePreset(key);
+        container.appendChild(btn);
+    });
+    
+    // Group 2: Login Required
+    const group2Title = document.createElement('h3');
+    group2Title.style.cssText = 'color: #2c3e5a; margin: 30px 0 15px 0; font-size: 1.1em; grid-column: 1 / -1;';
+    group2Title.innerHTML = `🔐 ${t('groupWithLogin')}`;
+    container.appendChild(group2Title);
+    
+    PRESET_GROUPS.withLogin.forEach(key => {
         const btn = document.createElement('button');
         btn.className = `preset-btn ${selectedPresets.includes(key) ? 'active' : ''}`;
         btn.innerHTML = `
