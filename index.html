@@ -138,6 +138,29 @@
                         5. Als .seb-Datei zur Verteilung exportieren
                     </p>
                 </div>
+                <div class="info-box">
+                    <h4>🔧 <span data-i18n="helperScriptTitle">Network Capture Helper</span></h4>
+                    <p data-i18n="helperScriptText">
+                        Benötigen Sie Hilfe beim Erfassen von Netzwerk-Domains? Wählen Sie die passende Methode für Ihr System:
+                    </p>
+                    <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <a href="scripts/capture-helper.ps1" download class="btn btn-secondary" style="text-decoration: none; flex: 1; min-width: 200px;">
+                            <span data-i18n="downloadHelperBtn">⬇️ PowerShell (Windows)</span>
+                        </a>
+                        <button class="btn btn-secondary" id="browserHelperBtn" style="flex: 1; min-width: 200px;">
+                            <span data-i18n="browserHelperBtn">🌐 Browser-Methode (Alle OS)</span>
+                        </button>
+                    </div>
+                    <p style="margin-top: 15px; font-size: 0.9em;">
+                        <span data-i18n="helperScriptInstructions">
+                            📖 Anleitungen: 
+                            <a href="docs/de/BROWSER_CAPTURE_ANLEITUNG.md" target="_blank" style="color: #5e72e4;">Browser (DE)</a> | 
+                            <a href="docs/en/BROWSER_CAPTURE_GUIDE.md" target="_blank" style="color: #5e72e4;">Browser (EN)</a> | 
+                            <a href="docs/de/SCHNELLSTART_ANLEITUNG.md" target="_blank" style="color: #5e72e4;">PowerShell (DE)</a> | 
+                            <a href="docs/en/TEACHER_GUIDE.md" target="_blank" style="color: #5e72e4;">PowerShell (EN)</a>
+                        </span>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -170,6 +193,11 @@ const TRANSLATIONS = {
         copyBtn: "📋 Domain-Liste kopieren",
         nextStepsTitle: "Nächste Schritte",
         nextStepsText: "1. JSON-Konfigurationsdatei herunterladen<br>2. Safe Exam Browser Config Tool öffnen<br>3. JSON-Datei importieren<br>4. Mit Schüler-Account testen<br>5. Als .seb-Datei zur Verteilung exportieren",
+        helperScriptTitle: "Network Capture Helper",
+        helperScriptText: "Benötigen Sie Hilfe beim Erfassen von Netzwerk-Domains? Wählen Sie die passende Methode für Ihr System:",
+        downloadHelperBtn: "⬇️ PowerShell (Windows)",
+        browserHelperBtn: "🌐 Browser-Methode (Alle OS)",
+        helperScriptInstructions: "📖 Anleitungen:",
         
         // Presets
         presetOnenote: "OneNote Online",
@@ -219,6 +247,11 @@ const TRANSLATIONS = {
         copyBtn: "📋 Copy Domain List",
         nextStepsTitle: "Next Steps",
         nextStepsText: "1. Download the JSON configuration file<br>2. Open Safe Exam Browser Config Tool<br>3. Import the JSON file<br>4. Test with a student account<br>5. Export as .seb file for distribution",
+        helperScriptTitle: "Network Capture Helper",
+        helperScriptText: "Need help capturing network domains? Choose the method that works for your system:",
+        downloadHelperBtn: "⬇️ PowerShell (Windows)",
+        browserHelperBtn: "🌐 Browser Method (All OS)",
+        helperScriptInstructions: "📖 Guides:",
         
         // Presets
         presetOnenote: "OneNote Online",
@@ -475,6 +508,184 @@ function copyDomains() {
 }
 
 // ============================================================================
+// BROWSER HELPER FUNCTIONALITY
+// ============================================================================
+function showBrowserHelper() {
+    const script = `// SEB Domain Capture Script
+(function() {
+    console.clear();
+    console.log('%c🛡️ SEB Domain Capture', 'font-size:20px; color:#5e72e4; font-weight:bold;');
+    console.log('%c' + '='.repeat(60), 'color:#ccc;');
+    
+    const domains = new Set();
+    
+    performance.getEntries().forEach(entry => {
+        try {
+            const url = new URL(entry.name);
+            if (url.hostname && !url.hostname.match(/^(localhost|127\\\\.0\\\\.0\\\\.1|::1)$/)) {
+                domains.add(url.hostname);
+            }
+        } catch (e) {}
+    });
+    
+    const sorted = [...domains].sort();
+    
+    console.log(\`\\n📊 Found \${sorted.length} unique domains:\\n\`);
+    sorted.forEach(domain => console.log(\`  \${domain}\`));
+    console.log('\\n' + '='.repeat(60));
+    
+    const wildcards = new Set();
+    sorted.forEach(domain => {
+        const parts = domain.split('.');
+        if (parts.length > 2) {
+            wildcards.add('*.' + parts.slice(-2).join('.'));
+        } else {
+            wildcards.add(domain);
+        }
+    });
+    
+    console.log(\`\\n🌟 Recommended wildcards (\${wildcards.size} domains):\\n\`);
+    [...wildcards].sort().forEach(domain => console.log(\`  \${domain}\`));
+    console.log('\\n' + '='.repeat(60));
+    
+    const output = sorted.join('\\n');
+    
+    navigator.clipboard.writeText(output).then(() => {
+        console.log('\\n%c✓ COPIED TO CLIPBOARD!', 'color:green; font-size:16px; font-weight:bold;');
+        console.log('%cPaste into "Custom Domains" field', 'color:#666; font-style:italic;');
+    }).catch(() => {
+        console.log('\\n%c⚠️ Could not auto-copy. Copy manually:', 'color:orange; font-weight:bold;');
+        console.log('\\n' + output);
+    });
+    
+    console.log('\\n' + '='.repeat(60) + '\\n');
+})();`;
+
+    const bookmarklet = `javascript:(function(){const domains=new Set();performance.getEntries().forEach(e=>{try{const u=new URL(e.name);if(u.hostname&&!u.hostname.match(/^(localhost|127\\\\.0\\\\.0\\\\.1|::1)$/)){domains.add(u.hostname)}}catch(err){}});const sorted=[...domains].sort();let output='SEB Domain Capture\\n'+'='.repeat(50)+'\\n\\n';output+='Total domains: '+sorted.length+'\\n\\n';output+='DOMAINS:\\n'+'-'.repeat(50)+'\\n';output+=sorted.join('\\n')+'\\n';output+='-'.repeat(50)+'\\n\\n';output+='Wildcards (recommended):\\n'+'-'.repeat(50)+'\\n';const wildcards=new Set();sorted.forEach(d=>{const parts=d.split('.');if(parts.length>2){wildcards.add('*.'+parts.slice(-2).join('.'))}else{wildcards.add(d)}});output+=[...wildcards].sort().join('\\n');const modal=document.createElement('div');modal.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.3);z-index:999999;max-width:600px;max-height:80vh;overflow:auto;font-family:monospace;';const pre=document.createElement('pre');pre.textContent=output;pre.style.cssText='background:#f5f5f5;padding:15px;border-radius:6px;overflow:auto;max-height:400px;font-size:12px;';const btnContainer=document.createElement('div');btnContainer.style.cssText='margin-top:20px;display:flex;gap:10px;';const copyBtn=document.createElement('button');copyBtn.textContent='📋 Copy';copyBtn.style.cssText='padding:12px 20px;background:#5e72e4;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;flex:1;';copyBtn.onclick=()=>{navigator.clipboard.writeText(sorted.join('\\n')).then(()=>{copyBtn.textContent='✓ Copied!';setTimeout(()=>copyBtn.textContent='📋 Copy',2000)})};const closeBtn=document.createElement('button');closeBtn.textContent='✕';closeBtn.style.cssText='padding:12px 20px;background:#e9ecef;color:#32325d;border:none;border-radius:6px;cursor:pointer;font-weight:600;';closeBtn.onclick=()=>modal.remove();btnContainer.appendChild(copyBtn);btnContainer.appendChild(closeBtn);modal.appendChild(pre);modal.appendChild(btnContainer);document.body.appendChild(modal)})();`;
+
+    const instructions = currentLang === 'de' 
+        ? {
+            title: '🌐 Browser-basierte Domain-Erfassung',
+            method1: 'Methode 1: Console Script (Empfohlen)',
+            method1Steps: [
+                '1. Öffnen Sie den Dienst (z.B. OneNote) in einem neuen Tab',
+                '2. Drücken Sie F12 um DevTools zu öffnen',
+                '3. Gehen Sie zum Tab "Konsole"',
+                '4. Kopieren Sie das Skript unten und fügen Sie es ein',
+                '5. Drücken Sie Enter',
+                '6. Domains werden automatisch kopiert!',
+                '7. Fügen Sie sie ins Feld "Benutzerdefinierte Domains" ein'
+            ],
+            method2: 'Methode 2: Bookmarklet',
+            method2Steps: [
+                '1. Erstellen Sie ein neues Lesezeichen',
+                '2. Kopieren Sie den Bookmarklet-Code unten',
+                '3. Fügen Sie ihn als URL des Lesezeichens ein',
+                '4. Öffnen Sie Ihren Dienst und klicken Sie das Lesezeichen',
+                '5. Ein Dialog zeigt alle Domains'
+            ],
+            consoleLabel: 'Console Script:',
+            bookmarkletLabel: 'Bookmarklet Code:',
+            copyScript: '📋 Script kopieren',
+            copyBookmarklet: '📋 Bookmarklet kopieren',
+            fullGuide: '📖 Vollständige Anleitung',
+            close: 'Schließen'
+        }
+        : {
+            title: '🌐 Browser-Based Domain Capture',
+            method1: 'Method 1: Console Script (Recommended)',
+            method1Steps: [
+                '1. Open your service (e.g., OneNote) in a new tab',
+                '2. Press F12 to open DevTools',
+                '3. Go to the "Console" tab',
+                '4. Copy the script below and paste it',
+                '5. Press Enter',
+                '6. Domains will be automatically copied!',
+                '7. Paste them into the "Custom Domains" field'
+            ],
+            method2: 'Method 2: Bookmarklet',
+            method2Steps: [
+                '1. Create a new bookmark',
+                '2. Copy the bookmarklet code below',
+                '3. Paste it as the bookmark URL',
+                '4. Open your service and click the bookmark',
+                '5. A dialog will show all domains'
+            ],
+            consoleLabel: 'Console Script:',
+            bookmarkletLabel: 'Bookmarklet Code:',
+            copyScript: '📋 Copy Script',
+            copyBookmarklet: '📋 Copy Bookmarklet',
+            fullGuide: '📖 Full Guide',
+            close: 'Close'
+        };
+
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    
+    const content = document.createElement('div');
+    content.style.cssText = 'background:white;border-radius:12px;padding:30px;max-width:800px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+    
+    content.innerHTML = `
+        <h2 style="color:#5e72e4;margin-bottom:20px;">${instructions.title}</h2>
+        
+        <div style="background:#f0f3ff;padding:20px;border-radius:8px;margin-bottom:20px;">
+            <h3 style="color:#5e72e4;margin-bottom:15px;">${instructions.method1}</h3>
+            ${instructions.method1Steps.map(step => `<div style="margin:8px 0;">${step}</div>`).join('')}
+            
+            <div style="margin-top:15px;">
+                <label style="font-weight:600;color:#32325d;display:block;margin-bottom:8px;">${instructions.consoleLabel}</label>
+                <textarea readonly style="width:100%;height:120px;font-family:monospace;font-size:12px;padding:10px;border:2px solid #e9ecef;border-radius:6px;resize:vertical;">${script}</textarea>
+                <button id="copyScriptBtn" style="margin-top:10px;padding:10px 20px;background:#5e72e4;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">${instructions.copyScript}</button>
+            </div>
+        </div>
+        
+        <div style="background:#f7f8fc;padding:20px;border-radius:8px;margin-bottom:20px;">
+            <h3 style="color:#5e72e4;margin-bottom:15px;">${instructions.method2}</h3>
+            ${instructions.method2Steps.map(step => `<div style="margin:8px 0;">${step}</div>`).join('')}
+            
+            <div style="margin-top:15px;">
+                <label style="font-weight:600;color:#32325d;display:block;margin-bottom:8px;">${instructions.bookmarkletLabel}</label>
+                <textarea readonly style="width:100%;height:100px;font-family:monospace;font-size:11px;padding:10px;border:2px solid #e9ecef;border-radius:6px;resize:vertical;">${bookmarklet}</textarea>
+                <button id="copyBookmarkletBtn" style="margin-top:10px;padding:10px 20px;background:#5e72e4;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">${instructions.copyBookmarklet}</button>
+            </div>
+        </div>
+        
+        <div style="display:flex;gap:10px;justify-content:space-between;margin-top:20px;">
+            <a href="docs/${currentLang}/BROWSER_CAPTURE_${currentLang === 'de' ? 'ANLEITUNG' : 'GUIDE'}.md" target="_blank" style="padding:12px 24px;background:#f7f8fc;color:#5e72e4;border:2px solid #e9ecef;border-radius:6px;text-decoration:none;font-weight:600;">${instructions.fullGuide}</a>
+            <button id="closeBrowserHelperBtn" style="padding:12px 24px;background:#e9ecef;color:#32325d;border:none;border-radius:6px;cursor:pointer;font-weight:600;">${instructions.close}</button>
+        </div>
+    `;
+    
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+    
+    // Event listeners
+    document.getElementById('copyScriptBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(script);
+        const btn = document.getElementById('copyScriptBtn');
+        const original = btn.textContent;
+        btn.textContent = '✓ ' + (currentLang === 'de' ? 'Kopiert!' : 'Copied!');
+        setTimeout(() => btn.textContent = original, 2000);
+    });
+    
+    document.getElementById('copyBookmarkletBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(bookmarklet);
+        const btn = document.getElementById('copyBookmarkletBtn');
+        const original = btn.textContent;
+        btn.textContent = '✓ ' + (currentLang === 'de' ? 'Kopiert!' : 'Copied!');
+        setTimeout(() => btn.textContent = original, 2000);
+    });
+    
+    document.getElementById('closeBrowserHelperBtn').addEventListener('click', () => {
+        modal.remove();
+    });
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+// ============================================================================
 // EVENT LISTENERS
 // ============================================================================
 function attachEventListeners() {
@@ -488,6 +699,9 @@ function attachEventListeners() {
     document.getElementById('copyBtn').addEventListener('click', copyDomains);
     document.getElementById('customDomains').addEventListener('input', updatePreview);
     document.getElementById('startUrl').addEventListener('input', updatePreview);
+    
+    // Browser helper
+    document.getElementById('browserHelperBtn').addEventListener('click', showBrowserHelper);
 }
 
 // ============================================================================
