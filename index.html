@@ -513,9 +513,9 @@ const TRANSLATIONS = {
         showReloadButton: "Neu-Laden-Button anzeigen",
         allowBackForward: "Vor/Zurück-Navigation erlauben",
         customDomainsLabel: "Zusätzliche erlaubte Domains hinzufügen (eine pro Zeile)",
-        customDomainsPlaceholder: "beispiel.de\n*.schule-domain.de",
+        customDomainsPlaceholder: "beispiel.ch\n*.schule-domain.ch",
         blockedDomainsLabel: "Domains sperren (Optional, nur bei Wildcards in 'Zusätzliche Domains')",
-        blockedDomainsPlaceholder: "# Beispiel: Falls Sie *.beispiel.de erlauben\n# aber mail.beispiel.de sperren möchten:\nmail.beispiel.de",
+        blockedDomainsPlaceholder: "# Beispiel: Falls Sie *.beispiel.ch erlauben\n# aber mail.beispiel.ch sperren möchten:\nmail.beispiel.ch",
         proTipTitle: "💡 Profi-Tipp",
         proTipText: "Verwenden Sie Wildcards (*) um alle Subdomains zu erlauben. Zum Beispiel: *.microsoft.com erlaubt login.microsoft.com, account.microsoft.com, usw.<br><br><strong>Hinweis:</strong> Doppelte Domains werden automatisch entfernt.",
         allowedDomains: "Erlaubte Domains",
@@ -584,7 +584,7 @@ const TRANSLATIONS = {
         // Privacy
         privacyTitle: "Datenschutz:",
         privacyText: "Alle Daten werden ausschließlich lokal in Ihrem Browser verarbeitet. Es werden keine Konfigurationsdaten oder Eingaben an unseren Server gesendet oder gespeichert. Nur Ihre Sprachpräferenz wird lokal im Browser gespeichert.",
-        suggestService: "Dienst oder Hilfsmittel vorschlagen",
+        suggestService: "Dienst oder Hilfsmittel vorschlagen / Problem melden",
         
         // Version info
         versionLabel: "Version",
@@ -612,9 +612,9 @@ const TRANSLATIONS = {
         showReloadButton: "Show reload button",
         allowBackForward: "Allow back/forward navigation",
         customDomainsLabel: "Add additional allowed domains (one per line)",
-        customDomainsPlaceholder: "example.com\n*.school-domain.edu",
+        customDomainsPlaceholder: "example.ch\n*.school-domain.ch",
         blockedDomainsLabel: "Block domains (Optional, only needed for wildcards in 'Additional Domains')",
-        blockedDomainsPlaceholder: "# Example: If you allow *.example.com\n# but want to block mail.example.com:\nmail.example.com",
+        blockedDomainsPlaceholder: "# Example: If you allow *.example.ch\n# but want to block mail.example.ch:\nmail.example.ch",
         proTipTitle: "💡 Pro Tip",
         proTipText: "Use wildcards (*) to allow all subdomains. For example: *.microsoft.com allows login.microsoft.com, account.microsoft.com, etc.<br><br><strong>Note:</strong> Duplicate domains are automatically removed.",
         allowedDomains: "Allowed Domains",
@@ -683,7 +683,7 @@ const TRANSLATIONS = {
         // Privacy
         privacyTitle: "Privacy:",
         privacyText: "All data is processed locally in your browser. No configuration data or inputs are sent to or stored on our server. Only your language preference is saved locally in your browser.",
-        suggestService: "Suggest Service or Tool",
+        suggestService: "Suggest Service or Tool / Report Issue",
         
         // Version info
         versionLabel: "Version",
@@ -697,12 +697,14 @@ const TRANSLATIONS = {
 const PRESETS = {
     onenote: {
         startUrl: "https://www.onenote.com/notebooks",
-        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.onenote.com","onenote.officeapps.live.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","browser.events.data.microsoft.com","chc-onenote.officeapps.live.com","common.online.office.com","euc-common.online.office.com","kshch0.sharepoint.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
+        // Note: *.sharepoint.com covers school-specific SharePoint sites (e.g., school1.sharepoint.com)
+        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.onenote.com","onenote.officeapps.live.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","browser.events.data.microsoft.com","chc-onenote.officeapps.live.com","common.online.office.com","euc-common.online.office.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
         blockedDomains: ["outlook.office.com","outlook.office365.com","teams.microsoft.com","teams.live.com"]
     },
     word: {
         startUrl: "https://www.office.com/launch/word",
-        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","browser.events.data.microsoft.com","common.online.office.com","euc-common.online.office.com","kshch0.sharepoint.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
+        // Note: *.sharepoint.com covers school-specific SharePoint sites (e.g., school1.sharepoint.com)
+        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","browser.events.data.microsoft.com","common.online.office.com","euc-common.online.office.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
         blockedDomains: ["outlook.office.com","outlook.office365.com","teams.microsoft.com","teams.live.com"]
     },
     whiteboard: {
@@ -779,8 +781,8 @@ const SECURITY_LEVELS = {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.8';
-const BUILD_DATE = new Date('2025-11-09T23:40:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.9';
+const BUILD_DATE = new Date('2025-11-09T23:50:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
