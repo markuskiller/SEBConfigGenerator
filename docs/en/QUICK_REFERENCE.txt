@@ -3,52 +3,64 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                   🛡️ SEB CONFIG GENERATOR                        │
+│                    SEB CONFIG GENERATOR                         │
 │              Creating Focus Mode for Student Devices            │
 └─────────────────────────────────────────────────────────────────┘
 
 ╔═══════════════════════════════════════════════════════════════╗
-║                    📋 5-MINUTE WORKFLOW                       ║
+║                     5-MINUTE WORKFLOW                         ║
 ╚═══════════════════════════════════════════════════════════════╝
 
-1️⃣  OPEN TOOL              🌐 https://[your-school-url]/seb-generator
+1  OPEN TOOL              https://markuskiller.github.io/SEBConfigGenerator
     └─> Works offline too: Just open index.html
 
-2️⃣  SELECT SERVICE         📚 Click a preset:
+2  SELECT SERVICE         Click a preset:
+    
+    NO LOGIN REQUIRED:
+    ├─> Whiteboard.fi      (Collaborative whiteboard)
+    ├─> Kahoot!            (Interactive quizzes)
+    ├─> Mentimeter         (Live polls)
+    ├─> Slido              (Q&A and polls)
+    ├─> Microsoft Forms    (Public surveys)
+    ├─> Padlet             (Digital bulletin board)
+    ├─> Miro               (Digital whiteboard)
+    └─> Etherpad           (Text collaboration)
+    
+    LOGIN REQUIRED:
     ├─> OneNote Online     (Microsoft notebooks)
-    ├─> Word Online        (Documents)
-    ├─> Google Docs        (Google Workspace)
-    └─> Google Sheets      (Spreadsheets)
+    └─> Word Online        (Documents)
 
-3️⃣  CHOOSE SECURITY       🔒 Pick your level:
-    ├─> Relaxed    ⭐ Focus aid, very flexible
-    ├─> Balanced   ⭐⭐⭐ RECOMMENDED: Good balance
-    └─> Strict     ⭐⭐⭐⭐⭐ Maximum locks (frustrating!)
 
-4️⃣  SET OPTIONS           ☑️  Check what students need:
-    ├─> ✅ Downloads       (Save files)
-    ├─> ✅ Spell check     (For writing)
-    ├─> ✅ Reload button   (If pages freeze)
-    └─> ✅ Back/Forward    (Multi-page docs)
 
-5️⃣  DOWNLOAD              📥 Click "Download SEB Config"
-    └─> Saves: YourConfig.json
+3  CHOOSE SECURITY       Pick your level:
+    ├─> Relaxed    * Focus aid, very flexible
+    ├─> Balanced   *** RECOMMENDED: Good balance
+    └─> Strict     ***** Maximum locks (frustrating!)
 
-6️⃣  IMPORT TO SEB TOOL    🔧 One-time setup:
+4  SET OPTIONS           Check what students need:
+    ├─> [x] Downloads       (Save files)
+    ├─> [x] Spell check     (For writing)
+    ├─> [x] Reload button   (If pages freeze)
+    └─> [x] Back/Forward    (Multi-page docs)
+
+5  DOWNLOAD              Click "Download SEB Config"
+    └─> Saves: YourConfig.seb
+
+6  IMPORT TO SEB TOOL    One-time setup:
     ├─> Open SEB Config Tool
     ├─> File → Open → YourConfig.json
     ├─> File → Save As → YourConfig.seb
     └─> Done!
 
-7️⃣  DISTRIBUTE            📧 Email students the .seb file
+7  DISTRIBUTE            Email students the .seb file
     └─> Double-click to open SEB with your settings
 
 
 ╔═══════════════════════════════════════════════════════════════╗
-║                  ⚡ WHEN TO USE SEB                           ║
+║                    WHEN TO USE SEB                            ║
 ╚═══════════════════════════════════════════════════════════════╝
 
-✅ GOOD USE CASES              ❌ DON'T USE FOR
+[OK] GOOD USE CASES            [X] DON'T USE FOR
 ├─> Class note-taking          ├─> High-stakes final exams
 ├─> Digital worksheets         ├─> Standardized testing
 ├─> In-class writing tasks     ├─> Homework
@@ -61,7 +73,7 @@ Key Insight:
 
 
 ╔═══════════════════════════════════════════════════════════════╗
-║                🔧 TROUBLESHOOTING QUICK FIXES                 ║
+║                 TROUBLESHOOTING QUICK FIXES                   ║
 ╚═══════════════════════════════════════════════════════════════╝
 
 ┌───────────────────────────────────────────────────────────────┐
@@ -97,7 +109,7 @@ Key Insight:
 
 
 ╔═══════════════════════════════════════════════════════════════╗
-║              🎯 NETWORK CAPTURE (ADVANCED)                    ║
+║               NETWORK CAPTURE (ADVANCED)                      ║
 ╚═══════════════════════════════════════════════════════════════╝
 
 When presets don't work, capture traffic yourself:
@@ -107,8 +119,8 @@ STEP 1: Install Fiddler Classic
 
 STEP 2: Configure Fiddler
         Tools → Options → HTTPS
-        ✅ Capture HTTPS CONNECTs
-        ✅ Decrypt HTTPS traffic
+        [x] Capture HTTPS CONNECTs
+        [x] Decrypt HTTPS traffic
 
 STEP 3: Capture Session
         ├─> Close all browsers
@@ -128,33 +140,33 @@ STEP 5: Use Discovered Domains
 
 
 ╔═══════════════════════════════════════════════════════════════╗
-║                    💡 PRO TIPS                                ║
+║                      PRO TIPS                                 ║
 ╚═══════════════════════════════════════════════════════════════╝
 
-🎓 ALWAYS test with a STUDENT account first
+* ALWAYS test with a STUDENT account first
    (Teacher accounts often have different permissions)
 
-📝 Start PERMISSIVE, tighten if needed
+* Start PERMISSIVE, tighten if needed
    (Relaxed → Balanced → Strict)
 
-🔄 Keep configs for reuse
+* Keep configs for reuse
    (Save successful .seb files in a shared folder)
 
-👥 Communicate expectations to students
+* Communicate expectations to students
    ("This helps you focus, not to spy on you")
 
-📄 Have paper backup ready
+* Have paper backup ready
    (Tech fails; that's life)
 
-⏰ Update configs quarterly
+* Update configs quarterly
    (Microsoft/Google change auth systems regularly)
 
-🤝 Share working configs with colleagues
+* Share working configs with colleagues
    (Build a school library of tested configs)
 
 
 ╔═══════════════════════════════════════════════════════════════╗
-║                   📞 GETTING HELP                             ║
+║                      GETTING HELP                             ║
 ╚═══════════════════════════════════════════════════════════════╝
 
 Documentation:  [Full README.md in package]
@@ -170,7 +182,7 @@ IT Helpdesk:    [Add your contact info]
 
 
 ╔═══════════════════════════════════════════════════════════════╗
-║              🎨 DOMAIN WILDCARD EXAMPLES                      ║
+║               DOMAIN WILDCARD EXAMPLES                        ║
 ╚═══════════════════════════════════════════════════════════════╝
 
 Single domain:          example.com
@@ -188,20 +200,20 @@ Comment (ignored):      # This is a comment
 
 
 ╔═══════════════════════════════════════════════════════════════╗
-║                   🚀 DEPLOYMENT OPTIONS                       ║
+║                    DEPLOYMENT OPTIONS                         ║
 ╚═══════════════════════════════════════════════════════════════╝
 
 ┌─────────────────┬──────────────┬──────────────┬──────────────┐
 │    METHOD       │   SETUP      │  MAINTAIN    │   BEST FOR   │
 ├─────────────────┼──────────────┼──────────────┼──────────────┤
-│ GitHub Pages    │  5 min ⭐     │  Easy ⭐⭐    │  Most schools│
-│ School Server   │  20 min ⭐⭐   │  Medium ⭐   │  IT control  │
-│ Standalone File │  0 min ⭐⭐⭐  │  Manual ⭐   │  Single users│
+│ GitHub Pages    │  5 min       │  Easy        │  Most schools│
+│ School Server   │  20 min      │  Medium      │  IT control  │
+│ Standalone File │  0 min       │  Manual      │  Single users│
 └─────────────────┴──────────────┴──────────────┴──────────────┘
 
 
 ╔═══════════════════════════════════════════════════════════════╗
-║                   📊 SECURITY LEVELS                          ║
+║                     SECURITY LEVELS                           ║
 ╚═══════════════════════════════════════════════════════════════╝
 
 RELAXED (Focus Aid)
@@ -209,26 +221,26 @@ RELAXED (Focus Aid)
 ├─> Windowed mode
 ├─> Toolbar visible
 ├─> Best for: Classwork, note-taking
-└─> Security: ⭐
+└─> Security: *
 
-BALANCED (Recommended) ⭐⭐⭐
+BALANCED (Recommended) ***
 ├─> Can quit with confirmation
 ├─> Windowed mode
 ├─> Toolbar visible
 ├─> Best for: Most classroom activities
-└─> Security: ⭐⭐⭐
+└─> Security: ***
 
 STRICT (Maximum Locks)
 ├─> Cannot quit SEB
 ├─> Fullscreen mode
 ├─> No toolbar
 ├─> Best for: Supervised assessments (school devices)
-└─> Security: ⭐⭐⭐⭐⭐
-    ⚠️  May frustrate students on BYOD!
+└─> Security: *****
+    [!] May frustrate students on BYOD!
 
 
 ═══════════════════════════════════════════════════════════════
-             🎓 Remember: Perfect is the enemy of good
+             Remember:
         This tool replaces PAPER, not secure exam systems
 ═══════════════════════════════════════════════════════════════
 ```

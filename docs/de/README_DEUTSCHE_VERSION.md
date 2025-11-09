@@ -9,7 +9,7 @@ Alle Dateien sind nun verfügbar mit vollständiger deutscher Übersetzung!
 ## 📦 Verfügbare Dateien
 
 ### ✅ Zweisprachige Web-Anwendung
-**[index-bilingual.html](computer:///mnt/user-data/outputs/index-bilingual.html)** (15KB)
+**[index.html](computer:///mnt/user-data/outputs/index.html)** (15KB)
 - **Standardsprache: Deutsch** 🇩🇪
 - Sprachwechsel: Deutsch ⟷ Englisch (oben rechts)
 - Sprachpräferenz wird gespeichert
@@ -47,7 +47,7 @@ Alle Dateien sind nun verfügbar mit vollständiger deutscher Übersetzung!
 ### Für Lehrkräfte (5 Minuten)
 
 1. **Datei öffnen:**
-   - Doppelklick auf `index-bilingual.html`
+   - Doppelklick auf `index.html`
    - Öffnet sich im Browser
    - Keine Installation nötig!
 
@@ -323,4 +323,4 @@ Alle Dateien sind bereit. Viel Erfolg beim Einsatz des SEB Konfigurations-Genera
 
 *Version: 1.0 (Deutsch)*  
 *Erstellt: November 2025*  
-*Lizenz: Kostenlos für Bildungszwecke*
+*Lizenz: MIT*
