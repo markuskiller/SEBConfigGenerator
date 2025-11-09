@@ -1,14 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEB Config Generator</title>
+    <title>SEB Konfigurations-Generator</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
         .container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%); color: white; padding: 40px 30px; text-align: center; }
+        .header { background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%); color: white; padding: 40px 30px; text-align: center; position: relative; }
+        .language-toggle { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; }
+        .lang-btn { background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+        .lang-btn:hover { background: rgba(255,255,255,0.3); }
+        .lang-btn.active { background: white; color: #5e72e4; }
         .header h1 { font-size: 2em; margin-bottom: 10px; }
         .header p { opacity: 0.9; font-size: 1.1em; }
         .content { padding: 40px 30px; }
@@ -47,51 +51,459 @@
         .domain-list { font-family: 'Courier New', monospace; font-size: 0.9em; color: #525f7f; line-height: 1.8; max-height: 300px; overflow-y: auto; }
         .domain-item { padding: 5px 0; border-bottom: 1px solid #e9ecef; }
         .badge { display: inline-block; padding: 4px 10px; background: #5e72e4; color: white; border-radius: 12px; font-size: 0.85em; margin-left: 10px; }
-        @media (max-width: 768px) { .security-level, .actions { flex-direction: column; } }
+        @media (max-width: 768px) { .security-level, .actions { flex-direction: column; } .language-toggle { position: static; margin-bottom: 20px; justify-content: center; } }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🛡️ SEB Config Generator</h1>
-            <p>Create Safe Exam Browser configurations for educational focus mode</p>
+            <div class="language-toggle">
+                <button class="lang-btn active" data-lang="de">Deutsch</button>
+                <button class="lang-btn" data-lang="en">English</button>
+            </div>
+            <h1>🛡️ <span data-i18n="title">SEB Konfigurations-Generator</span></h1>
+            <p data-i18n="subtitle">Erstellen Sie Safe Exam Browser Konfigurationen für Fokus-Modus im Bildungsbereich</p>
         </div>
         <div class="content">
             <div class="section">
-                <h2>1. Choose Service</h2>
+                <h2><span data-i18n="step1">1. Dienst auswählen</span></h2>
                 <div class="preset-buttons" id="presetButtons"></div>
             </div>
             <div class="section">
-                <h2>2. Configuration Settings</h2>
-                <div class="form-group"><label>Start URL</label><input type="url" id="startUrl" placeholder="https://www.onenote.com/notebooks"></div>
-                <div class="form-group"><label>Configuration Name</label><input type="text" id="configName" placeholder="My_School_OneNote"></div>
-                <div class="form-group"><label>Security Level</label><div class="security-level" id="securityLevel"></div></div>
+                <h2><span data-i18n="step2">2. Konfigurationseinstellungen</span></h2>
                 <div class="form-group">
-                    <label>Additional Options</label>
-                    <div class="checkbox-group"><input type="checkbox" id="allowDownloads" checked><label for="allowDownloads">Allow file downloads</label></div>
-                    <div class="checkbox-group"><input type="checkbox" id="allowSpellCheck" checked><label for="allowSpellCheck">Allow spell check</label></div>
-                    <div class="checkbox-group"><input type="checkbox" id="showReloadButton" checked><label for="showReloadButton">Show reload button</label></div>
-                    <div class="checkbox-group"><input type="checkbox" id="allowBackForward" checked><label for="allowBackForward">Allow back/forward navigation</label></div>
+                    <label data-i18n="startUrl">Start-URL</label>
+                    <input type="url" id="startUrl" placeholder="https://www.onenote.com/notebooks">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="configName">Konfigurationsname</label>
+                    <input type="text" id="configName" placeholder="Meine_Schule_OneNote">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="securityLevel">Sicherheitsstufe</label>
+                    <div class="security-level" id="securityLevel"></div>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="additionalOptions">Zusätzliche Optionen</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="allowDownloads" checked>
+                        <label for="allowDownloads" data-i18n="allowDownloads">Datei-Downloads erlauben</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="allowSpellCheck" checked>
+                        <label for="allowSpellCheck" data-i18n="allowSpellCheck">Rechtschreibprüfung erlauben</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="showReloadButton" checked>
+                        <label for="showReloadButton" data-i18n="showReloadButton">Neu-Laden-Button anzeigen</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="allowBackForward" checked>
+                        <label for="allowBackForward" data-i18n="allowBackForward">Vor/Zurück-Navigation erlauben</label>
+                    </div>
                 </div>
             </div>
             <div class="section">
-                <h2>3. Custom Domains (Optional)</h2>
-                <div class="form-group"><label>Add additional allowed domains (one per line)</label><textarea id="customDomains" placeholder="example.com&#10;*.school-domain.edu"></textarea></div>
-                <div class="info-box"><h4>💡 Pro Tip</h4><p>Use wildcards (*) to allow all subdomains. For example: <code>*.microsoft.com</code> allows login.microsoft.com, account.microsoft.com, etc.</p></div>
+                <h2><span data-i18n="step3">3. Benutzerdefinierte Domains (Optional)</span></h2>
+                <div class="form-group">
+                    <label data-i18n="customDomainsLabel">Zusätzliche erlaubte Domains hinzufügen (eine pro Zeile)</label>
+                    <textarea id="customDomains" data-i18n-placeholder="customDomainsPlaceholder" placeholder="beispiel.de&#10;*.schule-domain.de"></textarea>
+                </div>
+                <div class="info-box">
+                    <h4 data-i18n="proTipTitle">💡 Profi-Tipp</h4>
+                    <p data-i18n="proTipText">Verwenden Sie Wildcards (*) um alle Subdomains zu erlauben. Zum Beispiel: <code>*.microsoft.com</code> erlaubt login.microsoft.com, account.microsoft.com, usw.</p>
+                </div>
             </div>
             <div class="section">
-                <h2>4. Preview & Download</h2>
-                <div class="preview"><h3>Allowed Domains <span class="badge" id="domainCount">0</span></h3><div class="domain-list" id="domainPreview"></div></div>
+                <h2><span data-i18n="step4">4. Vorschau & Download</span></h2>
+                <div class="preview">
+                    <h3><span data-i18n="allowedDomains">Erlaubte Domains</span> <span class="badge" id="domainCount">0</span></h3>
+                    <div class="domain-list" id="domainPreview"></div>
+                </div>
                 <div class="actions">
-                    <button class="btn btn-primary" id="generateBtn">📥 Download SEB Config (.json)</button>
-                    <button class="btn btn-secondary" id="copyBtn">📋 Copy Domain List</button>
+                    <button class="btn btn-primary" id="generateBtn">
+                        <span data-i18n="downloadBtn">📥 SEB Konfiguration herunterladen (.json)</span>
+                    </button>
+                    <button class="btn btn-secondary" id="copyBtn">
+                        <span data-i18n="copyBtn">📋 Domain-Liste kopieren</span>
+                    </button>
                 </div>
-                <div class="info-box"><h4>Next Steps</h4><p>1. Download the JSON configuration file<br>2. Open Safe Exam Browser Config Tool<br>3. Import the JSON file<br>4. Test with a student account<br>5. Export as .seb file for distribution</p></div>
+                <div class="info-box">
+                    <h4 data-i18n="nextStepsTitle">Nächste Schritte</h4>
+                    <p data-i18n="nextStepsText">
+                        1. JSON-Konfigurationsdatei herunterladen<br>
+                        2. Safe Exam Browser Config Tool öffnen<br>
+                        3. JSON-Datei importieren<br>
+                        4. Mit Schüler-Account testen<br>
+                        5. Als .seb-Datei zur Verteilung exportieren
+                    </p>
+                </div>
             </div>
         </div>
     </div>
     <script>
-const PRESETS={onenote:{name:"OneNote Online",description:"Microsoft OneNote web client",startUrl:"https://www.onenote.com/notebooks",domains:["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.onenote.com","onenote.officeapps.live.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net"]},word:{name:"Word Online",description:"Microsoft Word web client",startUrl:"https://www.office.com/launch/word",domains:["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net"]},teams:{name:"Microsoft Teams",description:"Teams web client for collaboration",startUrl:"https://teams.microsoft.com",domains:["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","*.live.com","*.office.com","*.office365.com","*.teams.microsoft.com","*.skype.com","*.sharepoint.com","*.msocdn.com","*.msecnd.net","*.azureedge.net"]},gdocs:{name:"Google Docs",description:"Google Workspace document editor",startUrl:"https://docs.google.com",domains:["*.google.com","*.googleapis.com","*.gstatic.com","accounts.google.com","docs.google.com","drive.google.com","*.googleusercontent.com"]},gsheets:{name:"Google Sheets",description:"Google Workspace spreadsheet editor",startUrl:"https://sheets.google.com",domains:["*.google.com","*.googleapis.com","*.gstatic.com","accounts.google.com","sheets.google.com","drive.google.com","*.googleusercontent.com"]}};const SECURITY_LEVELS={relaxed:{name:"Relaxed",description:"Focus mode - blocks distractions but allows flexibility",settings:{allowSwitchToApplications:false,allowQuit:true,browserViewMode:0,enableBrowserWindowToolbar:true,showMenuBar:false}},balanced:{name:"Balanced",description:"Recommended - good balance of security and usability",settings:{allowSwitchToApplications:false,allowQuit:true,browserViewMode:0,enableBrowserWindowToolbar:true,showMenuBar:false}},strict:{name:"Strict",description:"Maximum restrictions (may frustrate students)",settings:{allowSwitchToApplications:false,allowQuit:false,browserViewMode:1,enableBrowserWindowToolbar:false,showMenuBar:false}}};let currentPreset='onenote',currentSecurityLevel='balanced';function init(){renderPresets();renderSecurityLevels();updatePreview();attachEventListeners()}function renderPresets(){const container=document.getElementById('presetButtons');container.innerHTML='';for(const[key,preset]of Object.entries(PRESETS)){const btn=document.createElement('button');btn.className=`preset-btn ${key===currentPreset?'active':''}`;btn.innerHTML=`<h3>${preset.name}</h3><p>${preset.description}</p>`;btn.onclick=()=>selectPreset(key);container.appendChild(btn)}}function renderSecurityLevels(){const container=document.getElementById('securityLevel');container.innerHTML='';for(const[key,level]of Object.entries(SECURITY_LEVELS)){const div=document.createElement('div');div.className=`security-option ${key===currentSecurityLevel?'active':''}`;div.innerHTML=`<h4>${level.name}</h4><p>${level.description}</p>`;div.onclick=()=>selectSecurityLevel(key);container.appendChild(div)}}function selectPreset(key){currentPreset=key;const preset=PRESETS[key];document.getElementById('startUrl').value=preset.startUrl;document.getElementById('configName').value=`${preset.name.replace(/\s+/g,'_')}_Config`;renderPresets();updatePreview()}function selectSecurityLevel(key){currentSecurityLevel=key;renderSecurityLevels()}function getAllDomains(){const preset=PRESETS[currentPreset];const customDomains=document.getElementById('customDomains').value.split('\n').map(d=>d.trim()).filter(d=>d&&!d.startsWith('#'));return[...preset.domains,...customDomains]}function updatePreview(){const domains=getAllDomains();const container=document.getElementById('domainPreview');document.getElementById('domainCount').textContent=domains.length;container.innerHTML=domains.map(domain=>`<div class="domain-item">${domain}</div>`).join('')}function generateConfig(){const preset=PRESETS[currentPreset];const securitySettings=SECURITY_LEVELS[currentSecurityLevel].settings;const domains=getAllDomains();return{originatorVersion:"3.7.0",startURL:document.getElementById('startUrl').value,browserViewMode:securitySettings.browserViewMode,enableZoomText:true,enableZoomPage:true,allowQuit:securitySettings.allowQuit,allowBrowsingBackForward:document.getElementById('allowBackForward').checked,enableBrowserWindowToolbar:securitySettings.enableBrowserWindowToolbar,showReloadButton:document.getElementById('showReloadButton').checked,showMenuBar:securitySettings.showMenuBar,urlFilterEnable:true,urlFilterEnableContentFilter:false,urlFilterRules:domains.map(domain=>({active:true,regex:false,expression:domain,action:1})),allowSwitchToApplications:securitySettings.allowSwitchToApplications,allowFlashFullscreen:false,enablePlugIns:true,allowVideoCapture:false,allowAudioCapture:false,allowSpellCheck:document.getElementById('allowSpellCheck').checked,allowDictionaryLookup:false,allowDownUploads:document.getElementById('allowDownloads').checked,enableSebBrowser:true,removeBrowserProfile:false,allowPreferencesWindow:false}}function downloadConfig(){const config=generateConfig();const configName=document.getElementById('configName').value||'SEB_Config';const blob=new Blob([JSON.stringify(config,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`${configName}.json`;a.click();URL.revokeObjectURL(url)}function copyDomains(){const domains=getAllDomains().join('\n');navigator.clipboard.writeText(domains).then(()=>{const btn=document.getElementById('copyBtn');const originalText=btn.textContent;btn.textContent='✓ Copied!';setTimeout(()=>{btn.textContent=originalText},2000)})}function attachEventListeners(){document.getElementById('generateBtn').addEventListener('click',downloadConfig);document.getElementById('copyBtn').addEventListener('click',copyDomains);document.getElementById('customDomains').addEventListener('input',updatePreview);document.getElementById('startUrl').addEventListener('input',updatePreview)}init();
+// ============================================================================
+// TRANSLATIONS / ÜBERSETZUNGEN
+// ============================================================================
+const TRANSLATIONS = {
+    de: {
+        title: "SEB Konfigurations-Generator",
+        subtitle: "Erstellen Sie Safe Exam Browser Konfigurationen für Fokus-Modus im Bildungsbereich",
+        step1: "1. Dienst auswählen",
+        step2: "2. Konfigurationseinstellungen",
+        step3: "3. Benutzerdefinierte Domains (Optional)",
+        step4: "4. Vorschau & Download",
+        startUrl: "Start-URL",
+        configName: "Konfigurationsname",
+        securityLevel: "Sicherheitsstufe",
+        additionalOptions: "Zusätzliche Optionen",
+        allowDownloads: "Datei-Downloads erlauben",
+        allowSpellCheck: "Rechtschreibprüfung erlauben",
+        showReloadButton: "Neu-Laden-Button anzeigen",
+        allowBackForward: "Vor/Zurück-Navigation erlauben",
+        customDomainsLabel: "Zusätzliche erlaubte Domains hinzufügen (eine pro Zeile)",
+        customDomainsPlaceholder: "beispiel.de\n*.schule-domain.de",
+        proTipTitle: "💡 Profi-Tipp",
+        proTipText: "Verwenden Sie Wildcards (*) um alle Subdomains zu erlauben. Zum Beispiel: *.microsoft.com erlaubt login.microsoft.com, account.microsoft.com, usw.",
+        allowedDomains: "Erlaubte Domains",
+        downloadBtn: "📥 SEB Konfiguration herunterladen (.json)",
+        copyBtn: "📋 Domain-Liste kopieren",
+        nextStepsTitle: "Nächste Schritte",
+        nextStepsText: "1. JSON-Konfigurationsdatei herunterladen<br>2. Safe Exam Browser Config Tool öffnen<br>3. JSON-Datei importieren<br>4. Mit Schüler-Account testen<br>5. Als .seb-Datei zur Verteilung exportieren",
+        
+        // Presets
+        presetOnenote: "OneNote Online",
+        presetOnenoteDesc: "Microsoft OneNote Web-Client",
+        presetWord: "Word Online",
+        presetWordDesc: "Microsoft Word Web-Client",
+        presetTeams: "Microsoft Teams",
+        presetTeamsDesc: "Teams Web-Client für Zusammenarbeit",
+        presetGdocs: "Google Docs",
+        presetGdocsDesc: "Google Workspace Dokumenteneditor",
+        presetGsheets: "Google Tabellen",
+        presetGsheetsDesc: "Google Workspace Tabellenkalkulation",
+        
+        // Security levels
+        securityRelaxed: "Locker",
+        securityRelaxedDesc: "Fokus-Modus - blockiert Ablenkungen, erlaubt Flexibilität",
+        securityBalanced: "Ausgewogen",
+        securityBalancedDesc: "Empfohlen - gutes Gleichgewicht zwischen Sicherheit und Benutzerfreundlichkeit",
+        securityStrict: "Streng",
+        securityStrictDesc: "Maximale Einschränkungen (kann Schüler frustrieren)",
+        
+        // Messages
+        copiedMsg: "✓ Kopiert!",
+        configNamePlaceholder: "Meine_Schule_"
+    },
+    en: {
+        title: "SEB Config Generator",
+        subtitle: "Create Safe Exam Browser configurations for educational focus mode",
+        step1: "1. Choose Service",
+        step2: "2. Configuration Settings",
+        step3: "3. Custom Domains (Optional)",
+        step4: "4. Preview & Download",
+        startUrl: "Start URL",
+        configName: "Configuration Name",
+        securityLevel: "Security Level",
+        additionalOptions: "Additional Options",
+        allowDownloads: "Allow file downloads",
+        allowSpellCheck: "Allow spell check",
+        showReloadButton: "Show reload button",
+        allowBackForward: "Allow back/forward navigation",
+        customDomainsLabel: "Add additional allowed domains (one per line)",
+        customDomainsPlaceholder: "example.com\n*.school-domain.edu",
+        proTipTitle: "💡 Pro Tip",
+        proTipText: "Use wildcards (*) to allow all subdomains. For example: *.microsoft.com allows login.microsoft.com, account.microsoft.com, etc.",
+        allowedDomains: "Allowed Domains",
+        downloadBtn: "📥 Download SEB Config (.json)",
+        copyBtn: "📋 Copy Domain List",
+        nextStepsTitle: "Next Steps",
+        nextStepsText: "1. Download the JSON configuration file<br>2. Open Safe Exam Browser Config Tool<br>3. Import the JSON file<br>4. Test with a student account<br>5. Export as .seb file for distribution",
+        
+        // Presets
+        presetOnenote: "OneNote Online",
+        presetOnenoteDesc: "Microsoft OneNote web client",
+        presetWord: "Word Online",
+        presetWordDesc: "Microsoft Word web client",
+        presetTeams: "Microsoft Teams",
+        presetTeamsDesc: "Teams web client for collaboration",
+        presetGdocs: "Google Docs",
+        presetGdocsDesc: "Google Workspace document editor",
+        presetGsheets: "Google Sheets",
+        presetGsheetsDesc: "Google Workspace spreadsheet editor",
+        
+        // Security levels
+        securityRelaxed: "Relaxed",
+        securityRelaxedDesc: "Focus mode - blocks distractions but allows flexibility",
+        securityBalanced: "Balanced",
+        securityBalancedDesc: "Recommended - good balance of security and usability",
+        securityStrict: "Strict",
+        securityStrictDesc: "Maximum restrictions (may frustrate students)",
+        
+        // Messages
+        copiedMsg: "✓ Copied!",
+        configNamePlaceholder: "My_School_"
+    }
+};
+
+// ============================================================================
+// PRESET CONFIGURATIONS
+// ============================================================================
+const PRESETS = {
+    onenote: {
+        startUrl: "https://www.onenote.com/notebooks",
+        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.onenote.com","onenote.officeapps.live.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net"]
+    },
+    word: {
+        startUrl: "https://www.office.com/launch/word",
+        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net"]
+    },
+    teams: {
+        startUrl: "https://teams.microsoft.com",
+        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","*.live.com","*.office.com","*.office365.com","*.teams.microsoft.com","*.skype.com","*.sharepoint.com","*.msocdn.com","*.msecnd.net","*.azureedge.net"]
+    },
+    gdocs: {
+        startUrl: "https://docs.google.com",
+        domains: ["*.google.com","*.googleapis.com","*.gstatic.com","accounts.google.com","docs.google.com","drive.google.com","*.googleusercontent.com"]
+    },
+    gsheets: {
+        startUrl: "https://sheets.google.com",
+        domains: ["*.google.com","*.googleapis.com","*.gstatic.com","accounts.google.com","sheets.google.com","drive.google.com","*.googleusercontent.com"]
+    }
+};
+
+const SECURITY_LEVELS = {
+    relaxed: {
+        settings: {allowSwitchToApplications:false,allowQuit:true,browserViewMode:0,enableBrowserWindowToolbar:true,showMenuBar:false}
+    },
+    balanced: {
+        settings: {allowSwitchToApplications:false,allowQuit:true,browserViewMode:0,enableBrowserWindowToolbar:true,showMenuBar:false}
+    },
+    strict: {
+        settings: {allowSwitchToApplications:false,allowQuit:false,browserViewMode:1,enableBrowserWindowToolbar:false,showMenuBar:false}
+    }
+};
+
+// ============================================================================
+// STATE
+// ============================================================================
+let currentLang = 'de';
+let currentPreset = 'onenote';
+let currentSecurityLevel = 'balanced';
+
+// ============================================================================
+// LANGUAGE MANAGEMENT
+// ============================================================================
+function setLanguage(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    
+    // Update all elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (TRANSLATIONS[lang][key]) {
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.placeholder = TRANSLATIONS[lang][key];
+            } else {
+                el.innerHTML = TRANSLATIONS[lang][key];
+            }
+        }
+    });
+    
+    // Update placeholder attributes
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (TRANSLATIONS[lang][key]) {
+            el.placeholder = TRANSLATIONS[lang][key];
+        }
+    });
+    
+    // Update language toggle buttons
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+    
+    // Re-render dynamic content
+    renderPresets();
+    renderSecurityLevels();
+    
+    // Save language preference
+    localStorage.setItem('sebConfigLang', lang);
+}
+
+function t(key) {
+    return TRANSLATIONS[currentLang][key] || key;
+}
+
+// ============================================================================
+// UI RENDERING
+// ============================================================================
+function renderPresets() {
+    const container = document.getElementById('presetButtons');
+    container.innerHTML = '';
+    
+    const presetKeys = ['onenote', 'word', 'teams', 'gdocs', 'gsheets'];
+    
+    presetKeys.forEach(key => {
+        const btn = document.createElement('button');
+        btn.className = `preset-btn ${key === currentPreset ? 'active' : ''}`;
+        btn.innerHTML = `
+            <h3>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1))}</h3>
+            <p>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1) + 'Desc')}</p>
+        `;
+        btn.onclick = () => selectPreset(key);
+        container.appendChild(btn);
+    });
+}
+
+function renderSecurityLevels() {
+    const container = document.getElementById('securityLevel');
+    container.innerHTML = '';
+    
+    ['relaxed', 'balanced', 'strict'].forEach(key => {
+        const div = document.createElement('div');
+        div.className = `security-option ${key === currentSecurityLevel ? 'active' : ''}`;
+        div.innerHTML = `
+            <h4>${t('security' + key.charAt(0).toUpperCase() + key.slice(1))}</h4>
+            <p>${t('security' + key.charAt(0).toUpperCase() + key.slice(1) + 'Desc')}</p>
+        `;
+        div.onclick = () => selectSecurityLevel(key);
+        container.appendChild(div);
+    });
+}
+
+function selectPreset(key) {
+    currentPreset = key;
+    const preset = PRESETS[key];
+    document.getElementById('startUrl').value = preset.startUrl;
+    
+    const presetName = t('preset' + key.charAt(0).toUpperCase() + key.slice(1));
+    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config`;
+    
+    renderPresets();
+    updatePreview();
+}
+
+function selectSecurityLevel(key) {
+    currentSecurityLevel = key;
+    renderSecurityLevels();
+}
+
+function getAllDomains() {
+    const preset = PRESETS[currentPreset];
+    const customDomains = document.getElementById('customDomains').value
+        .split('\n')
+        .map(d => d.trim())
+        .filter(d => d && !d.startsWith('#'));
+    
+    return [...preset.domains, ...customDomains];
+}
+
+function updatePreview() {
+    const domains = getAllDomains();
+    const container = document.getElementById('domainPreview');
+    document.getElementById('domainCount').textContent = domains.length;
+    
+    container.innerHTML = domains
+        .map(domain => `<div class="domain-item">${domain}</div>`)
+        .join('');
+}
+
+// ============================================================================
+// CONFIG GENERATION
+// ============================================================================
+function generateConfig() {
+    const preset = PRESETS[currentPreset];
+    const securitySettings = SECURITY_LEVELS[currentSecurityLevel].settings;
+    const domains = getAllDomains();
+    
+    return {
+        originatorVersion: "3.7.0",
+        startURL: document.getElementById('startUrl').value,
+        browserViewMode: securitySettings.browserViewMode,
+        enableZoomText: true,
+        enableZoomPage: true,
+        allowQuit: securitySettings.allowQuit,
+        allowBrowsingBackForward: document.getElementById('allowBackForward').checked,
+        enableBrowserWindowToolbar: securitySettings.enableBrowserWindowToolbar,
+        showReloadButton: document.getElementById('showReloadButton').checked,
+        showMenuBar: securitySettings.showMenuBar,
+        urlFilterEnable: true,
+        urlFilterEnableContentFilter: false,
+        urlFilterRules: domains.map(domain => ({
+            active: true,
+            regex: false,
+            expression: domain,
+            action: 1
+        })),
+        allowSwitchToApplications: securitySettings.allowSwitchToApplications,
+        allowFlashFullscreen: false,
+        enablePlugIns: true,
+        allowVideoCapture: false,
+        allowAudioCapture: false,
+        allowSpellCheck: document.getElementById('allowSpellCheck').checked,
+        allowDictionaryLookup: false,
+        allowDownUploads: document.getElementById('allowDownloads').checked,
+        enableSebBrowser: true,
+        removeBrowserProfile: false,
+        allowPreferencesWindow: false
+    };
+}
+
+function downloadConfig() {
+    const config = generateConfig();
+    const configName = document.getElementById('configName').value || 'SEB_Config';
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${configName}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function copyDomains() {
+    const domains = getAllDomains().join('\n');
+    navigator.clipboard.writeText(domains).then(() => {
+        const btn = document.getElementById('copyBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = t('copiedMsg');
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+        }, 2000);
+    });
+}
+
+// ============================================================================
+// EVENT LISTENERS
+// ============================================================================
+function attachEventListeners() {
+    // Language toggle
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+    });
+    
+    // Main actions
+    document.getElementById('generateBtn').addEventListener('click', downloadConfig);
+    document.getElementById('copyBtn').addEventListener('click', copyDomains);
+    document.getElementById('customDomains').addEventListener('input', updatePreview);
+    document.getElementById('startUrl').addEventListener('input', updatePreview);
+}
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+function init() {
+    // Load saved language preference or default to German
+    const savedLang = localStorage.getItem('sebConfigLang') || 'de';
+    setLanguage(savedLang);
+    
+    attachEventListeners();
+    updatePreview();
+}
+
+// Start the application
+init();
     </script>
 </body>
 </html>
