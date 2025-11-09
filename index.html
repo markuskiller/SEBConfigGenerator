@@ -6,19 +6,20 @@
     <title>SEB Konfigurations-Generator</title>
     <style>
         /* ============================================================================
-           COLOR PALETTE - Marine Blue Theme (#0B173C)
+           COLOR PALETTE - Soft Navy Blue Theme (#2c3e5a)
            ============================================================================
-           Primary: #0B173C (Navy Dark), #1a2b5e (Navy Medium), #2c5aa0 (Medium Blue)
-           Accent: #1e88e5 (Blue Accent), #2dce89 (Success Green), #fb6340 (Warning Orange)
-           Neutrals: #b9bdc1 (Light Gray Background), #e8ecf1 (Border Gray), #c5cdd8 (Version Text)
-           Text: #0B173C (Navy Dark), #1a2b5e (Navy Medium), #525f7f (Text Gray)
+           Primary: #2c3e5a (Navy Soft), #3d5170 (Navy Medium), #4a6fa5 (Blue Medium)
+           Accent: #5b9bd5 (Sky Blue), #7eb8e6 (Light Blue), #2dce89 (Success Green)
+           Backgrounds: #e8edf5 (Soft Blue-Gray), #f5f7fb (Light Blue-Gray), #dfe6f0 (Blue-Tint)
+           Text: #2c3e5a (Navy Soft), #525f7f (Gray Medium), #6c7a89 (Gray Light)
+           Version/Footer: #8898aa (Medium Gray on dark background)
            ============================================================================ */
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
-            background: linear-gradient(135deg, #0B173C 0%, #1a2856 100%); 
+            background: linear-gradient(135deg, #3d5170 0%, #4a6fa5 100%); 
             min-height: 100vh; 
             padding: 20px; 
         }
@@ -26,15 +27,15 @@
         .container { 
             max-width: 1000px; 
             margin: 0 auto; 
-            background: #b9bdc1; 
+            background: #e8edf5; 
             border-radius: 12px; 
-            box-shadow: 0 20px 60px rgba(11, 23, 60, 0.4); 
+            box-shadow: 0 20px 60px rgba(44, 62, 90, 0.3); 
             overflow: hidden; 
         }
         
         .header { 
-            background: linear-gradient(135deg, #0B173C 0%, #1a2b5e 100%); 
-            color: white; 
+            background: linear-gradient(135deg, #2c3e5a 0%, #3d5170 100%); 
+            color: #f5f7fb; 
             padding: 40px 30px; 
             text-align: center; 
             position: relative; 
@@ -49,9 +50,9 @@
         }
         
         .lang-btn { 
-            background: rgba(255,255,255,0.15); 
-            border: 2px solid rgba(255,255,255,0.4); 
-            color: white; 
+            background: rgba(245, 247, 251, 0.15); 
+            border: 2px solid rgba(245, 247, 251, 0.4); 
+            color: #f5f7fb; 
             padding: 8px 15px; 
             border-radius: 6px; 
             cursor: pointer; 
@@ -60,14 +61,14 @@
         }
         
         .lang-btn:hover { 
-            background: rgba(255,255,255,0.25); 
-            border-color: rgba(255,255,255,0.6); 
+            background: rgba(245, 247, 251, 0.25); 
+            border-color: rgba(245, 247, 251, 0.6); 
         }
         
         .lang-btn.active { 
-            background: #1e88e5; 
-            color: white; 
-            border-color: #1e88e5; 
+            background: #5b9bd5; 
+            color: #f5f7fb; 
+            border-color: #5b9bd5; 
         }
         
         .header h1 { 
@@ -89,10 +90,10 @@
         }
         
         .section h2 { 
-            color: #0B173C; 
+            color: #2c3e5a; 
             margin-bottom: 20px; 
             padding-bottom: 10px; 
-            border-bottom: 2px solid #2c5aa0; 
+            border-bottom: 2px solid #5b9bd5; 
         }
         
         .form-group { 
@@ -102,7 +103,7 @@
         label { 
             display: block; 
             font-weight: 600; 
-            color: #0B173C; 
+            color: #2c3e5a; 
             margin-bottom: 8px; 
         }
         
@@ -112,18 +113,21 @@
         select { 
             width: 100%; 
             padding: 12px 15px; 
-            border: 2px solid #e9ecef; 
+            border: 2px solid #dfe6f0; 
             border-radius: 6px; 
             font-size: 14px; 
-            transition: border-color 0.3s; 
+            background: #f5f7fb; 
+            color: #2c3e5a; 
+            transition: all 0.3s; 
         }
         
         input:focus, 
         textarea:focus, 
         select:focus { 
             outline: none; 
-            border-color: #2c5aa0; 
-            box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1); 
+            border-color: #5b9bd5; 
+            background: #ffffff; 
+            box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.15); 
         }
         
         textarea { 
@@ -141,35 +145,35 @@
         
         .preset-btn { 
             padding: 15px; 
-            border: 2px solid #e8ecf1; 
+            border: 2px solid #dfe6f0; 
             border-radius: 8px; 
-            background: white; 
+            background: #f5f7fb; 
             cursor: pointer; 
             transition: all 0.3s; 
             text-align: left; 
         }
         
         .preset-btn:hover { 
-            border-color: #2c5aa0; 
-            background: #f8faff; 
+            border-color: #5b9bd5; 
+            background: #ffffff; 
             transform: translateY(-2px); 
-            box-shadow: 0 4px 12px rgba(44, 90, 160, 0.2); 
+            box-shadow: 0 4px 12px rgba(91, 155, 213, 0.25); 
         }
         
         .preset-btn.active { 
-            border-color: #1e88e5; 
-            background: linear-gradient(135deg, #e3f2fd 0%, #f0f9ff 100%); 
-            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.15); 
+            border-color: #5b9bd5; 
+            background: linear-gradient(135deg, #d4e6f7 0%, #e8f2fa 100%); 
+            box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.2); 
         }
         
         .preset-btn h3 { 
-            color: #0B173C; 
+            color: #2c3e5a; 
             margin-bottom: 5px; 
             font-size: 1.1em; 
         }
         
         .preset-btn p { 
-            color: #8898aa; 
+            color: #6c7a89; 
             font-size: 0.9em; 
         }
         
@@ -184,7 +188,7 @@
             height: 20px; 
             margin-right: 10px; 
             cursor: pointer; 
-            accent-color: #2c5aa0; 
+            accent-color: #5b9bd5; 
         }
         
         .security-level { 
@@ -196,31 +200,31 @@
         .security-option { 
             flex: 1; 
             padding: 20px; 
-            border: 2px solid #e8ecf1; 
+            border: 2px solid #dfe6f0; 
             border-radius: 8px; 
             cursor: pointer; 
             transition: all 0.3s; 
-            background: white; 
+            background: #f5f7fb; 
         }
         
         .security-option:hover { 
-            border-color: #2c5aa0; 
-            background: #f8faff; 
+            border-color: #5b9bd5; 
+            background: #ffffff; 
         }
         
         .security-option.active { 
-            border-color: #1e88e5; 
-            background: linear-gradient(135deg, #e3f2fd 0%, #f0f9ff 100%); 
-            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.15); 
+            border-color: #5b9bd5; 
+            background: linear-gradient(135deg, #d4e6f7 0%, #e8f2fa 100%); 
+            box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.2); 
         }
         
         .security-option h4 { 
-            color: #0B173C; 
+            color: #2c3e5a; 
             margin-bottom: 8px; 
         }
         
         .security-option p { 
-            color: #8898aa; 
+            color: #6c7a89; 
             font-size: 0.9em; 
         }
         
@@ -238,25 +242,25 @@
         }
         
         .btn-primary { 
-            background: linear-gradient(135deg, #2c5aa0 0%, #1e88e5 100%); 
-            color: white; 
-            box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3); 
+            background: linear-gradient(135deg, #4a6fa5 0%, #5b9bd5 100%); 
+            color: #f5f7fb; 
+            box-shadow: 0 4px 12px rgba(74, 111, 165, 0.3); 
         }
         
         .btn-primary:hover { 
             transform: translateY(-2px); 
-            box-shadow: 0 10px 20px rgba(44, 90, 160, 0.4); 
+            box-shadow: 0 10px 20px rgba(74, 111, 165, 0.4); 
         }
         
         .btn-secondary { 
-            background: #f8f9fa; 
-            color: #0B173C; 
-            border: 2px solid #e9ecef; 
+            background: #f5f7fb; 
+            color: #2c3e5a; 
+            border: 2px solid #dfe6f0; 
         }
         
         .btn-secondary:hover { 
-            background: #e8ecf1; 
-            border-color: #2c5aa0; 
+            background: #ffffff; 
+            border-color: #5b9bd5; 
         }
         
         .actions { 
@@ -267,41 +271,41 @@
         }
         
         .info-box { 
-            background: linear-gradient(135deg, #e3f2fd 0%, #f0f9ff 100%); 
-            border-left: 4px solid #2c5aa0; 
+            background: linear-gradient(135deg, #d4e6f7 0%, #e8f2fa 100%); 
+            border-left: 4px solid #5b9bd5; 
             padding: 15px; 
             margin-top: 20px; 
             border-radius: 4px; 
         }
         
         .info-box h4 { 
-            color: #0B173C; 
+            color: #2c3e5a; 
             margin-bottom: 8px; 
         }
         
         .info-box p { 
-            color: #1a2b5e; 
+            color: #3d5170; 
             font-size: 0.95em; 
             line-height: 1.6; 
         }
         
         .preview { 
-            background: #f8f9fa; 
+            background: #f5f7fb; 
             padding: 20px; 
             border-radius: 8px; 
             margin-top: 20px; 
-            border: 1px solid #e9ecef; 
+            border: 2px solid #dfe6f0; 
         }
         
         .preview h3 { 
-            color: #0B173C; 
+            color: #2c3e5a; 
             margin-bottom: 15px; 
         }
         
         .domain-list { 
             font-family: 'Courier New', monospace; 
             font-size: 0.9em; 
-            color: #1a2b5e; 
+            color: #3d5170; 
             line-height: 1.8; 
             max-height: 300px; 
             overflow-y: auto; 
@@ -309,14 +313,14 @@
         
         .domain-item { 
             padding: 5px 0; 
-            border-bottom: 1px solid #e9ecef; 
+            border-bottom: 1px solid #dfe6f0; 
         }
         
         .badge { 
             display: inline-block; 
             padding: 4px 10px; 
-            background: linear-gradient(135deg, #2c5aa0 0%, #1e88e5 100%); 
-            color: white; 
+            background: linear-gradient(135deg, #4a6fa5 0%, #5b9bd5 100%); 
+            color: #f5f7fb; 
             border-radius: 12px; 
             font-size: 0.85em; 
             margin-left: 10px; 
@@ -328,7 +332,7 @@
         
         .doc-link:hover { 
             transform: translateY(-2px); 
-            box-shadow: 0 4px 12px rgba(44, 90, 160, 0.4); 
+            box-shadow: 0 4px 12px rgba(91, 155, 213, 0.4); 
             opacity: 1 !important; 
         }
         
@@ -355,7 +359,7 @@
             <h1>🛡️ <span data-i18n="title">SEB Konfigurations-Generator</span></h1>
             <p data-i18n="subtitle">Erstellen Sie Safe Exam Browser Konfigurationen für Fokus-Modus im Bildungsbereich</p>
             <p style="margin-top: 15px;">
-                <a href="#" id="mainDocLink" class="doc-link" target="_blank" style="color: white; text-decoration: none; opacity: 0.9; font-weight: 600; border: 2px solid rgba(255,255,255,0.5); padding: 8px 16px; border-radius: 6px; display: inline-block;">
+                <a href="#" id="mainDocLink" class="doc-link" target="_blank" style="color: #f5f7fb; text-decoration: none; opacity: 0.95; font-weight: 600; border: 2px solid rgba(245, 247, 251, 0.5); padding: 8px 16px; border-radius: 6px; display: inline-block;">
                     📚 <span data-i18n="mainDocLink">Vollständige Anleitung</span>
                 </a>
             </p>
@@ -452,13 +456,13 @@
                             <span data-i18n="helperDocsTitle">📖 Hilfe & Anleitungen:</span>
                         </p>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <a href="#" id="browserCaptureLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #e3f2fd; color: #0B173C; border: 2px solid #2c5aa0; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                            <a href="#" id="browserCaptureLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #d4e6f7; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
                                 🌐 <span data-i18n="browserCaptureLink">Browser Capture</span>
                             </a>
-                            <a href="#" id="quickstartLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #e3f2fd; color: #0B173C; border: 2px solid #2c5aa0; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                            <a href="#" id="quickstartLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #d4e6f7; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
                                 🚀 <span data-i18n="quickstartLink">Schnellstart (Google Sites)</span>
                             </a>
-                            <a href="#" id="quickRefLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #e3f2fd; color: #0B173C; border: 2px solid #2c5aa0; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                            <a href="#" id="quickRefLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #d4e6f7; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
                                 📋 <span data-i18n="quickRefLink">Schnellreferenz</span>
                             </a>
                         </div>
@@ -466,7 +470,7 @@
                 </div>
             </div>
         </div>
-        <div style="text-align: center; padding: 20px; color: #c5cdd8; font-size: 0.85em;">
+        <div style="text-align: center; padding: 20px; color: #8898aa; font-size: 0.85em;">
             <span id="versionInfo"></span>
         </div>
     </div>
@@ -686,8 +690,8 @@ const SECURITY_LEVELS = {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.1';
-const BUILD_DATE = new Date('2025-11-09T21:11:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.2';
+const BUILD_DATE = new Date('2025-11-09T21:45:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
