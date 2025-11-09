@@ -359,7 +359,7 @@
             <h1>🛡️ <span data-i18n="title">SEB Konfigurations-Generator</span></h1>
             <p data-i18n="subtitle">Erstellen Sie Safe Exam Browser Konfigurationen für Fokus-Modus im Unterricht</p>
             <p style="margin-top: 15px;">
-                <a href="#" id="mainDocLink" class="doc-link" target="_blank" style="color: #f5f7fb; text-decoration: none; opacity: 0.95; font-weight: 600; border: 2px solid rgba(245, 247, 251, 0.5); padding: 8px 16px; border-radius: 6px; display: inline-block;">
+                <a href="#" id="mainDocLink" class="doc-link" target="_blank" rel="noopener noreferrer" style="color: #f5f7fb; text-decoration: none; opacity: 0.95; font-weight: 600; border: 2px solid rgba(245, 247, 251, 0.5); padding: 8px 16px; border-radius: 6px; display: inline-block;">
                     📚 <span data-i18n="mainDocLink">Vollständige Anleitung</span>
                 </a>
             </p>
@@ -463,13 +463,13 @@
                             <span data-i18n="helperDocsTitle">📖 Hilfe & Anleitungen:</span>
                         </p>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <a href="#" id="browserCaptureLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #d4e6f7; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                            <a href="#" id="browserCaptureLink" class="doc-link" target="_blank" rel="noopener noreferrer" style="padding: 8px 16px; background: #d4e6f7; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
                                 🌐 <span data-i18n="browserCaptureLink">Browser Capture</span>
                             </a>
-                            <a href="#" id="quickstartLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #d4e6f7; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                            <a href="#" id="quickstartLink" class="doc-link" target="_blank" rel="noopener noreferrer" style="padding: 8px 16px; background: #d4e6f7; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
                                 🚀 <span data-i18n="quickstartLink">Schnellstart (Google Sites)</span>
                             </a>
-                            <a href="#" id="quickRefLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #d4e6f7; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                            <a href="#" id="quickRefLink" class="doc-link" target="_blank" rel="noopener noreferrer" style="padding: 8px 16px; background: #d4e6f7; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
                                 📋 <span data-i18n="quickRefLink">Schnellreferenz</span>
                             </a>
                         </div>
@@ -1530,7 +1530,7 @@ function showBrowserHelper() {
         </div>
         
         <div style="display:flex;gap:10px;justify-content:space-between;margin-top:20px;">
-            <a href="docs/${currentLang}/BROWSER_CAPTURE_${currentLang === 'de' ? 'ANLEITUNG' : 'GUIDE'}.md" target="_blank" style="padding:12px 24px;background:#f7f8fc;color:#5e72e4;border:2px solid #e9ecef;border-radius:6px;text-decoration:none;font-weight:600;">${instructions.fullGuide}</a>
+            <a href="docs/${currentLang}/BROWSER_CAPTURE_${currentLang === 'de' ? 'ANLEITUNG' : 'GUIDE'}.md" target="_blank" rel="noopener noreferrer" style="padding:12px 24px;background:#f7f8fc;color:#5e72e4;border:2px solid #e9ecef;border-radius:6px;text-decoration:none;font-weight:600;">${instructions.fullGuide}</a>
             <button id="closeBrowserHelperBtn" style="padding:12px 24px;background:#e9ecef;color:#32325d;border:none;border-radius:6px;cursor:pointer;font-weight:600;">${instructions.close}</button>
         </div>
     `;
