@@ -210,6 +210,20 @@ const TRANSLATIONS = {
         presetGdocsDesc: "Google Workspace Dokumenteneditor",
         presetGsheets: "Google Tabellen",
         presetGsheetsDesc: "Google Workspace Tabellenkalkulation",
+        presetWhiteboard: "Whiteboard.fi",
+        presetWhiteboardDesc: "Kollaboratives Online-Whiteboard",
+        presetPadlet: "Padlet",
+        presetPadletDesc: "Digitale Pinnwand für Zusammenarbeit",
+        presetKahoot: "Kahoot!",
+        presetKahootDesc: "Gamifizierte Quizze und Umfragen",
+        presetMentimeter: "Mentimeter",
+        presetMentimeterDesc: "Live-Umfragen und interaktive Präsentationen",
+        presetMiro: "Miro",
+        presetMiroDesc: "Digitales Whiteboard für Zusammenarbeit",
+        presetSlido: "Slido",
+        presetSlidoDesc: "Live Q&A und Umfragen",
+        presetEtherpad: "Etherpad",
+        presetEtherpadDesc: "Kollaboratives Textdokument",
         
         // Security levels
         securityRelaxed: "Locker",
@@ -264,6 +278,20 @@ const TRANSLATIONS = {
         presetGdocsDesc: "Google Workspace document editor",
         presetGsheets: "Google Sheets",
         presetGsheetsDesc: "Google Workspace spreadsheet editor",
+        presetWhiteboard: "Whiteboard.fi",
+        presetWhiteboardDesc: "Collaborative online whiteboard",
+        presetPadlet: "Padlet",
+        presetPadletDesc: "Digital bulletin board for collaboration",
+        presetKahoot: "Kahoot!",
+        presetKahootDesc: "Gamified quizzes and polls",
+        presetMentimeter: "Mentimeter",
+        presetMentimeterDesc: "Live polls and interactive presentations",
+        presetMiro: "Miro",
+        presetMiroDesc: "Digital whiteboard for collaboration",
+        presetSlido: "Slido",
+        presetSlidoDesc: "Live Q&A and polls",
+        presetEtherpad: "Etherpad",
+        presetEtherpadDesc: "Collaborative text document",
         
         // Security levels
         securityRelaxed: "Relaxed",
@@ -291,17 +319,33 @@ const PRESETS = {
         startUrl: "https://www.office.com/launch/word",
         domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net"]
     },
-    teams: {
-        startUrl: "https://teams.microsoft.com",
-        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","*.live.com","*.office.com","*.office365.com","*.teams.microsoft.com","*.skype.com","*.sharepoint.com","*.msocdn.com","*.msecnd.net","*.azureedge.net"]
+    whiteboard: {
+        startUrl: "https://whiteboard.fi",
+        domains: ["whiteboard.fi","whiteboard-storage-*.s3.*.amazonaws.com","cdn.jsdelivr.net","fonts.googleapis.com","fonts.gstatic.com"]
     },
-    gdocs: {
-        startUrl: "https://docs.google.com",
-        domains: ["*.google.com","*.googleapis.com","*.gstatic.com","accounts.google.com","docs.google.com","drive.google.com","*.googleusercontent.com"]
+    padlet: {
+        startUrl: "https://padlet.com",
+        domains: ["padlet.com","*.padlet.com","padlet.net","*.padlet.pics"]
     },
-    gsheets: {
-        startUrl: "https://sheets.google.com",
-        domains: ["*.google.com","*.googleapis.com","*.gstatic.com","accounts.google.com","sheets.google.com","drive.google.com","*.googleusercontent.com"]
+    kahoot: {
+        startUrl: "https://kahoot.it",
+        domains: ["kahoot.it","*.kahoot.it","kahoot.com","*.kahoot.com"]
+    },
+    mentimeter: {
+        startUrl: "https://www.menti.com",
+        domains: ["menti.com","*.menti.com","mentimeter.com","*.mentimeter.com"]
+    },
+    miro: {
+        startUrl: "https://miro.com",
+        domains: ["miro.com","*.miro.com","*.mirocdn.com"]
+    },
+    slido: {
+        startUrl: "https://www.slido.com",
+        domains: ["slido.com","*.slido.com","*.sli.do"]
+    },
+    etherpad: {
+        startUrl: "https://etherpad.org",
+        domains: ["etherpad.org","*.etherpad.org"]
     }
 };
 
@@ -321,7 +365,7 @@ const SECURITY_LEVELS = {
 // STATE
 // ============================================================================
 let currentLang = 'de';
-let currentPreset = 'onenote';
+let selectedPresets = ['onenote']; // Changed to array for multiple selection
 let currentSecurityLevel = 'balanced';
 
 // ============================================================================
@@ -375,16 +419,16 @@ function renderPresets() {
     const container = document.getElementById('presetButtons');
     container.innerHTML = '';
     
-    const presetKeys = ['onenote', 'word', 'teams', 'gdocs', 'gsheets'];
+    const presetKeys = ['onenote', 'word', 'whiteboard', 'padlet', 'kahoot', 'mentimeter', 'miro', 'slido', 'etherpad'];
     
     presetKeys.forEach(key => {
         const btn = document.createElement('button');
-        btn.className = `preset-btn ${key === currentPreset ? 'active' : ''}`;
+        btn.className = `preset-btn ${selectedPresets.includes(key) ? 'active' : ''}`;
         btn.innerHTML = `
             <h3>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1))}</h3>
             <p>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1) + 'Desc')}</p>
         `;
-        btn.onclick = () => selectPreset(key);
+        btn.onclick = () => togglePreset(key);
         container.appendChild(btn);
     });
 }
@@ -405,13 +449,30 @@ function renderSecurityLevels() {
     });
 }
 
-function selectPreset(key) {
-    currentPreset = key;
-    const preset = PRESETS[key];
-    document.getElementById('startUrl').value = preset.startUrl;
+function togglePreset(key) {
+    const index = selectedPresets.indexOf(key);
+    if (index === -1) {
+        selectedPresets.push(key);
+    } else {
+        selectedPresets.splice(index, 1);
+    }
     
-    const presetName = t('preset' + key.charAt(0).toUpperCase() + key.slice(1));
-    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config`;
+    // Ensure at least one preset is selected
+    if (selectedPresets.length === 0) {
+        selectedPresets = [key];
+    }
+    
+    // Update start URL to first selected preset
+    const firstPreset = PRESETS[selectedPresets[0]];
+    document.getElementById('startUrl').value = firstPreset.startUrl;
+    
+    // Update config name
+    if (selectedPresets.length === 1) {
+        const presetName = t('preset' + selectedPresets[0].charAt(0).toUpperCase() + selectedPresets[0].slice(1));
+        document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config`;
+    } else {
+        document.getElementById('configName').value = `Multi_Service_Config`;
+    }
     
     renderPresets();
     updatePreview();
@@ -423,14 +484,21 @@ function selectSecurityLevel(key) {
 }
 
 function getAllDomains() {
-    const preset = PRESETS[currentPreset];
+    // Combine domains from all selected presets
+    const presetDomains = [];
+    selectedPresets.forEach(presetKey => {
+        if (PRESETS[presetKey]) {
+            presetDomains.push(...PRESETS[presetKey].domains);
+        }
+    });
+    
     const customDomains = document.getElementById('customDomains').value
         .split('\n')
         .map(d => d.trim())
         .filter(d => d && !d.startsWith('#'));
     
     // Combine and remove duplicates (case-insensitive)
-    const allDomains = [...preset.domains, ...customDomains];
+    const allDomains = [...presetDomains, ...customDomains];
     const uniqueDomains = [];
     const seen = new Set();
     
@@ -446,28 +514,46 @@ function getAllDomains() {
 }
 
 function updatePreview() {
-    const preset = PRESETS[currentPreset];
+    const presetDomains = [];
+    selectedPresets.forEach(presetKey => {
+        if (PRESETS[presetKey]) {
+            presetDomains.push(...PRESETS[presetKey].domains);
+        }
+    });
+    
     const customDomains = document.getElementById('customDomains').value
         .split('\n')
         .map(d => d.trim())
         .filter(d => d && !d.startsWith('#'));
     
-    const allDomainsBeforeDedup = [...preset.domains, ...customDomains];
+    const allDomainsBeforeDedup = [...presetDomains, ...customDomains];
     const domains = getAllDomains();
     const duplicatesRemoved = allDomainsBeforeDedup.length - domains.length;
     
     const container = document.getElementById('domainPreview');
     document.getElementById('domainCount').textContent = domains.length;
     
-    let html = domains
+    // Show selected services info
+    let html = '';
+    if (selectedPresets.length > 1) {
+        const serviceNames = selectedPresets.map(key => 
+            t('preset' + key.charAt(0).toUpperCase() + key.slice(1))
+        ).join(', ');
+        const infoText = currentLang === 'de'
+            ? `✓ Ausgewählte Dienste: ${serviceNames}`
+            : `✓ Selected services: ${serviceNames}`;
+        html += `<div style="background:#d4edda;border-left:4px solid #28a745;padding:10px;margin-bottom:10px;border-radius:4px;color:#155724;font-size:0.9em;">${infoText}</div>`;
+    }
+    
+    html += domains
         .map(domain => `<div class="domain-item">${domain}</div>`)
         .join('');
     
     // Show warning if duplicates were removed
     if (duplicatesRemoved > 0) {
         const warningText = currentLang === 'de' 
-            ? `⚠️ ${duplicatesRemoved} doppelte Domain(s) wurden entfernt (bereits in Basis-Konfiguration enthalten)`
-            : `⚠️ ${duplicatesRemoved} duplicate domain(s) removed (already in base configuration)`;
+            ? `⚠️ ${duplicatesRemoved} doppelte Domain(s) wurden entfernt`
+            : `⚠️ ${duplicatesRemoved} duplicate domain(s) removed`;
         html = `<div style="background:#fff3cd;border-left:4px solid #ffc107;padding:10px;margin-bottom:10px;border-radius:4px;color:#856404;font-size:0.9em;">${warningText}</div>` + html;
     }
     
@@ -609,9 +695,13 @@ function copyDomains() {
 // ============================================================================
 function showBrowserHelper() {
     // Get current preset domains for filtering
-    const currentPreset = document.getElementById('preset').value;
-    const presetDomains = PRESETS[currentPreset] || [];
-    const presetDomainsJSON = JSON.stringify(presetDomains);
+    const presetDomains = [];
+    selectedPresets.forEach(presetKey => {
+        if (PRESETS[presetKey]) {
+            presetDomains.push(...PRESETS[presetKey].domains);
+        }
+    });
+    const presetDomainsJSON = JSON.stringify([...new Set(presetDomains)]);
     
     const script = `// SEB Domain Capture Script - Run AFTER fully logging in and using the service
 (function() {
