@@ -112,76 +112,64 @@ javascript:(function(){const domains=new Set();performance.getEntries().forEach(
 
 ## DevTools Script
 
-**Copy and paste this into the Console tab** of your browser's DevTools:
+**IMPORTANT:** Copy the script directly from the SEB Generator (click "🌐 Browser Helper" button)!
 
-```javascript
-// SEB Domain Capture Script
-// Run this in the browser Console after using the service
+The script automatically shows **only new domains** that are not already included in your selected preset configuration.
 
-(function() {
-    console.clear();
-    console.log('%c🛡️ SEB Domain Capture', 'font-size:20px; color:#5e72e4; font-weight:bold;');
-    console.log('%c' + '='.repeat(60), 'color:#ccc;');
-    
-    // Collect all domains from Performance API
-    const domains = new Set();
-    
-    // Get existing entries
-    performance.getEntries().forEach(entry => {
-        try {
-            const url = new URL(entry.name);
-            if (url.hostname && !url.hostname.match(/^(localhost|127\.0\.0\.1|::1)$/)) {
-                domains.add(url.hostname);
-            }
-        } catch (e) {}
-    });
-    
-    // Sort domains
-    const sorted = [...domains].sort();
-    
-    console.log(`\n📊 Found ${sorted.length} unique domains:\n`);
-    
-    // Display domains
-    sorted.forEach(domain => {
-        console.log(`  ${domain}`);
-    });
-    
-    console.log('\n' + '='.repeat(60));
-    
-    // Generate wildcards
-    const wildcards = new Set();
-    sorted.forEach(domain => {
-        const parts = domain.split('.');
-        if (parts.length > 2) {
-            // Create wildcard for subdomains
-            wildcards.add('*.' + parts.slice(-2).join('.'));
-        } else {
-            wildcards.add(domain);
-        }
-    });
-    
-    console.log(`\n🌟 Recommended wildcards (${wildcards.size} domains):\n`);
-    [...wildcards].sort().forEach(domain => {
-        console.log(`  ${domain}`);
-    });
-    
-    console.log('\n' + '='.repeat(60));
-    
-    // Copy to clipboard
-    const output = sorted.join('\n');
-    
-    navigator.clipboard.writeText(output).then(() => {
-        console.log('\n%c✓ COPIED TO CLIPBOARD!', 'color:green; font-size:16px; font-weight:bold;');
-        console.log('%cPaste this into the "Custom Domains" field', 'color:#666; font-style:italic;');
-    }).catch(() => {
-        console.log('\n%c⚠️ Could not auto-copy. Please copy manually:', 'color:orange; font-weight:bold;');
-        console.log('\n' + output);
-    });
-    
-    console.log('\n' + '='.repeat(60) + '\n');
-    
-})();
+### Features:
+
+✅ **Smart Filtering**: Compares captured domains against current preset  
+✅ **Wildcard Matching**: Recognizes `*.domain.com` patterns in preset  
+✅ **Clear Output**: Shows only domains you need to add  
+✅ **Statistics**: See how many domains are already covered
+
+### Usage:
+
+1. **Select your preset** in SEB Generator (e.g., OneNote)
+2. **Click "🌐 Browser Helper"** button
+3. **Copy the Console Script** from the dialog
+4. **Open your service** and use it fully
+5. **Press F12** → Console tab
+6. **Paste script** and press Enter
+
+### Example Output:
+
 ```
+🛡️ SEB Domain Capture
+============================================================
+
+📊 Total captured: 23 domains
+✓ Already in preset: 18 domains
+🆕 New domains found: 5 domains
+
+============================================================
+📋 COPY THESE NEW DOMAINS:
+============================================================
+
+cdn.example.com
+fonts.example.net
+*.media-cdn.com
+analytics.service.io
+static.resource.org
+
+============================================================
+
+📝 HOW TO USE:
+  1. Select the domain list above (click & drag)
+  2. Right-click → Copy (or Ctrl+C / Cmd+C)
+  3. Paste into "Custom Domains" field in SEB Generator
+
+============================================================
+```
+
+### If no new domains are found:
+
+```
+✅ NO NEW DOMAINS NEEDED!
+All captured domains are already in the preset.
+```
+
+This means your preset already covers everything - no additional domains needed!
 
 ---
 

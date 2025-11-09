@@ -112,76 +112,64 @@ javascript:(function(){const domains=new Set();performance.getEntries().forEach(
 
 ## DevTools-Skript
 
-**Kopieren und fügen Sie dies in den Konsole-Tab** Ihrer Browser-DevTools ein:
+**WICHTIG:** Kopieren Sie das Skript direkt aus dem SEB Generator (Button "🌐 Browser Helper")!
 
-```javascript
-// SEB Domain Erfassungs-Skript
-// Führen Sie dies in der Browser-Konsole nach Verwendung des Dienstes aus
+Das Skript zeigt automatisch **nur neue Domains**, die noch nicht in Ihrer gewählten Preset-Konfiguration enthalten sind.
 
-(function() {
-    console.clear();
-    console.log('%c🛡️ SEB Domain Erfassung', 'font-size:20px; color:#5e72e4; font-weight:bold;');
-    console.log('%c' + '='.repeat(60), 'color:#ccc;');
-    
-    // Alle Domains aus Performance API sammeln
-    const domains = new Set();
-    
-    // Vorhandene Einträge abrufen
-    performance.getEntries().forEach(entry => {
-        try {
-            const url = new URL(entry.name);
-            if (url.hostname && !url.hostname.match(/^(localhost|127\.0\.0\.1|::1)$/)) {
-                domains.add(url.hostname);
-            }
-        } catch (e) {}
-    });
-    
-    // Domains sortieren
-    const sorted = [...domains].sort();
-    
-    console.log(`\n📊 ${sorted.length} eindeutige Domains gefunden:\n`);
-    
-    // Domains anzeigen
-    sorted.forEach(domain => {
-        console.log(`  ${domain}`);
-    });
-    
-    console.log('\n' + '='.repeat(60));
-    
-    // Wildcards generieren
-    const wildcards = new Set();
-    sorted.forEach(domain => {
-        const parts = domain.split('.');
-        if (parts.length > 2) {
-            // Wildcard für Subdomains erstellen
-            wildcards.add('*.' + parts.slice(-2).join('.'));
-        } else {
-            wildcards.add(domain);
-        }
-    });
-    
-    console.log(`\n🌟 Empfohlene Wildcards (${wildcards.size} Domains):\n`);
-    [...wildcards].sort().forEach(domain => {
-        console.log(`  ${domain}`);
-    });
-    
-    console.log('\n' + '='.repeat(60));
-    
-    // In Zwischenablage kopieren
-    const output = sorted.join('\n');
-    
-    navigator.clipboard.writeText(output).then(() => {
-        console.log('\n%c✓ IN ZWISCHENABLAGE KOPIERT!', 'color:green; font-size:16px; font-weight:bold;');
-        console.log('%cFügen Sie dies in das Feld "Benutzerdefinierte Domains" ein', 'color:#666; font-style:italic;');
-    }).catch(() => {
-        console.log('\n%c⚠️ Konnte nicht automatisch kopieren. Bitte manuell kopieren:', 'color:orange; font-weight:bold;');
-        console.log('\n' + output);
-    });
-    
-    console.log('\n' + '='.repeat(60) + '\n');
-    
-})();
+### Funktionen:
+
+✅ **Intelligente Filterung**: Vergleicht erfasste Domains mit aktuellem Preset  
+✅ **Wildcard-Matching**: Erkennt `*.domain.com` Muster im Preset  
+✅ **Klare Ausgabe**: Zeigt nur Domains, die Sie hinzufügen müssen  
+✅ **Statistik**: Sehen Sie, wie viele Domains bereits abgedeckt sind
+
+### Verwendung:
+
+1. **Wählen Sie Ihr Preset** im SEB Generator (z.B. OneNote)
+2. **Klicken Sie auf "🌐 Browser Helper"** Button
+3. **Kopieren Sie das Console Script** aus dem Dialog
+4. **Öffnen Sie Ihren Dienst** und nutzen Sie ihn vollständig
+5. **F12 drücken** → Console Tab
+6. **Script einfügen** und Enter drücken
+
+### Ausgabe-Beispiel:
+
 ```
+🛡️ SEB Domain Capture
+============================================================
+
+📊 Total captured: 23 domains
+✓ Already in preset: 18 domains
+🆕 New domains found: 5 domains
+
+============================================================
+📋 COPY THESE NEW DOMAINS:
+============================================================
+
+cdn.example.com
+fonts.example.net
+*.media-cdn.com
+analytics.service.io
+static.resource.org
+
+============================================================
+
+📝 HOW TO USE:
+  1. Select the domain list above (click & drag)
+  2. Right-click → Copy (or Ctrl+C / Cmd+C)
+  3. Paste into "Custom Domains" field in SEB Generator
+
+============================================================
+```
+
+### Falls keine neuen Domains gefunden werden:
+
+```
+✅ NO NEW DOMAINS NEEDED!
+All captured domains are already in the preset.
+```
+
+Das bedeutet, Ihr Preset deckt bereits alles ab - keine zusätzlichen Domains nötig!
 
 ---
 

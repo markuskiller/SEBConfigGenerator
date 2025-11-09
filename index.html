@@ -608,31 +608,64 @@ function copyDomains() {
 // BROWSER HELPER FUNCTIONALITY
 // ============================================================================
 function showBrowserHelper() {
-    const script = `// SEB Domain Capture Script
+    // Get current preset domains for filtering
+    const currentPreset = document.getElementById('preset').value;
+    const presetDomains = PRESETS[currentPreset] || [];
+    const presetDomainsJSON = JSON.stringify(presetDomains);
+    
+    const script = `// SEB Domain Capture Script - Run AFTER fully logging in and using the service
 (function() {
     console.clear();
     console.log('%c🛡️ SEB Domain Capture', 'font-size:20px; color:#5e72e4; font-weight:bold;');
     console.log('%c' + '='.repeat(60), 'color:#ccc;');
     
-    const domains = new Set();
+    // Preset domains from current configuration
+    const presetDomains = ${presetDomainsJSON};
+    const presetSet = new Set(presetDomains.map(d => d.toLowerCase()));
     
+    const allDomains = new Set();
+    
+    // Capture all network requests
     performance.getEntries().forEach(entry => {
         try {
             const url = new URL(entry.name);
             if (url.hostname && !url.hostname.match(/^(localhost|127\\\\.0\\\\.0\\\\.1|::1)$/)) {
-                domains.add(url.hostname);
+                allDomains.add(url.hostname.toLowerCase());
             }
         } catch (e) {}
     });
     
-    const sorted = [...domains].sort();
+    // Filter out domains already in preset
+    const newDomains = [...allDomains].filter(domain => {
+        // Check exact match
+        if (presetSet.has(domain)) return false;
+        
+        // Check if domain matches any preset wildcard
+        for (let preset of presetDomains) {
+            if (preset.startsWith('*.')) {
+                const suffix = preset.substring(1); // Remove *
+                if (domain.endsWith(suffix) || domain === suffix.substring(1)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }).sort();
     
-    console.log(\`\\n📊 Found \${sorted.length} unique domains:\\n\`);
-    sorted.forEach(domain => console.log(\`  \${domain}\`));
-    console.log('\\n' + '='.repeat(60));
+    console.log(\`\\n📊 Total captured: \${allDomains.size} domains\`);
+    console.log(\`✓ Already in preset: \${allDomains.size - newDomains.length} domains\`);
+    console.log(\`🆕 New domains found: \${newDomains.length} domains\\n\`);
     
+    if (newDomains.length === 0) {
+        console.log('%c✅ NO NEW DOMAINS NEEDED!', 'color:#2dce89; font-size:18px; font-weight:bold;');
+        console.log('%cAll captured domains are already in the preset.', 'color:#666;');
+        console.log('\\n' + '='.repeat(60) + '\\n');
+        return;
+    }
+    
+    // Generate wildcards for new domains only
     const wildcards = new Set();
-    sorted.forEach(domain => {
+    newDomains.forEach(domain => {
         const parts = domain.split('.');
         if (parts.length > 2) {
             wildcards.add('*.' + parts.slice(-2).join('.'));
@@ -641,20 +674,18 @@ function showBrowserHelper() {
         }
     });
     
-    console.log(\`\\n🌟 Recommended wildcards (\${wildcards.size} domains):\\n\`);
-    [...wildcards].sort().forEach(domain => console.log(\`  \${domain}\`));
+    const output = [...wildcards].sort().join('\\n');
+    
+    console.log('='.repeat(60));
+    console.log('%c📋 COPY THESE NEW DOMAINS:', 'color:#f5365c; font-size:16px; font-weight:bold;');
+    console.log('='.repeat(60) + '\\n');
+    console.log(output);
     console.log('\\n' + '='.repeat(60));
     
-    const output = sorted.join('\\n');
-    
-    navigator.clipboard.writeText(output).then(() => {
-        console.log('\\n%c✓ COPIED TO CLIPBOARD!', 'color:green; font-size:16px; font-weight:bold;');
-        console.log('%cPaste into "Custom Domains" field', 'color:#666; font-style:italic;');
-    }).catch(() => {
-        console.log('\\n%c⚠️ Could not auto-copy. Copy manually:', 'color:orange; font-weight:bold;');
-        console.log('\\n' + output);
-    });
-    
+    console.log('\\n%c📝 HOW TO USE:', 'color:#5e72e4; font-weight:bold;');
+    console.log('  1. Select the domain list above (click & drag)');
+    console.log('  2. Right-click → Copy (or Ctrl+C / Cmd+C)');
+    console.log('  3. Paste into "Custom Domains" field in SEB Generator');
     console.log('\\n' + '='.repeat(60) + '\\n');
 })();`;
 
@@ -665,13 +696,16 @@ function showBrowserHelper() {
             title: '🌐 Browser-basierte Domain-Erfassung',
             method1: 'Methode 1: Console Script (Empfohlen)',
             method1Steps: [
+                '⚠️ WICHTIG: Zuerst Browser-Cache leeren (Strg+Shift+Entf / Cmd+Shift+Entf)',
                 '1. Öffnen Sie den Dienst (z.B. OneNote) in einem neuen Tab',
-                '2. Drücken Sie F12 um DevTools zu öffnen',
-                '3. Gehen Sie zum Tab "Konsole"',
-                '4. Kopieren Sie das Skript unten und fügen Sie es ein',
-                '5. Drücken Sie Enter',
-                '6. Domains werden automatisch kopiert!',
-                '7. Fügen Sie sie ins Feld "Benutzerdefinierte Domains" ein'
+                '2. Nutzen Sie den Dienst vollständig (einloggen, arbeiten)',
+                '3. Drücken Sie F12 um DevTools zu öffnen',
+                '4. Gehen Sie zum Tab "Konsole"',
+                '5. Kopieren Sie das Skript unten und fügen Sie es ein',
+                '6. Drücken Sie Enter',
+                '7. Zeigt nur NEUE Domains (nicht bereits in Preset)',
+                '8. Wählen Sie die Domains aus und kopieren Sie sie manuell',
+                '9. Fügen Sie sie ins Feld "Benutzerdefinierte Domains" ein'
             ],
             method2: 'Methode 2: Bookmarklet',
             method2Steps: [
@@ -692,13 +726,16 @@ function showBrowserHelper() {
             title: '🌐 Browser-Based Domain Capture',
             method1: 'Method 1: Console Script (Recommended)',
             method1Steps: [
+                '⚠️ IMPORTANT: First clear browser cache (Ctrl+Shift+Delete / Cmd+Shift+Delete)',
                 '1. Open your service (e.g., OneNote) in a new tab',
-                '2. Press F12 to open DevTools',
-                '3. Go to the "Console" tab',
-                '4. Copy the script below and paste it',
-                '5. Press Enter',
-                '6. Domains will be automatically copied!',
-                '7. Paste them into the "Custom Domains" field'
+                '2. Use the service fully (login, work normally)',
+                '3. Press F12 to open DevTools',
+                '4. Go to the "Console" tab',
+                '5. Copy the script below and paste it',
+                '6. Press Enter',
+                '7. Shows only NEW domains (not already in preset)',
+                '8. Select the domains and copy them manually',
+                '9. Paste them into the "Custom Domains" field'
             ],
             method2: 'Method 2: Bookmarklet',
             method2Steps: [
