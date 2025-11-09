@@ -366,6 +366,11 @@
             <div style="margin-top: 20px; padding: 12px 20px; background: rgba(45, 206, 137, 0.15); border: 2px solid rgba(45, 206, 137, 0.4); border-radius: 8px; color: #f5f7fb; font-size: 0.9em; line-height: 1.6;">
                 <strong>🔒 <span data-i18n="privacyTitle">Datenschutz:</span></strong> <span data-i18n="privacyText">Alle Daten werden ausschließlich lokal in Ihrem Browser verarbeitet. Es werden keine Konfigurationsdaten oder Eingaben an unseren Server gesendet oder gespeichert. Nur Ihre Sprachpräferenz wird lokal im Browser gespeichert.</span>
             </div>
+            <p style="margin-top: 15px; text-align: center;">
+                <a href="https://github.com/markuskiller/SEBConfigGenerator/issues/new" target="_blank" rel="noopener noreferrer" style="color: #f5f7fb; text-decoration: none; opacity: 0.9; font-size: 0.9em; border: 1px solid rgba(245, 247, 251, 0.3); padding: 6px 14px; border-radius: 6px; display: inline-block;">
+                    💡 <span data-i18n="suggestService">Dienst oder Hilfsmittel vorschlagen</span>
+                </a>
+            </p>
         </div>
         <div class="content">
             <div class="section">
@@ -579,6 +584,7 @@ const TRANSLATIONS = {
         // Privacy
         privacyTitle: "Datenschutz:",
         privacyText: "Alle Daten werden ausschließlich lokal in Ihrem Browser verarbeitet. Es werden keine Konfigurationsdaten oder Eingaben an unseren Server gesendet oder gespeichert. Nur Ihre Sprachpräferenz wird lokal im Browser gespeichert.",
+        suggestService: "Dienst oder Hilfsmittel vorschlagen",
         
         // Version info
         versionLabel: "Version",
@@ -677,6 +683,7 @@ const TRANSLATIONS = {
         // Privacy
         privacyTitle: "Privacy:",
         privacyText: "All data is processed locally in your browser. No configuration data or inputs are sent to or stored on our server. Only your language preference is saved locally in your browser.",
+        suggestService: "Suggest Service or Tool",
         
         // Version info
         versionLabel: "Version",
@@ -772,8 +779,8 @@ const SECURITY_LEVELS = {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.';
-const BUILD_DATE = new Date('2025-11-09T23:28:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.8';
+const BUILD_DATE = new Date('2025-11-09T23:40:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
