@@ -8,9 +8,10 @@
         /* ============================================================================
            COLOR PALETTE - Marine Blue Theme (#0B173C)
            ============================================================================
-           Primary: #0B173C (Navy Dark), #1a2b5e (Navy Medium), #4A90E2 (Sky Blue)
-           Accent: #3DD5F3 (Cyan), #2dce89 (Success Green), #fb6340 (Warning Orange)
-           Neutrals: #ffffff (White), #f8f9fa (Light Gray), #8898aa (Medium Gray)
+           Primary: #0B173C (Navy Dark), #1a2b5e (Navy Medium), #2c5aa0 (Medium Blue)
+           Accent: #1e88e5 (Blue Accent), #2dce89 (Success Green), #fb6340 (Warning Orange)
+           Neutrals: #b9bdc1 (Light Gray Background), #e8ecf1 (Border Gray), #c5cdd8 (Version Text)
+           Text: #0B173C (Navy Dark), #1a2b5e (Navy Medium), #525f7f (Text Gray)
            ============================================================================ */
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -25,7 +26,7 @@
         .container { 
             max-width: 1000px; 
             margin: 0 auto; 
-            background: white; 
+            background: #b9bdc1; 
             border-radius: 12px; 
             box-shadow: 0 20px 60px rgba(11, 23, 60, 0.4); 
             overflow: hidden; 
@@ -64,9 +65,9 @@
         }
         
         .lang-btn.active { 
-            background: #3DD5F3; 
-            color: #0B173C; 
-            border-color: #3DD5F3; 
+            background: #1e88e5; 
+            color: white; 
+            border-color: #1e88e5; 
         }
         
         .header h1 { 
@@ -91,7 +92,7 @@
             color: #0B173C; 
             margin-bottom: 20px; 
             padding-bottom: 10px; 
-            border-bottom: 2px solid #3DD5F3; 
+            border-bottom: 2px solid #2c5aa0; 
         }
         
         .form-group { 
@@ -121,8 +122,8 @@
         textarea:focus, 
         select:focus { 
             outline: none; 
-            border-color: #4A90E2; 
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1); 
+            border-color: #2c5aa0; 
+            box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1); 
         }
         
         textarea { 
@@ -140,7 +141,7 @@
         
         .preset-btn { 
             padding: 15px; 
-            border: 2px solid #e9ecef; 
+            border: 2px solid #e8ecf1; 
             border-radius: 8px; 
             background: white; 
             cursor: pointer; 
@@ -149,16 +150,16 @@
         }
         
         .preset-btn:hover { 
-            border-color: #4A90E2; 
+            border-color: #2c5aa0; 
             background: #f8faff; 
             transform: translateY(-2px); 
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2); 
+            box-shadow: 0 4px 12px rgba(44, 90, 160, 0.2); 
         }
         
         .preset-btn.active { 
-            border-color: #3DD5F3; 
-            background: linear-gradient(135deg, #e8f7fc 0%, #f0f9ff 100%); 
-            box-shadow: 0 0 0 3px rgba(61, 213, 243, 0.1); 
+            border-color: #1e88e5; 
+            background: linear-gradient(135deg, #e3f2fd 0%, #f0f9ff 100%); 
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.15); 
         }
         
         .preset-btn h3 { 
@@ -183,7 +184,7 @@
             height: 20px; 
             margin-right: 10px; 
             cursor: pointer; 
-            accent-color: #4A90E2; 
+            accent-color: #2c5aa0; 
         }
         
         .security-level { 
@@ -195,7 +196,7 @@
         .security-option { 
             flex: 1; 
             padding: 20px; 
-            border: 2px solid #e9ecef; 
+            border: 2px solid #e8ecf1; 
             border-radius: 8px; 
             cursor: pointer; 
             transition: all 0.3s; 
@@ -203,14 +204,14 @@
         }
         
         .security-option:hover { 
-            border-color: #4A90E2; 
+            border-color: #2c5aa0; 
             background: #f8faff; 
         }
         
         .security-option.active { 
-            border-color: #3DD5F3; 
-            background: linear-gradient(135deg, #e8f7fc 0%, #f0f9ff 100%); 
-            box-shadow: 0 0 0 3px rgba(61, 213, 243, 0.1); 
+            border-color: #1e88e5; 
+            background: linear-gradient(135deg, #e3f2fd 0%, #f0f9ff 100%); 
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.15); 
         }
         
         .security-option h4 { 
@@ -237,14 +238,14 @@
         }
         
         .btn-primary { 
-            background: linear-gradient(135deg, #4A90E2 0%, #3DD5F3 100%); 
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e88e5 100%); 
             color: white; 
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3); 
+            box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3); 
         }
         
         .btn-primary:hover { 
             transform: translateY(-2px); 
-            box-shadow: 0 10px 20px rgba(74, 144, 226, 0.4); 
+            box-shadow: 0 10px 20px rgba(44, 90, 160, 0.4); 
         }
         
         .btn-secondary { 
@@ -254,8 +255,8 @@
         }
         
         .btn-secondary:hover { 
-            background: #e9ecef; 
-            border-color: #4A90E2; 
+            background: #e8ecf1; 
+            border-color: #2c5aa0; 
         }
         
         .actions { 
@@ -266,8 +267,8 @@
         }
         
         .info-box { 
-            background: linear-gradient(135deg, #e8f7fc 0%, #f0f9ff 100%); 
-            border-left: 4px solid #3DD5F3; 
+            background: linear-gradient(135deg, #e3f2fd 0%, #f0f9ff 100%); 
+            border-left: 4px solid #2c5aa0; 
             padding: 15px; 
             margin-top: 20px; 
             border-radius: 4px; 
@@ -314,7 +315,7 @@
         .badge { 
             display: inline-block; 
             padding: 4px 10px; 
-            background: linear-gradient(135deg, #4A90E2 0%, #3DD5F3 100%); 
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e88e5 100%); 
             color: white; 
             border-radius: 12px; 
             font-size: 0.85em; 
@@ -327,7 +328,7 @@
         
         .doc-link:hover { 
             transform: translateY(-2px); 
-            box-shadow: 0 4px 12px rgba(61, 213, 243, 0.4); 
+            box-shadow: 0 4px 12px rgba(44, 90, 160, 0.4); 
             opacity: 1 !important; 
         }
         
@@ -447,17 +448,17 @@
                         </button>
                     </div>
                     <div style="margin-top: 15px; font-size: 0.9em;">
-                        <p style="margin-bottom: 8px; font-weight: 600; color: #5e72e4;">
+                        <p style="margin-bottom: 8px; font-weight: 600; color: #0B173C;">
                             <span data-i18n="helperDocsTitle">📖 Hilfe & Anleitungen:</span>
                         </p>
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <a href="#" id="browserCaptureLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #f0f3ff; color: #5e72e4; border: 2px solid #5e72e4; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                            <a href="#" id="browserCaptureLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #e3f2fd; color: #0B173C; border: 2px solid #2c5aa0; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
                                 🌐 <span data-i18n="browserCaptureLink">Browser Capture</span>
                             </a>
-                            <a href="#" id="quickstartLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #f0f3ff; color: #5e72e4; border: 2px solid #5e72e4; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                            <a href="#" id="quickstartLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #e3f2fd; color: #0B173C; border: 2px solid #2c5aa0; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
                                 🚀 <span data-i18n="quickstartLink">Schnellstart (Google Sites)</span>
                             </a>
-                            <a href="#" id="quickRefLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #f0f3ff; color: #5e72e4; border: 2px solid #5e72e4; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                            <a href="#" id="quickRefLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #e3f2fd; color: #0B173C; border: 2px solid #2c5aa0; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
                                 📋 <span data-i18n="quickRefLink">Schnellreferenz</span>
                             </a>
                         </div>
@@ -465,7 +466,7 @@
                 </div>
             </div>
         </div>
-        <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.7); font-size: 0.85em;">
+        <div style="text-align: center; padding: 20px; color: #c5cdd8; font-size: 0.85em;">
             <span id="versionInfo"></span>
         </div>
     </div>
