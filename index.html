@@ -111,7 +111,7 @@
                 </div>
                 <div class="info-box">
                     <h4 data-i18n="proTipTitle">💡 Profi-Tipp</h4>
-                    <p data-i18n="proTipText">Verwenden Sie Wildcards (*) um alle Subdomains zu erlauben. Zum Beispiel: <code>*.microsoft.com</code> erlaubt login.microsoft.com, account.microsoft.com, usw.</p>
+                    <p data-i18n="proTipText">Verwenden Sie Wildcards (*) um alle Subdomains zu erlauben. Zum Beispiel: <code>*.microsoft.com</code> erlaubt login.microsoft.com, account.microsoft.com, usw.<br><br><strong>Hinweis:</strong> Doppelte Domains werden automatisch entfernt.</p>
                 </div>
             </div>
             <div class="section">
@@ -187,7 +187,7 @@ const TRANSLATIONS = {
         customDomainsLabel: "Zusätzliche erlaubte Domains hinzufügen (eine pro Zeile)",
         customDomainsPlaceholder: "beispiel.de\n*.schule-domain.de",
         proTipTitle: "💡 Profi-Tipp",
-        proTipText: "Verwenden Sie Wildcards (*) um alle Subdomains zu erlauben. Zum Beispiel: *.microsoft.com erlaubt login.microsoft.com, account.microsoft.com, usw.",
+        proTipText: "Verwenden Sie Wildcards (*) um alle Subdomains zu erlauben. Zum Beispiel: *.microsoft.com erlaubt login.microsoft.com, account.microsoft.com, usw.<br><br><strong>Hinweis:</strong> Doppelte Domains werden automatisch entfernt.",
         allowedDomains: "Erlaubte Domains",
         downloadBtn: "📥 SEB Konfiguration herunterladen (.seb)",
         copyBtn: "📋 Domain-Liste kopieren",
@@ -241,7 +241,7 @@ const TRANSLATIONS = {
         customDomainsLabel: "Add additional allowed domains (one per line)",
         customDomainsPlaceholder: "example.com\n*.school-domain.edu",
         proTipTitle: "💡 Pro Tip",
-        proTipText: "Use wildcards (*) to allow all subdomains. For example: *.microsoft.com allows login.microsoft.com, account.microsoft.com, etc.",
+        proTipText: "Use wildcards (*) to allow all subdomains. For example: *.microsoft.com allows login.microsoft.com, account.microsoft.com, etc.<br><br><strong>Note:</strong> Duplicate domains are automatically removed.",
         allowedDomains: "Allowed Domains",
         downloadBtn: "📥 Download SEB Config (.seb)",
         copyBtn: "📋 Copy Domain List",
@@ -429,17 +429,49 @@ function getAllDomains() {
         .map(d => d.trim())
         .filter(d => d && !d.startsWith('#'));
     
-    return [...preset.domains, ...customDomains];
+    // Combine and remove duplicates (case-insensitive)
+    const allDomains = [...preset.domains, ...customDomains];
+    const uniqueDomains = [];
+    const seen = new Set();
+    
+    allDomains.forEach(domain => {
+        const lowerDomain = domain.toLowerCase();
+        if (!seen.has(lowerDomain)) {
+            seen.add(lowerDomain);
+            uniqueDomains.push(domain);
+        }
+    });
+    
+    return uniqueDomains;
 }
 
 function updatePreview() {
+    const preset = PRESETS[currentPreset];
+    const customDomains = document.getElementById('customDomains').value
+        .split('\n')
+        .map(d => d.trim())
+        .filter(d => d && !d.startsWith('#'));
+    
+    const allDomainsBeforeDedup = [...preset.domains, ...customDomains];
     const domains = getAllDomains();
+    const duplicatesRemoved = allDomainsBeforeDedup.length - domains.length;
+    
     const container = document.getElementById('domainPreview');
     document.getElementById('domainCount').textContent = domains.length;
     
-    container.innerHTML = domains
+    let html = domains
         .map(domain => `<div class="domain-item">${domain}</div>`)
         .join('');
+    
+    // Show warning if duplicates were removed
+    if (duplicatesRemoved > 0) {
+        const warningText = currentLang === 'de' 
+            ? `⚠️ ${duplicatesRemoved} doppelte Domain(s) wurden entfernt (bereits in Basis-Konfiguration enthalten)`
+            : `⚠️ ${duplicatesRemoved} duplicate domain(s) removed (already in base configuration)`;
+        html = `<div style="background:#fff3cd;border-left:4px solid #ffc107;padding:10px;margin-bottom:10px;border-radius:4px;color:#856404;font-size:0.9em;">${warningText}</div>` + html;
+    }
+    
+    container.innerHTML = html;
 }
 
 // ============================================================================
