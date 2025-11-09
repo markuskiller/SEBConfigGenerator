@@ -79,8 +79,11 @@
 3. **Add Custom Domains** (if needed):
    - One domain per line
    - Use wildcards: `*.example.com`
-4. **Download:** Click "Download SEB Config"
-5. **Import to SEB Config Tool**
+4. **Download Template:** Click "Download SEB Config (.seb)"
+5. **Finalize in Config Tool:**
+   - Import template into SEB Config Tool
+   - Add passwords and encryption
+   - Save encrypted final version
 6. **Test with student account!**
 
 ### Advanced: Network Capture
@@ -158,21 +161,26 @@ Add to header section:
 
 ## 📖 Using the Generated Configs
 
-### Method 1: SEB Config Tool (Recommended)
+### Complete Workflow (Required)
 
-1. Download [SEB Config Tool](https://safeexambrowser.org/)
-2. Open the tool
-3. File → Open → Select your `.json` file
-4. Review settings
-5. File → Save → Export as `.seb`
-6. Distribute `.seb` file to students
+1. **Download template** from the generator (`.seb` file)
+2. **Import into SEB Config Tool:**
+   - Download [SEB Config Tool](https://safeexambrowser.org/)
+   - File → Open → Select your `.seb` template
+3. **Refine settings:**
+   - Add administrator password
+   - Add quit password
+   - Configure additional restrictions
+4. **Encrypt the configuration:**
+   - Configure → Encrypt with password or certificate
+   - This prevents students from modifying settings
+5. **Save final version:**
+   - File → Save As → `YourService_Final.seb`
+6. **Distribute encrypted `.seb` file** to students (email/LMS)
+7. **Students double-click** the `.seb` file
+8. **SEB starts** with the secure configuration
 
-### Method 2: Direct JSON Import
-
-Some SEB versions can import JSON directly:
-1. Copy `.json` to student machines
-2. Open SEB
-3. Import configuration
+**Important:** Never distribute the unencrypted template directly to students!
 
 ---
 

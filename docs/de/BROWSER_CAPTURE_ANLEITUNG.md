@@ -279,7 +279,8 @@ javascript:(function(){const domains=new Set();performance.getEntries().forEach(
 15. ✓ Domains in Zwischenablage kopiert!
 16. Zum SEB Konfigurations-Generator gehen
 17. In Feld "Benutzerdefinierte Domains" einfügen
-18. Konfiguration generieren
+18. .seb-Konfigurationsdatei herunterladen
+19. Testen!
 ```
 
 ---
@@ -290,9 +291,10 @@ Nach Erfassung der Domains:
 
 1. **In SEB Konfigurations-Generator einfügen**
 2. **Domain-Liste in der Vorschau prüfen** (sollte vernünftig aussehen)
-3. **JSON-Konfiguration herunterladen**
-4. **Mit SEB Config Tool testen**
-5. **Mit Schüler-Account verifizieren** im echten SEB-Browser
+3. **.seb-Vorlage herunterladen**
+4. **Ins SEB Config Tool importieren**
+5. **Verfeinern, verschlüsseln und finale Version speichern**
+6. **Mit Schüler-Account verifizieren** im SEB-Browser
 
 ---
 

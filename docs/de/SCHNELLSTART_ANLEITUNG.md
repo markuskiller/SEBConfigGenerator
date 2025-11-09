@@ -42,19 +42,27 @@ Aktivieren Sie, was Schüler*innen benötigen:
 | Vor/Zurück | ✅ Für mehrseitige Dokumente |
 
 ### 5. Konfiguration herunterladen
-Klicken Sie auf: **"SEB Konfiguration herunterladen (.json)"**
+Klicken Sie auf: **"SEB Konfiguration herunterladen (.seb)"**
 
-Speichert als: `OneNote_Config.json` (oder ähnlich)
+Speichert als: `OneNote_Config.seb` (oder ähnlich)
 
-### 6. In SEB Config Tool importieren
+### 6. Im SEB Config Tool importieren und finalisieren
 
-Sie benötigen das [SEB Config Tool](https://safeexambrowser.org/download_de.html) (einmalige Einrichtung):
+Die heruntergeladene `.seb`-Datei ist eine Vorlage, die verfeinert werden muss:
 
-1. Öffnen Sie **SEB Config Tool**
-2. **Datei → Öffnen** → Wählen Sie Ihre `.json`-Datei
-3. Überprüfen Sie die Einstellungen (sollten korrekt aussehen!)
-4. **Datei → Speichern unter** → Als `.seb`-Datei speichern
-5. Diese `.seb`-Datei geben Sie an Schüler*innen weiter
+1. [SEB Config Tool](https://safeexambrowser.org/download_de.html) herunterladen (einmalige Einrichtung)
+2. **SEB Config Tool** öffnen
+3. **Datei → Öffnen** → Ihre heruntergeladene `.seb`-Datei wählen
+4. **Einstellungen überprüfen und verfeinern:**
+   - Administrator-Passwort hinzufügen
+   - Beenden-Passwort hinzufügen (falls gewünscht)
+   - Zusätzliche Einschränkungen konfigurieren
+5. **Konfiguration verschlüsseln:**
+   - Konfigurieren → Mit Passwort oder Zertifikat verschlüsseln
+6. **Als finale .seb-Datei speichern:**
+   - Datei → Speichern unter → `OneNote_Final.seb`
+
+**Wichtig:** Nur die verschlüsselte, finalisierte `.seb`-Datei an Schüler*innen verteilen!
 
 ### 7. An Schüler*innen verteilen
 
@@ -67,9 +75,11 @@ Hallo zusammen,
 für die Aktivität am Dienstag benötigt ihr Safe Exam Browser:
 
 1. SEB herunterladen: https://safeexambrowser.org/download_de.html
-2. Config-Datei herunterladen: [YourConfig.seb anhängen]
-3. Doppelklick auf die Config-Datei, um SEB zu öffnen
-4. Mit eurem Schul-Account anmelden
+2. Config-Datei herunterladen: [OneNote_Final.seb anhängen]
+3. Doppelklick auf die .seb-Datei - SEB startet automatisch
+4. Mit eurem Schul-Account anmelden, wenn ihr dazu aufgefordert werdet
+
+Hinweis: Die Konfigurationsdatei ist zu eurer Sicherheit verschlüsselt.
 
 Bis Dienstag!
 ```
@@ -191,7 +201,13 @@ A: **Nein.** Verwenden Sie dies für Unterrichtsarbeit, nicht für Prüfungen mi
 A: Haben Sie Papier-Arbeitsblätter als Backup, oder nutzen Sie Schulcomputer
 
 **F: Kann ich eine bestehende Konfiguration bearbeiten?**
-A: Ja! Öffnen Sie die `.json`-Datei erneut im Tool (Drag & Drop)
+A: Ja! Öffnen Sie die `.seb`-Datei im SEB Config Tool, um Änderungen vorzunehmen
+
+**F: Brauche ich das SEB Config Tool?**
+A: **Ja!** Der Generator erstellt eine Vorlage, die im Config Tool verfeinert, verschlüsselt und finalisiert werden muss, bevor sie verteilt wird.
+
+**F: Warum muss ich die Konfiguration verschlüsseln?**
+A: Verschlüsselung verhindert, dass Schüler*innen die Einstellungen ändern und stellt sicher, dass die Konfiguration nicht einfach umgangen werden kann.
 
 ---
 
@@ -265,11 +281,15 @@ A: Ja! Öffnen Sie die `.json`-Datei erneut im Tool (Drag & Drop)
 
 ## Checkliste: Vor dem Unterricht
 
+- [ ] `.seb`-Vorlage vom Generator heruntergeladen
+- [ ] Konfiguration ins SEB Config Tool importiert
+- [ ] Einstellungen verfeinert (Passwörter, Einschränkungen)
+- [ ] Konfiguration verschlüsselt
+- [ ] Finale `.seb`-Datei gespeichert
 - [ ] Konfiguration mit Schüler-Account getestet
-- [ ] `.seb`-Datei erstellt und gespeichert
 - [ ] Schüler*innen über SEB-Anforderung informiert
 - [ ] SEB-Download-Link geteilt
-- [ ] Config-Datei verteilt (E-Mail/LMS)
+- [ ] Verschlüsselte `.seb`-Datei verteilt (E-Mail/LMS)
 - [ ] Papier-Backup vorbereitet
 - [ ] Auf Schulnetzwerk getestet
 - [ ] Anweisungen für Unterricht bereit
@@ -278,9 +298,14 @@ A: Ja! Öffnen Sie die `.json`-Datei erneut im Tool (Drag & Drop)
 
 ## Zeitinvestition
 
-**Erstes Mal:** 30-60 Minuten (inkl. Testen)
-**Nachfolgende Nutzung:** 5 Minuten (bestehende Konfigurationen wiederverwenden)
+**Erstes Mal:** 30-45 Minuten (inkl. Config Tool Einrichtung und Testen)
+**Nachfolgende Nutzung:** 5-10 Minuten (bestehende Konfigurationen anpassen)
 **ROI:** Massive Reduktion von Ablenkungsverhalten
+
+**Aufschlüsselung:**
+- Generator: 5 Minuten (Vorlage erstellen)
+- Config Tool: 15-20 Minuten (verfeinern, verschlüsseln, testen)
+- Testen: 10-20 Minuten (mit Schüler-Account verifizieren)
 
 ---
 

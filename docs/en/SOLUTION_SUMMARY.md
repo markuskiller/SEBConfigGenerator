@@ -31,8 +31,10 @@ seb-config-generator/
 ### What It Does
 1. Provides preset configurations for common educational services (OneNote, Word, Google Docs, etc.)
 2. Lets teachers customize security levels and options
-3. Generates SEB config files (.json) that can be converted to .seb
-4. Includes network capture workflow for advanced troubleshooting
+3. Generates SEB config templates (.seb) for import into SEB Config Tool
+4. Includes browser-based and PowerShell network capture tools
+
+**Important:** Generated files are templates that must be finalized and encrypted in SEB Config Tool before distribution.
 
 ---
 
@@ -111,7 +113,7 @@ seb-config-generator/
 - 3 security levels (Relaxed, Balanced, Strict)
 - Custom domain whitelisting
 - Real-time domain preview
-- One-click JSON export
+- One-click .seb file download
 - Mobile-responsive design
 
 ### Security

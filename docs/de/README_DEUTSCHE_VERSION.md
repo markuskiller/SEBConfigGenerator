@@ -57,11 +57,11 @@ Alle Dateien sind nun verfügbar mit vollständiger deutscher Übersetzung!
    - Optionen aktivieren
    - "SEB Konfiguration herunterladen" klicken
 
-3. **In SEB importieren:**
-   - SEB Config Tool öffnen
-   - JSON-Datei importieren
-   - Als .seb exportieren
-   - An Schüler*innen verteilen
+3. **Im Config Tool finalisieren:**
+   - .seb-Vorlage wird heruntergeladen
+   - Im SEB Config Tool importieren
+   - Verfeinern und verschlüsseln
+   - Verschlüsselte .seb-Datei an Schüler*innen verteilen
 
 **Detaillierte Anleitung:** Siehe `SCHNELLSTART_ANLEITUNG.md`
 

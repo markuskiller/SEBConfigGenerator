@@ -122,7 +122,7 @@
                 </div>
                 <div class="actions">
                     <button class="btn btn-primary" id="generateBtn">
-                        <span data-i18n="downloadBtn">📥 SEB Konfiguration herunterladen (.json)</span>
+                        <span data-i18n="downloadBtn">📥 SEB Konfiguration herunterladen (.seb)</span>
                     </button>
                     <button class="btn btn-secondary" id="copyBtn">
                         <span data-i18n="copyBtn">📋 Domain-Liste kopieren</span>
@@ -131,11 +131,11 @@
                 <div class="info-box">
                     <h4 data-i18n="nextStepsTitle">Nächste Schritte</h4>
                     <p data-i18n="nextStepsText">
-                        1. JSON-Konfigurationsdatei herunterladen<br>
-                        2. Safe Exam Browser Config Tool öffnen<br>
-                        3. JSON-Datei importieren<br>
-                        4. Mit Schüler-Account testen<br>
-                        5. Als .seb-Datei zur Verteilung exportieren
+                        1. SEB-Konfigurationsdatei herunterladen (.seb)<br>
+                        2. Im SEB Config Tool öffnen<br>
+                        3. Einstellungen verfeinern und verschlüsseln<br>
+                        4. Als finale .seb-Datei speichern<br>
+                        5. Verschlüsselte Datei an Schüler*innen verteilen
                     </p>
                 </div>
                 <div class="info-box">
@@ -189,10 +189,10 @@ const TRANSLATIONS = {
         proTipTitle: "💡 Profi-Tipp",
         proTipText: "Verwenden Sie Wildcards (*) um alle Subdomains zu erlauben. Zum Beispiel: *.microsoft.com erlaubt login.microsoft.com, account.microsoft.com, usw.",
         allowedDomains: "Erlaubte Domains",
-        downloadBtn: "📥 SEB Konfiguration herunterladen (.json)",
+        downloadBtn: "📥 SEB Konfiguration herunterladen (.seb)",
         copyBtn: "📋 Domain-Liste kopieren",
         nextStepsTitle: "Nächste Schritte",
-        nextStepsText: "1. JSON-Konfigurationsdatei herunterladen<br>2. Safe Exam Browser Config Tool öffnen<br>3. JSON-Datei importieren<br>4. Mit Schüler-Account testen<br>5. Als .seb-Datei zur Verteilung exportieren",
+        nextStepsText: "1. SEB-Konfigurationsdatei herunterladen (.seb)<br>2. Im SEB Config Tool öffnen<br>3. Einstellungen verfeinern und verschlüsseln<br>4. Als finale .seb-Datei speichern<br>5. Verschlüsselte Datei an Schüler*innen verteilen",
         helperScriptTitle: "Network Capture Helper",
         helperScriptText: "Benötigen Sie Hilfe beim Erfassen von Netzwerk-Domains? Wählen Sie die passende Methode für Ihr System:",
         downloadHelperBtn: "⬇️ PowerShell (Windows)",
@@ -243,10 +243,10 @@ const TRANSLATIONS = {
         proTipTitle: "💡 Pro Tip",
         proTipText: "Use wildcards (*) to allow all subdomains. For example: *.microsoft.com allows login.microsoft.com, account.microsoft.com, etc.",
         allowedDomains: "Allowed Domains",
-        downloadBtn: "📥 Download SEB Config (.json)",
+        downloadBtn: "📥 Download SEB Config (.seb)",
         copyBtn: "📋 Copy Domain List",
         nextStepsTitle: "Next Steps",
-        nextStepsText: "1. Download the JSON configuration file<br>2. Open Safe Exam Browser Config Tool<br>3. Import the JSON file<br>4. Test with a student account<br>5. Export as .seb file for distribution",
+        nextStepsText: "1. Download the SEB configuration file (.seb)<br>2. Open in SEB Config Tool<br>3. Refine settings and encrypt<br>4. Save as final .seb file<br>5. Distribute encrypted file to students",
         helperScriptTitle: "Network Capture Helper",
         helperScriptText: "Need help capturing network domains? Choose the method that works for your system:",
         downloadHelperBtn: "⬇️ PowerShell (Windows)",
@@ -443,54 +443,119 @@ function updatePreview() {
 }
 
 // ============================================================================
-// CONFIG GENERATION
+// CONFIG GENERATION - XML (PLIST)
 // ============================================================================
-function generateConfig() {
+function generateConfigXML() {
     const preset = PRESETS[currentPreset];
     const securitySettings = SECURITY_LEVELS[currentSecurityLevel].settings;
     const domains = getAllDomains();
+    const startUrl = document.getElementById('startUrl').value;
     
-    return {
-        originatorVersion: "3.7.0",
-        startURL: document.getElementById('startUrl').value,
-        browserViewMode: securitySettings.browserViewMode,
-        enableZoomText: true,
-        enableZoomPage: true,
-        allowQuit: securitySettings.allowQuit,
-        allowBrowsingBackForward: document.getElementById('allowBackForward').checked,
-        enableBrowserWindowToolbar: securitySettings.enableBrowserWindowToolbar,
-        showReloadButton: document.getElementById('showReloadButton').checked,
-        showMenuBar: securitySettings.showMenuBar,
-        urlFilterEnable: true,
-        urlFilterEnableContentFilter: false,
-        urlFilterRules: domains.map(domain => ({
-            active: true,
-            regex: false,
-            expression: domain,
-            action: 1
-        })),
-        allowSwitchToApplications: securitySettings.allowSwitchToApplications,
-        allowFlashFullscreen: false,
-        enablePlugIns: true,
-        allowVideoCapture: false,
-        allowAudioCapture: false,
-        allowSpellCheck: document.getElementById('allowSpellCheck').checked,
-        allowDictionaryLookup: false,
-        allowDownUploads: document.getElementById('allowDownloads').checked,
-        enableSebBrowser: true,
-        removeBrowserProfile: false,
-        allowPreferencesWindow: false
-    };
+    // Build URL filter rules XML
+    let urlFilterRulesXML = '';
+    domains.forEach(domain => {
+        urlFilterRulesXML += `\t\t<dict>
+\t\t\t<key>action</key>
+\t\t\t<integer>1</integer>
+\t\t\t<key>active</key>
+\t\t\t<true/>
+\t\t\t<key>expression</key>
+\t\t\t<string>${escapeXML(domain)}</string>
+\t\t\t<key>regex</key>
+\t\t\t<false/>
+\t\t</dict>
+`;
+    });
+    
+    // Generate complete plist XML
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+\t<key>URLFilterEnable</key>
+\t<${urlFilterRulesXML.length > 0 ? 'true' : 'false'}/>
+\t<key>URLFilterEnableContentFilter</key>
+\t<false/>
+\t<key>URLFilterRules</key>
+\t<array>
+${urlFilterRulesXML}\t</array>
+\t<key>allowAudioCapture</key>
+\t<false/>
+\t<key>allowBrowsingBackForward</key>
+\t<${document.getElementById('allowBackForward').checked ? 'true' : 'false'}/>
+\t<key>allowDictionaryLookup</key>
+\t<false/>
+\t<key>allowDownUploads</key>
+\t<${document.getElementById('allowDownloads').checked ? 'true' : 'false'}/>
+\t<key>allowDownloads</key>
+\t<${document.getElementById('allowDownloads').checked ? 'true' : 'false'}/>
+\t<key>allowFlashFullscreen</key>
+\t<false/>
+\t<key>allowPreferencesWindow</key>
+\t<false/>
+\t<key>allowQuit</key>
+\t<${securitySettings.allowQuit ? 'true' : 'false'}/>
+\t<key>allowSpellCheck</key>
+\t<${document.getElementById('allowSpellCheck').checked ? 'true' : 'false'}/>
+\t<key>allowSwitchToApplications</key>
+\t<${securitySettings.allowSwitchToApplications ? 'true' : 'false'}/>
+\t<key>allowVideoCapture</key>
+\t<false/>
+\t<key>browserViewMode</key>
+\t<integer>${securitySettings.browserViewMode}</integer>
+\t<key>browserWindowAllowReload</key>
+\t<${document.getElementById('showReloadButton').checked ? 'true' : 'false'}/>
+\t<key>enableBrowserWindowToolbar</key>
+\t<${securitySettings.enableBrowserWindowToolbar ? 'true' : 'false'}/>
+\t<key>enablePlugIns</key>
+\t<true/>
+\t<key>enableSebBrowser</key>
+\t<true/>
+\t<key>enableZoomPage</key>
+\t<true/>
+\t<key>enableZoomText</key>
+\t<true/>
+\t<key>examSessionClearCookiesOnEnd</key>
+\t<true/>
+\t<key>examSessionClearCookiesOnStart</key>
+\t<true/>
+\t<key>newBrowserWindowAllowReload</key>
+\t<${document.getElementById('showReloadButton').checked ? 'true' : 'false'}/>
+\t<key>originatorVersion</key>
+\t<string>SEB_Generator_1.0</string>
+\t<key>removeBrowserProfile</key>
+\t<false/>
+\t<key>showMenuBar</key>
+\t<${securitySettings.showMenuBar ? 'true' : 'false'}/>
+\t<key>showReloadButton</key>
+\t<${document.getElementById('showReloadButton').checked ? 'true' : 'false'}/>
+\t<key>startURL</key>
+\t<string>${escapeXML(startUrl)}</string>
+\t<key>touchOptimized</key>
+\t<false/>
+</dict>
+</plist>`;
+    
+    return xml;
+}
+
+function escapeXML(str) {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
 }
 
 function downloadConfig() {
-    const config = generateConfig();
+    const configXML = generateConfigXML();
     const configName = document.getElementById('configName').value || 'SEB_Config';
-    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const blob = new Blob([configXML], { type: 'application/xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${configName}.json`;
+    a.download = `${configName}.seb`;
     a.click();
     URL.revokeObjectURL(url);
 }

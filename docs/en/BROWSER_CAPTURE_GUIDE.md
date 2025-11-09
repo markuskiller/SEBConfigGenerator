@@ -279,7 +279,8 @@ javascript:(function(){const domains=new Set();performance.getEntries().forEach(
 15. ✓ Domains copied to clipboard!
 16. Go to SEB Config Generator
 17. Paste into "Custom Domains" field
-18. Generate config
+18. Download .seb config file
+19. Test it!
 ```
 
 ---
@@ -290,9 +291,10 @@ After capturing domains:
 
 1. **Paste into SEB Config Generator**
 2. **Preview the domain list** (make sure it looks reasonable)
-3. **Download JSON config**
-4. **Test with SEB Config Tool**
-5. **Verify with student account** in actual SEB browser
+3. **Download .seb template**
+4. **Import into SEB Config Tool**
+5. **Refine, encrypt, and save final version**
+6. **Test with student account** in SEB browser
 
 ---
 

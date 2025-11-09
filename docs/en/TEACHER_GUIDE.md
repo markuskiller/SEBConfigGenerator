@@ -42,19 +42,27 @@ Check what students need:
 | Back/Forward | ✅ For multi-page documents |
 
 ### 5. Download Config
-Click: **"Download SEB Config (.json)"**
+Click: **"Download SEB Config (.seb)"**
 
-Saves as: `OneNote_Config.json` (or similar)
+Saves as: `OneNote_Config.seb` (or similar)
 
-### 6. Import to SEB Config Tool
+### 6. Import and Finalize in SEB Config Tool
 
-You need the [SEB Config Tool](https://safeexambrowser.org/download_en.html) (one-time setup):
+The downloaded `.seb` file is a template that must be refined:
 
-1. Open **SEB Config Tool**
-2. **File → Open** → Select your `.json` file
-3. Review the settings (they should look right!)
-4. **File → Save As** → Save as `.seb` file
-5. This `.seb` file is what you give students
+1. Download [SEB Config Tool](https://safeexambrowser.org/download_en.html) (one-time setup)
+2. Open **SEB Config Tool**
+3. **File → Open** → Select your downloaded `.seb` file
+4. **Review and refine settings:**
+   - Add administrator password
+   - Add quit password (if needed)
+   - Configure additional restrictions
+5. **Encrypt the configuration:**
+   - Configure → Encrypt with password or certificate
+6. **Save as final .seb file:**
+   - File → Save As → `OneNote_Final.seb`
+
+**Important:** Only distribute the encrypted, finalized `.seb` file to students!
 
 ### 7. Distribute to Students
 
@@ -67,9 +75,11 @@ Hi everyone,
 For Tuesday's class activity, you'll need Safe Exam Browser:
 
 1. Download SEB: https://safeexambrowser.org/download_en.html
-2. Download config file: [attach YourConfig.seb]
-3. Double-click the config file to open SEB
-4. Log in with your school account
+2. Download config file: [attach OneNote_Final.seb]
+3. Double-click the .seb file - SEB will start automatically
+4. Log in with your school account when prompted
+
+Note: The config file is encrypted for your security.
 
 See you Tuesday!
 ```
@@ -183,7 +193,13 @@ A: **No.** Use this for classwork, not high-stakes assessments.
 A: Have backup paper worksheets, or use school computers
 
 **Q: Can I edit an existing config?**
-A: Yes! Open the `.json` file in the tool again (drag & drop)
+A: Yes! Open the `.seb` file in the SEB Config Tool to make changes
+
+**Q: Do I need the SEB Config Tool?**
+A: **Yes!** The generator creates a template that must be refined, encrypted, and finalized in the Config Tool before distribution.
+
+**Q: Why do I need to encrypt the config?**
+A: Encryption prevents students from modifying the settings and ensures the configuration cannot be easily bypassed.
 
 ---
 
@@ -257,11 +273,15 @@ A: Yes! Open the `.json` file in the tool again (drag & drop)
 
 ## Checklist: Before Class
 
+- [ ] `.seb` template downloaded from generator
+- [ ] Config imported into SEB Config Tool
+- [ ] Settings refined (passwords, restrictions)
+- [ ] Config encrypted
+- [ ] Final `.seb` file saved
 - [ ] Config tested with student account
-- [ ] `.seb` file created and saved
 - [ ] Students notified about SEB requirement
 - [ ] SEB download link shared
-- [ ] Config file distributed (email/LMS)
+- [ ] Encrypted `.seb` file distributed (email/LMS)
 - [ ] Paper backup prepared
 - [ ] Tested on school network
 - [ ] Instructions ready for class
@@ -270,9 +290,14 @@ A: Yes! Open the `.json` file in the tool again (drag & drop)
 
 ## Time Investment
 
-**First time:** 30-60 minutes (including testing)
-**Subsequent uses:** 5 minutes (reuse existing configs)
+**First time:** 30-45 minutes (including Config Tool setup and testing)
+**Subsequent uses:** 5-10 minutes (modify existing configs)
 **ROI:** Massive reduction in off-task behavior
+
+**Breakdown:**
+- Generator: 5 minutes (create template)
+- Config Tool: 15-20 minutes (refine, encrypt, test)
+- Testing: 10-20 minutes (verify with student account)
 
 ---
 
