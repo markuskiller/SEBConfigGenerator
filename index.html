@@ -51,6 +51,8 @@
         .domain-list { font-family: 'Courier New', monospace; font-size: 0.9em; color: #525f7f; line-height: 1.8; max-height: 300px; overflow-y: auto; }
         .domain-item { padding: 5px 0; border-bottom: 1px solid #e9ecef; }
         .badge { display: inline-block; padding: 4px 10px; background: #5e72e4; color: white; border-radius: 12px; font-size: 0.85em; margin-left: 10px; }
+        .doc-link { transition: all 0.3s; }
+        .doc-link:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(94,114,228,0.3); opacity: 1 !important; }
         @media (max-width: 768px) { .security-level, .actions { flex-direction: column; } .language-toggle { position: static; margin-bottom: 20px; justify-content: center; } }
     </style>
 </head>
@@ -63,6 +65,11 @@
             </div>
             <h1>🛡️ <span data-i18n="title">SEB Konfigurations-Generator</span></h1>
             <p data-i18n="subtitle">Erstellen Sie Safe Exam Browser Konfigurationen für Fokus-Modus im Bildungsbereich</p>
+            <p style="margin-top: 15px;">
+                <a href="#" id="mainDocLink" class="doc-link" target="_blank" style="color: white; text-decoration: none; opacity: 0.9; font-weight: 600; border: 2px solid rgba(255,255,255,0.5); padding: 8px 16px; border-radius: 6px; display: inline-block;">
+                    📚 <span data-i18n="mainDocLink">Vollständige Anleitung</span>
+                </a>
+            </p>
         </div>
         <div class="content">
             <div class="section">
@@ -151,15 +158,22 @@
                             <span data-i18n="browserHelperBtn">🌐 Browser-Methode (Alle OS)</span>
                         </button>
                     </div>
-                    <p style="margin-top: 15px; font-size: 0.9em;">
-                        <span data-i18n="helperScriptInstructions">
-                            📖 Anleitungen: 
-                            <a href="docs/de/BROWSER_CAPTURE_ANLEITUNG.md" target="_blank" style="color: #5e72e4;">Browser (DE)</a> | 
-                            <a href="docs/en/BROWSER_CAPTURE_GUIDE.md" target="_blank" style="color: #5e72e4;">Browser (EN)</a> | 
-                            <a href="docs/de/SCHNELLSTART_ANLEITUNG.md" target="_blank" style="color: #5e72e4;">PowerShell (DE)</a> | 
-                            <a href="docs/en/TEACHER_GUIDE.md" target="_blank" style="color: #5e72e4;">PowerShell (EN)</a>
-                        </span>
-                    </p>
+                    <div style="margin-top: 15px; font-size: 0.9em;">
+                        <p style="margin-bottom: 8px; font-weight: 600; color: #5e72e4;">
+                            <span data-i18n="helperDocsTitle">📖 Hilfe & Anleitungen:</span>
+                        </p>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <a href="#" id="browserCaptureLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #f0f3ff; color: #5e72e4; border: 2px solid #5e72e4; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                                🌐 <span data-i18n="browserCaptureLink">Browser Capture</span>
+                            </a>
+                            <a href="#" id="quickstartLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #f0f3ff; color: #5e72e4; border: 2px solid #5e72e4; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                                🚀 <span data-i18n="quickstartLink">Schnellstart (Google Sites)</span>
+                            </a>
+                            <a href="#" id="quickRefLink" class="doc-link" target="_blank" style="padding: 8px 16px; background: #f0f3ff; color: #5e72e4; border: 2px solid #5e72e4; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                                📋 <span data-i18n="quickRefLink">Schnellreferenz</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -197,7 +211,11 @@ const TRANSLATIONS = {
         helperScriptText: "Benötigen Sie Hilfe beim Erfassen von Netzwerk-Domains? Wählen Sie die passende Methode für Ihr System:",
         downloadHelperBtn: "⬇️ PowerShell (Windows)",
         browserHelperBtn: "🌐 Browser-Methode (Alle OS)",
-        helperScriptInstructions: "📖 Anleitungen:",
+        helperDocsTitle: "📖 Hilfe & Anleitungen:",
+        browserCaptureLink: "Browser Capture Anleitung",
+        quickstartLink: "Schnellstart mit Google Sites",
+        quickRefLink: "Schnellreferenz",
+        mainDocLink: "Vollständige Anleitung",
         
         // Presets
         presetOnenote: "OneNote Online",
@@ -265,7 +283,11 @@ const TRANSLATIONS = {
         helperScriptText: "Need help capturing network domains? Choose the method that works for your system:",
         downloadHelperBtn: "⬇️ PowerShell (Windows)",
         browserHelperBtn: "🌐 Browser Method (All OS)",
-        helperScriptInstructions: "📖 Guides:",
+        helperDocsTitle: "📖 Help & Guides:",
+        browserCaptureLink: "Browser Capture Guide",
+        quickstartLink: "Quick Start with Google Sites",
+        quickRefLink: "Quick Reference",
+        mainDocLink: "Complete Guide",
         
         // Presets
         presetOnenote: "OneNote Online",
@@ -400,12 +422,57 @@ function setLanguage(lang) {
         btn.classList.toggle('active', btn.dataset.lang === lang);
     });
     
+    // Update documentation links based on language
+    updateDocLinks(lang);
+    
     // Re-render dynamic content
     renderPresets();
     renderSecurityLevels();
     
     // Save language preference
     localStorage.setItem('sebConfigLang', lang);
+}
+
+function updateDocLinks(lang) {
+    // Main documentation link in header
+    const mainDocLink = document.getElementById('mainDocLink');
+    if (mainDocLink) {
+        if (lang === 'de') {
+            mainDocLink.href = 'docs/de/SCHNELLSTART_ANLEITUNG.md';
+        } else {
+            mainDocLink.href = 'docs/en/TEACHER_GUIDE.md';
+        }
+    }
+    
+    // Browser capture guide
+    const browserCaptureLink = document.getElementById('browserCaptureLink');
+    if (browserCaptureLink) {
+        if (lang === 'de') {
+            browserCaptureLink.href = 'docs/de/BROWSER_CAPTURE_ANLEITUNG.md';
+        } else {
+            browserCaptureLink.href = 'docs/en/BROWSER_CAPTURE_GUIDE.md';
+        }
+    }
+    
+    // Quickstart/Sites guide
+    const quickstartLink = document.getElementById('quickstartLink');
+    if (quickstartLink) {
+        if (lang === 'de') {
+            quickstartLink.href = 'docs/de/SCHNELLSTART_ANLEITUNG.md';
+        } else {
+            quickstartLink.href = 'docs/en/TEACHER_GUIDE.md';
+        }
+    }
+    
+    // Quick reference
+    const quickRefLink = document.getElementById('quickRefLink');
+    if (quickRefLink) {
+        if (lang === 'de') {
+            quickRefLink.href = 'docs/de/SCHNELLREFERENZ.txt';
+        } else {
+            quickRefLink.href = 'docs/en/QUICK_REFERENCE.txt';
+        }
+    }
 }
 
 function t(key) {
