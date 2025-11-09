@@ -29,7 +29,7 @@ seb-config-generator/
 - Works offline
 
 ### What It Does
-1. Provides preset configurations for common educational services (OneNote, Word, Google Docs, etc.)
+1. Provides preset configurations for common educational services (Whiteboard.fi, Kahoot!, Mentimeter, Slido, Microsoft Forms, Padlet, Miro, Etherpad, OneNote, Word, etc.)
 2. Lets teachers customize security levels and options
 3. Generates SEB config templates (.seb) for import into SEB Config Tool
 4. Includes browser-based and PowerShell network capture tools
@@ -109,7 +109,7 @@ seb-config-generator/
 - No plugins or extensions required
 
 ### Features
-- 5 preset configurations (OneNote, Word, Teams, Google Docs, Google Sheets)
+- 10 preset configurations (No login: Whiteboard.fi, Kahoot!, Mentimeter, Slido, Microsoft Forms, Padlet, Miro, Etherpad | Login required: OneNote, Word)
 - 3 security levels (Relaxed, Balanced, Strict)
 - Custom domain whitelisting
 - Real-time domain preview
@@ -260,8 +260,8 @@ Total:              15 hours/year  (equivalent ~$900/year if outsourced)
 **YES - with realistic expectations:**
 
 ### What WILL Work (80-90% success rate)
-- ✅ Basic authentication flows for MS365 and Google
-- ✅ OneNote, Word, Google Docs for straightforward use cases
+- ✅ No-login services (Whiteboard.fi, Kahoot!, Mentimeter, Slido, Forms, Padlet, Miro, Etherpad)
+- ✅ Basic authentication flows for MS365 (OneNote, Word)
 - ✅ Students staying more focused than without any tool
 - ✅ Replacing paper-based activities with digital alternatives
 

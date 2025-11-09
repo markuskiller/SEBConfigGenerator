@@ -72,7 +72,7 @@
 
 ### Creating Your First Config
 
-1. **Choose Service:** Click the preset (OneNote, Word, Google Docs)
+1. **Choose Service:** Select from presets (No login: Whiteboard.fi, Kahoot!, Mentimeter, Slido, Forms, Padlet, Miro, Etherpad | Login required: OneNote, Word)
 2. **Customize Settings:**
    - Security Level: Start with "Balanced"
    - Check/uncheck options as needed

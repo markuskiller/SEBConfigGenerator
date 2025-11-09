@@ -90,12 +90,18 @@ No distractions (YouTube, social media blocked)
 Go to: `[YOUR_SCHOOL_URL]/seb-generator/` (or open `index.html`)
 
 ### Step 3. Choose Services (multiple allowed!)
-Click on the tools you need:
+
+**No Login Required:**
+- **Whiteboard.fi** - Collaborative whiteboard
 - **Kahoot!** - Quizzes and polls
 - **Mentimeter** - Live polls
+- **Slido** - Q&A and polls
+- **Microsoft Forms** - Public surveys
 - **Padlet** - Digital bulletin board
-- **Whiteboard.fi** - Collaborative whiteboard
 - **Miro** - Digital whiteboard
+- **Etherpad** - Text collaboration
+
+**Login Required:**
 - **OneNote Online** - For digital notebooks
 - **Word Online** - For document editing
 

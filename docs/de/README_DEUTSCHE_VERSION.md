@@ -95,11 +95,8 @@ const savedLang = localStorage.getItem('sebConfigLang') || 'en';
 - Hauptüberschrift und Untertitel
 - Alle Schritt-Überschriften (1-4)
 - Service-Vorlagen:
-  - OneNote Online
-  - Word Online
-  - Microsoft Teams
-  - Google Docs
-  - Google Tabellen
+  - Ohne Anmeldung: Whiteboard.fi, Kahoot!, Mentimeter, Slido, Microsoft Forms, Padlet, Miro, Etherpad
+  - Mit Anmeldung: OneNote Online, Word Online
 - Sicherheitsstufen:
   - Locker (Relaxed)
   - Ausgewogen (Balanced)

@@ -90,12 +90,18 @@ Keine Ablenkungen (YouTube, Social Media blockiert)
 Gehen Sie zu: `[IHRE_SCHUL_URL]/seb-generator/` (oder öffnen Sie `index.html`)
 
 ### Schritt 3: Dienste auswählen (mehrere möglich!)
-Klicken Sie auf die benötigten Tools:
+
+**Ohne Anmeldung:**
+- **Whiteboard.fi** - Kollaboratives Whiteboard
 - **Kahoot!** - Quiz und Umfragen
 - **Mentimeter** - Live-Umfragen
+- **Slido** - Q&A und Umfragen
+- **Microsoft Forms** - Öffentliche Umfragen
 - **Padlet** - Digitale Pinnwand
-- **Whiteboard.fi** - Kollaboratives Whiteboard
 - **Miro** - Digitales Whiteboard
+- **Etherpad** - Text-Kollaboration
+
+**Mit Anmeldung:**
 - **OneNote Online** - Für digitale Notizbücher
 - **Word Online** - Für Dokumentenbearbeitung
 
