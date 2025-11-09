@@ -21,15 +21,15 @@
     ├─> Kahoot!            (Interaktive Quizze)
     ├─> Mentimeter         (Live-Umfragen)
     ├─> Slido              (Q&A und Polls)
-    └─> Microsoft Forms    (Öffentliche Umfragen)
-    
-    MIT ANMELDUNG:
-    ├─> OneNote Online     (Microsoft Notizbücher)
-    ├─> Word Online        (Dokumente)
-    ├─> Microsoft Teams    (Zusammenarbeit)
+    ├─> Microsoft Forms    (Öffentliche Umfragen)
     ├─> Padlet             (Digitale Pinnwand)
     ├─> Miro               (Digitales Whiteboard)
     └─> Etherpad           (Text-Kollaboration)
+    
+    MIT ANMELDUNG:
+    ├─> OneNote Online     (Microsoft Notizbücher)
+    └─> Word Online        (Dokumente)
+
 
 3  SICHERHEIT WÄHLEN     Wählen Sie Ihre Stufe:
     ├─> Locker     * Fokus-Hilfe, sehr flexibel
