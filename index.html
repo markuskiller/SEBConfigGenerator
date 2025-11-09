@@ -357,12 +357,15 @@
                 <button class="lang-btn" data-lang="en">English</button>
             </div>
             <h1>🛡️ <span data-i18n="title">SEB Konfigurations-Generator</span></h1>
-            <p data-i18n="subtitle">Erstellen Sie Safe Exam Browser Konfigurationen für Fokus-Modus im Bildungsbereich</p>
+            <p data-i18n="subtitle">Erstellen Sie Safe Exam Browser Konfigurationen für Fokus-Modus im Unterricht</p>
             <p style="margin-top: 15px;">
                 <a href="#" id="mainDocLink" class="doc-link" target="_blank" style="color: #f5f7fb; text-decoration: none; opacity: 0.95; font-weight: 600; border: 2px solid rgba(245, 247, 251, 0.5); padding: 8px 16px; border-radius: 6px; display: inline-block;">
                     📚 <span data-i18n="mainDocLink">Vollständige Anleitung</span>
                 </a>
             </p>
+            <div style="margin-top: 20px; padding: 12px 20px; background: rgba(45, 206, 137, 0.15); border: 2px solid rgba(45, 206, 137, 0.4); border-radius: 8px; color: #f5f7fb; font-size: 0.9em; line-height: 1.6;">
+                <strong>🔒 <span data-i18n="privacyTitle">Datenschutz:</span></strong> <span data-i18n="privacyText">Alle Daten werden ausschließlich lokal in Ihrem Browser verarbeitet. Es werden keine Konfigurationsdaten oder Eingaben an unseren Server gesendet oder gespeichert. Nur Ihre Sprachpräferenz wird lokal im Browser gespeichert.</span>
+            </div>
         </div>
         <div class="content">
             <div class="section">
@@ -485,7 +488,7 @@
 const TRANSLATIONS = {
     de: {
         title: "SEB Konfigurations-Generator",
-        subtitle: "Erstellen Sie Safe Exam Browser Konfigurationen für Fokus-Modus im Bildungsbereich",
+        subtitle: "Erstellen Sie Safe Exam Browser Konfigurationen für Fokus-Modus im Unterricht",
         step1: "1. Dienst auswählen",
         groupNoLogin: "Ohne Anmeldung",
         groupWithLogin: "Mit Anmeldung",
@@ -554,8 +557,12 @@ const TRANSLATIONS = {
         presetFormsDesc: "Umfragen und Formulare (öffentlich)",
         presetDuden: "Duden",
         presetDudenDesc: "Deutsches Wörterbuch und Rechtschreibung",
+        presetDwds: "DWDS",
+        presetDwdsDesc: "Digitales Wörterbuch der deutschen Sprache",
         presetOxford: "Oxford Dictionary",
         presetOxfordDesc: "Englisches Lernwörterbuch",
+        presetCambridge: "Cambridge Dictionary",
+        presetCambridgeDesc: "Cambridge Englisch Wörterbuch",
         
         // Security levels
         securityRelaxed: "Locker",
@@ -568,6 +575,10 @@ const TRANSLATIONS = {
         // Messages
         copiedMsg: "✓ Kopiert!",
         configNamePlaceholder: "Meine_Schule_",
+        
+        // Privacy
+        privacyTitle: "Datenschutz:",
+        privacyText: "Alle Daten werden ausschließlich lokal in Ihrem Browser verarbeitet. Es werden keine Konfigurationsdaten oder Eingaben an unseren Server gesendet oder gespeichert. Nur Ihre Sprachpräferenz wird lokal im Browser gespeichert.",
         
         // Version info
         versionLabel: "Version",
@@ -644,8 +655,12 @@ const TRANSLATIONS = {
         presetFormsDesc: "Surveys and forms (public)",
         presetDuden: "Duden",
         presetDudenDesc: "German dictionary and spelling",
+        presetDwds: "DWDS",
+        presetDwdsDesc: "Digital Dictionary of German Language",
         presetOxford: "Oxford Dictionary",
         presetOxfordDesc: "English learner's dictionary",
+        presetCambridge: "Cambridge Dictionary",
+        presetCambridgeDesc: "Cambridge English Dictionary",
         
         // Security levels
         securityRelaxed: "Relaxed",
@@ -658,6 +673,10 @@ const TRANSLATIONS = {
         // Messages
         copiedMsg: "✓ Copied!",
         configNamePlaceholder: "My_School_",
+        
+        // Privacy
+        privacyTitle: "Privacy:",
+        privacyText: "All data is processed locally in your browser. No configuration data or inputs are sent to or stored on our server. Only your language preference is saved locally in your browser.",
         
         // Version info
         versionLabel: "Version",
@@ -715,9 +734,17 @@ const PRESETS = {
         startUrl: "https://www.duden.de",
         domains: ["duden.de","*.duden.de","*.doubleclick.net","*.googletagmanager.com","*.stroeerdigitalgroup.de","*.taboola.com","*.yieldlove.com","mitself.net"]
     },
+    dwds: {
+        startUrl: "https://www.dwds.de",
+        domains: ["dwds.de","*.dwds.de"]
+    },
     oxford: {
         startUrl: "https://www.oxfordlearnersdictionaries.com",
         domains: ["oxfordlearnersdictionaries.com","*.oxfordlearnersdictionaries.com","*.oup.com","*.cookielaw.org","*.doubleclick.net","*.google-analytics.com","*.google.com","*.googletagmanager.com","*.onetrust.com","*.polarbyte.com","html-load.com"]
+    },
+    cambridge: {
+        startUrl: "https://dictionary.cambridge.org",
+        domains: ["dictionary.cambridge.org","*.cambridge.org"]
     }
 };
 
@@ -725,8 +752,8 @@ const PRESET_GROUPS = {
     noLogin: ['whiteboard', 'kahoot', 'mentimeter', 'slido', 'forms', 'padlet', 'miro', 'etherpad'],
     withLogin: ['onenote', 'word'],
     allowedTools: {
-        german: ['duden'],
-        english: ['oxford']
+        german: ['duden', 'dwds'],
+        english: ['oxford', 'cambridge']
     }
 };
 
@@ -745,8 +772,8 @@ const SECURITY_LEVELS = {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.5';
-const BUILD_DATE = new Date('2025-11-09T22:55:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.6';
+const BUILD_DATE = new Date('2025-11-09T23:10:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -768,6 +795,7 @@ function formatBuildDate(lang) {
 let currentLang = 'de';
 let selectedPresets = ['onenote']; // Changed to array for multiple selection
 let currentSecurityLevel = 'balanced';
+let currentSelectedSubject = ''; // Track selected subject for allowed tools
 
 // ============================================================================
 // LANGUAGE MANAGEMENT
@@ -937,10 +965,15 @@ function renderPresets() {
     toolsContainer.style.cssText = 'grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;';
     container.appendChild(toolsContainer);
     
-    // Add event listener to subject selector
+    // Add event listener to subject selector and restore previous selection
     setTimeout(() => {
         const select = document.getElementById('subjectSelect');
         if (select) {
+            // Restore previously selected subject
+            if (currentSelectedSubject) {
+                select.value = currentSelectedSubject;
+                renderAllowedTools(currentSelectedSubject);
+            }
             select.addEventListener('change', (e) => renderAllowedTools(e.target.value));
         }
     }, 0);
@@ -949,6 +982,9 @@ function renderPresets() {
 function renderAllowedTools(subject) {
     const container = document.getElementById('allowedToolsContainer');
     if (!container) return;
+    
+    // Store the selected subject
+    currentSelectedSubject = subject;
     
     container.innerHTML = '';
     
@@ -983,6 +1019,9 @@ function renderSecurityLevels() {
 }
 
 function togglePreset(key) {
+    // Check if this is an allowed tool (Hilfsmittel)
+    const isAllowedTool = Object.values(PRESET_GROUPS.allowedTools).flat().includes(key);
+    
     const index = selectedPresets.indexOf(key);
     if (index === -1) {
         selectedPresets.push(key);
@@ -990,20 +1029,24 @@ function togglePreset(key) {
         selectedPresets.splice(index, 1);
     }
     
-    // Ensure at least one preset is selected
-    if (selectedPresets.length === 0) {
+    // Ensure at least one main preset is selected (not counting allowed tools)
+    const mainPresets = selectedPresets.filter(p => !Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
+    if (mainPresets.length === 0 && !isAllowedTool) {
         selectedPresets = [key];
     }
     
-    // Update start URL to first selected preset
-    const firstPreset = PRESETS[selectedPresets[0]];
-    document.getElementById('startUrl').value = firstPreset.startUrl;
+    // Update start URL to first selected main preset
+    const firstMainPreset = selectedPresets.find(p => !Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
+    if (firstMainPreset && PRESETS[firstMainPreset]) {
+        document.getElementById('startUrl').value = PRESETS[firstMainPreset].startUrl;
+    }
     
     // Update config name
-    if (selectedPresets.length === 1) {
-        const presetName = t('preset' + selectedPresets[0].charAt(0).toUpperCase() + selectedPresets[0].slice(1));
+    const mainPresetsForName = selectedPresets.filter(p => !Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
+    if (mainPresetsForName.length === 1) {
+        const presetName = t('preset' + mainPresetsForName[0].charAt(0).toUpperCase() + mainPresetsForName[0].slice(1));
         document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config`;
-    } else {
+    } else if (mainPresetsForName.length > 1) {
         document.getElementById('configName').value = `Multi_Service_Config`;
     }
     
