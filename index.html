@@ -409,6 +409,10 @@
                     <label data-i18n="customDomainsLabel">Zusätzliche erlaubte Domains hinzufügen (eine pro Zeile)</label>
                     <textarea id="customDomains" data-i18n-placeholder="customDomainsPlaceholder" placeholder="beispiel.de&#10;*.schule-domain.de"></textarea>
                 </div>
+                <div class="form-group">
+                    <label data-i18n="blockedDomainsLabel">Zusätzlich zu sperrende Domains (Optional, eine pro Zeile)</label>
+                    <textarea id="blockedDomains" data-i18n-placeholder="blockedDomainsPlaceholder" placeholder="facebook.com&#10;instagram.com&#10;tiktok.com"></textarea>
+                </div>
                 <div class="info-box">
                     <h4 data-i18n="proTipTitle">💡 Profi-Tipp</h4>
                     <p data-i18n="proTipText">Verwenden Sie Wildcards (*) um alle Subdomains zu erlauben. Zum Beispiel: <code>*.microsoft.com</code> erlaubt login.microsoft.com, account.microsoft.com, usw.<br><br><strong>Hinweis:</strong> Doppelte Domains werden automatisch entfernt.</p>
@@ -498,6 +502,8 @@ const TRANSLATIONS = {
         allowBackForward: "Vor/Zurück-Navigation erlauben",
         customDomainsLabel: "Zusätzliche erlaubte Domains hinzufügen (eine pro Zeile)",
         customDomainsPlaceholder: "beispiel.de\n*.schule-domain.de",
+        blockedDomainsLabel: "Domains sperren (Optional, nur bei Wildcards in 'Zusätzliche Domains')",
+        blockedDomainsPlaceholder: "# Beispiel: Falls Sie *.beispiel.de erlauben\n# aber mail.beispiel.de sperren möchten:\nmail.beispiel.de",
         proTipTitle: "💡 Profi-Tipp",
         proTipText: "Verwenden Sie Wildcards (*) um alle Subdomains zu erlauben. Zum Beispiel: *.microsoft.com erlaubt login.microsoft.com, account.microsoft.com, usw.<br><br><strong>Hinweis:</strong> Doppelte Domains werden automatisch entfernt.",
         allowedDomains: "Erlaubte Domains",
@@ -578,6 +584,8 @@ const TRANSLATIONS = {
         allowBackForward: "Allow back/forward navigation",
         customDomainsLabel: "Add additional allowed domains (one per line)",
         customDomainsPlaceholder: "example.com\n*.school-domain.edu",
+        blockedDomainsLabel: "Block domains (Optional, only needed for wildcards in 'Additional Domains')",
+        blockedDomainsPlaceholder: "# Example: If you allow *.example.com\n# but want to block mail.example.com:\nmail.example.com",
         proTipTitle: "💡 Pro Tip",
         proTipText: "Use wildcards (*) to allow all subdomains. For example: *.microsoft.com allows login.microsoft.com, account.microsoft.com, etc.<br><br><strong>Note:</strong> Duplicate domains are automatically removed.",
         allowedDomains: "Allowed Domains",
@@ -647,11 +655,13 @@ const TRANSLATIONS = {
 const PRESETS = {
     onenote: {
         startUrl: "https://www.onenote.com/notebooks",
-        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.onenote.com","onenote.officeapps.live.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net"]
+        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.onenote.com","onenote.officeapps.live.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","browser.events.data.microsoft.com","chc-onenote.officeapps.live.com","common.online.office.com","euc-common.online.office.com","kshch0.sharepoint.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
+        blockedDomains: ["outlook.office.com","outlook.office365.com","teams.microsoft.com","teams.live.com"]
     },
     word: {
         startUrl: "https://www.office.com/launch/word",
-        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net"]
+        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","browser.events.data.microsoft.com","common.online.office.com","euc-common.online.office.com","kshch0.sharepoint.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
+        blockedDomains: ["outlook.office.com","outlook.office365.com","teams.microsoft.com","teams.live.com"]
     },
     whiteboard: {
         startUrl: "https://whiteboard.fi",
@@ -707,8 +717,8 @@ const SECURITY_LEVELS = {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.2';
-const BUILD_DATE = new Date('2025-11-09T22:06:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.4';
+const BUILD_DATE = new Date('2025-11-09T22:36:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -988,8 +998,37 @@ function updatePreview() {
     }
     
     html += domains
-        .map(domain => `<div class="domain-item">${domain}</div>`)
+        .map(domain => `<div class="domain-item">✓ ${domain}</div>`)
         .join('');
+    
+    // Show blocked domains if any
+    const blockedDomains = [];
+    selectedPresets.forEach(presetKey => {
+        const preset = PRESETS[presetKey];
+        if (preset && preset.blockedDomains) {
+            blockedDomains.push(...preset.blockedDomains);
+        }
+    });
+    
+    // Add custom blocked domains from user input
+    const customBlockedInput = document.getElementById('blockedDomains').value;
+    if (customBlockedInput.trim()) {
+        const customBlockedDomains = customBlockedInput
+            .split('\n')
+            .map(domain => domain.trim())
+            .filter(domain => domain && !domain.startsWith('#'));
+        blockedDomains.push(...customBlockedDomains);
+    }
+    
+    if (blockedDomains.length > 0) {
+        const blockedTitle = currentLang === 'de' 
+            ? '🚫 Blockierte Domains (explizit gesperrt)'
+            : '🚫 Blocked Domains (explicitly denied)';
+        html += `<div style="margin-top:20px;padding-top:15px;border-top:2px solid #dfe6f0;"><strong style="color:#2c3e5a;">${blockedTitle}</strong></div>`;
+        html += blockedDomains
+            .map(domain => `<div class="domain-item" style="color:#dc3545;">✗ ${domain}</div>`)
+            .join('');
+    }
     
     // Show warning if duplicates were removed
     if (duplicatesRemoved > 0) {
@@ -1006,12 +1045,11 @@ function updatePreview() {
 // CONFIG GENERATION - XML (PLIST)
 // ============================================================================
 function generateConfigXML() {
-    const preset = PRESETS[currentPreset];
     const securitySettings = SECURITY_LEVELS[currentSecurityLevel].settings;
     const domains = getAllDomains();
     const startUrl = document.getElementById('startUrl').value;
     
-    // Build URL filter rules XML
+    // Build URL filter rules XML (whitelist - action: 1)
     let urlFilterRulesXML = '';
     domains.forEach(domain => {
         urlFilterRulesXML += `\t\t<dict>
@@ -1026,6 +1064,49 @@ function generateConfigXML() {
 \t\t</dict>
 `;
     });
+    
+    // Add blocked domains (blacklist - action: 0) from selected presets
+    selectedPresets.forEach(presetKey => {
+        const preset = PRESETS[presetKey];
+        if (preset && preset.blockedDomains) {
+            preset.blockedDomains.forEach(domain => {
+                urlFilterRulesXML += `\t\t<dict>
+\t\t\t<key>action</key>
+\t\t\t<integer>0</integer>
+\t\t\t<key>active</key>
+\t\t\t<true/>
+\t\t\t<key>expression</key>
+\t\t\t<string>${escapeXML(domain)}</string>
+\t\t\t<key>regex</key>
+\t\t\t<false/>
+\t\t</dict>
+`;
+            });
+        }
+    });
+    
+    // Add custom blocked domains (blacklist - action: 0) from user input
+    const customBlockedInput = document.getElementById('blockedDomains').value;
+    if (customBlockedInput.trim()) {
+        const customBlockedDomains = customBlockedInput
+            .split('\n')
+            .map(domain => domain.trim())
+            .filter(domain => domain && !domain.startsWith('#'));
+        
+        customBlockedDomains.forEach(domain => {
+            urlFilterRulesXML += `\t\t<dict>
+\t\t\t<key>action</key>
+\t\t\t<integer>0</integer>
+\t\t\t<key>active</key>
+\t\t\t<true/>
+\t\t\t<key>expression</key>
+\t\t\t<string>${escapeXML(domain)}</string>
+\t\t\t<key>regex</key>
+\t\t\t<false/>
+\t\t</dict>
+`;
+        });
+    }
     
     // Generate complete plist XML with version info
     const buildDateFormatted = formatBuildDate('en'); // Use international format for file
@@ -1367,6 +1448,7 @@ function attachEventListeners() {
     document.getElementById('generateBtn').addEventListener('click', downloadConfig);
     document.getElementById('copyBtn').addEventListener('click', copyDomains);
     document.getElementById('customDomains').addEventListener('input', updatePreview);
+    document.getElementById('blockedDomains').addEventListener('input', updatePreview);
     document.getElementById('startUrl').addEventListener('input', updatePreview);
     
     // Browser helper
