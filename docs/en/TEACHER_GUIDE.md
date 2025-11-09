@@ -1,37 +1,128 @@
 # Teacher Quick Start Guide
-## SEB Config Generator in 5 Minutes
+## SEB Config Generator with Google Sites Hub
 
 ### What is This Tool?
 
-Creates Safe Exam Browser configurations that help students focus on educational tasks (like OneNote or Google Docs) on their own devices by blocking distractions.
+Creates Safe Exam Browser configurations that help students focus on educational tasks by blocking distractions.
 
 **Important:** This is NOT for high-stakes exams! It's for:
 - ✅ Digital worksheets during class
 - ✅ Collaborative writing assignments  
 - ✅ Focus mode for in-class activities
-- ✅ Replacing paper when you need basic digital access
+- ✅ Interactive tool usage (Kahoot, Mentimeter, Padlet)
+
+---
+
+## 🌟 Recommended Approach: Google Sites as Hub
+
+### Why Google Sites?
+
+**The best method for schools:**
+
+1. **One central landing page** - All lesson activities in one place
+2. **Easy verification** - Instantly see who's in SEB mode
+3. **Flexible lesson planning** - Use different tools via links
+4. **Security** - "Secret" URL prevents unauthorized access
+
+### How it Works:
+
+```
+Student starts .seb file
+    ↓
+Auto-opens your Sites page
+    ↓
+Student clicks links to activities (Kahoot, Mentimeter, etc.)
+    ↓
+Everything works - only allowed domains reachable
+    ↓
+No distractions (YouTube, social media blocked)
+```
 
 ---
 
 ## Step-by-Step: Your First Config
 
-### 1. Open the Tool
+### Step 1: Create Google Sites Landing Page
+
+1. **Open Google Sites:** [sites.google.com](https://sites.google.com)
+
+2. **Create new page:**
+   - Click "+" (New Site)
+   - Name: `Lesson_[Date]_[Subject]` (e.g. "Lesson_2024_11_09_Math")
+
+3. **Set visibility:**
+   - Settings → Share
+   - Select **"Anyone with the link"**
+   - ✅ URL becomes complex/secret (e.g. `sites.google.com/view/xy7z3abc`)
+
+4. **Add content - Example:**
+
+```
+┌─────────────────────────────────────────────────┐
+│  🎓 Mathematics - Quadratic Equations          │
+│  ═══════════════════════════════════════════    │
+│                                                 │
+│  ✅ CHECK: Can you see this text?              │
+│     → You're in SEB focus mode!                │
+│                                                 │
+│  📋 Today's Schedule (45 minutes):             │
+│  ────────────────────────────────              │
+│  1️⃣ [10 Min] Kahoot Quiz - Review             │
+│     🔗 Link: https://kahoot.it                 │
+│     📌 PIN: 1234567                            │
+│                                                 │
+│  2️⃣ [15 Min] Mentimeter Poll                  │
+│     🔗 Link: https://menti.com                 │
+│     📌 Code: 8765 4321                         │
+│                                                 │
+│  3️⃣ [20 Min] Padlet - Solution Strategies     │
+│     🔗 Link: https://padlet.com/class/math     │
+│                                                 │
+│  💡 Need help? → Raise your hand!              │
+└─────────────────────────────────────────────────┘
+```
+
+5. **Publish and copy URL**
+
+---
+
+### Step 2. Open the Generator
 Go to: `[YOUR_SCHOOL_URL]/seb-generator/` (or open `index.html`)
 
-### 2. Choose Your Service
-Click one of these buttons:
+### Step 3. Choose Services (multiple allowed!)
+Click on the tools you need:
+- **Kahoot!** - Quizzes and polls
+- **Mentimeter** - Live polls
+- **Padlet** - Digital bulletin board
+- **Whiteboard.fi** - Collaborative whiteboard
+- **Miro** - Digital whiteboard
 - **OneNote Online** - For digital notebooks
 - **Word Online** - For document editing
-- **Google Docs** - For Google Workspace
 
-### 3. Set Security Level
+### Step 4: Start URL and Custom Domains
+
+1. **Enter Start URL:**
+   ```
+   https://sites.google.com/view/your-secret-page-xyz123
+   ```
+
+2. **Add Custom Domains:**
+   ```
+   sites.google.com
+   *.googleusercontent.com
+   fonts.googleapis.com
+   fonts.gstatic.com
+   ```
+   **⚠️ Important:** Do NOT use `*.google.com` (too broad - opens Gmail, YouTube!)
+
+### Step 5: Set Security Level
 **Recommendation:** Start with **"Balanced"**
 
 - **Relaxed** = Allows more flexibility (good for class work)
 - **Balanced** = Good mix of focus and usability ⭐
 - **Strict** = Maximum restrictions (may frustrate students)
 
-### 4. Configure Options
+### Step 6: Configure Options
 Check what students need:
 
 | Option | When to Enable |
@@ -41,14 +132,14 @@ Check what students need:
 | Reload button | ✅ If pages might freeze |
 | Back/Forward | ✅ For multi-page documents |
 
-### 5. Download Config
-Click: **"Download SEB Config (.seb)"**
+### Step 7: Download Config
+Click: **"📥 Download SEB Config (.seb)"**
 
-Saves as: `OneNote_Config.seb` (or similar)
+Saves as: `Multi_Service_Config.seb` (multiple services) or `[Service]_Config.seb`
 
-### 6. Import and Finalize in SEB Config Tool
+### Step 8: Import and Finalize in SEB Config Tool
 
-The downloaded `.seb` file is a template that must be refined:
+**⚠️ The downloaded `.seb` file is just a template!**
 
 1. Download [SEB Config Tool](https://safeexambrowser.org/download_en.html) (one-time setup)
 2. Open **SEB Config Tool**
@@ -64,24 +155,33 @@ The downloaded `.seb` file is a template that must be refined:
 
 **Important:** Only distribute the encrypted, finalized `.seb` file to students!
 
-### 7. Distribute to Students
+### Step 9: Distribute to Students
 
-**Email them:**
+**Email template:**
 ```
-Subject: Digital Assignment Setup
+Subject: SEB Setup for [Date] Lesson
 
 Hi everyone,
 
-For Tuesday's class activity, you'll need Safe Exam Browser:
+For our digital lesson on [Day], you'll need:
 
-1. Download SEB: https://safeexambrowser.org/download_en.html
-2. Download config file: [attach OneNote_Final.seb]
-3. Double-click the .seb file - SEB will start automatically
-4. Log in with your school account when prompted
+1️⃣ Install Safe Exam Browser:
+   https://safeexambrowser.org/download_en.html
 
-Note: The config file is encrypted for your security.
+2️⃣ Download config file:
+   [attach Lesson_2024_11_09_Final.seb]
 
-See you Tuesday!
+3️⃣ Double-click the .seb file
+   → SEB starts automatically
+   → You'll land on the landing page
+
+4️⃣ From there, find all links to activities
+   (Kahoot, Mentimeter, etc.)
+
+The config is encrypted for your security.
+
+See you [Day]!
+[Your Name]
 ```
 
 ---
@@ -203,62 +303,120 @@ A: Encryption prevents students from modifying the settings and ensures the conf
 
 ---
 
-## Real-World Scenarios
+## 💡 Real-World Scenarios with Sites Hub
 
-### Scenario 1: OneNote Class Notes
-**Goal:** Students take notes during lecture
+### Scenario 1: Interactive History Lesson
 
-**Config:**
-- Service: OneNote Online
-- Security: Relaxed
-- Options: ✅ Spell check, ✅ Back/Forward
-- Duration: 45-minute class
+**Setup:**
+```
+Services: Kahoot + Mentimeter + Padlet
+Start URL: sites.google.com/view/history-2024
+Duration: 45 minutes
+```
 
-**Result:** Students stay focused, fewer distractions than open laptops
+**Sites Content:**
+```
+1. Kahoot Quiz (10 Min) - Last lesson review
+2. Mentimeter Poll (15 Min) - Opinions on historical events
+3. Padlet Collection (20 Min) - Gather sources and quotes
+```
 
----
-
-### Scenario 2: Timed Essay
-**Goal:** 30-minute writing prompt in Word Online
-
-**Config:**
-- Service: Word Online
-- Security: Balanced
-- Options: ✅ Spell check, ❌ Downloads (force cloud save)
-- Note: Add time limit in SEB settings
-
-**Result:** Students can't browse internet, must focus on writing
+**Result:** Students focused, all tools work seamlessly, clear structure
 
 ---
 
-### Scenario 3: Collaborative Google Doc
-**Goal:** Group editing project
+### Scenario 2: Math Practice Session
 
-**Config:**
-- Service: Google Docs
-- Security: Relaxed
-- Options: ✅ All enabled
-- Add: *.google.com for full collaboration features
+**Setup:**
+```
+Services: Whiteboard.fi + OneNote
+Start URL: sites.google.com/view/math-practice
+Duration: 60 minutes
+```
 
-**Result:** Students can collaborate without distractions
+**Sites Content:**
+```
+1. Whiteboard.fi (30 Min) - Solve problems together
+2. OneNote (30 Min) - Individual exercises in notebook
+```
+
+**Result:** Varied lesson, visual collaboration + individual work
 
 ---
 
-## Best Practices
+### Scenario 3: Group Project Work
 
-### ✅ DO:
-- Test configs with student accounts before class
-- Communicate clearly about why you're using SEB
-- Have a paper backup plan
-- Start with permissive settings
-- Get feedback from students
+**Setup:**
+```
+Services: Padlet + Miro + Word Online
+Start URL: sites.google.com/view/project-groups
+Duration: 90 minutes
+```
 
-### ❌ DON'T:
-- Use for high-stakes exams on BYOD
-- Assume it's tamper-proof
-- Make it too restrictive (students will resist)
-- Skip testing phase
-- Forget to update when services change
+**Sites Content:**
+```
+Phase 1: Brainstorming with Padlet (30 Min)
+Phase 2: Mind Map with Miro (30 Min)
+Phase 3: Documentation in Word (30 Min)
+```
+
+**Result:** Flexible group work without distractions, clear workflow
+
+---
+
+## ✅ Best Practices with Sites Hub
+
+### DO:
+
+✅ **Update Sites page before each lesson**
+   - New PINs/codes for Kahoot/Mentimeter
+   - Current links to Padlet/Miro
+   - Adjust timeline
+
+✅ **Clear visual structure on Sites**
+   - Use numbering (1️⃣ 2️⃣ 3️⃣)
+   - Add time estimates
+   - Use emojis for better orientation
+
+✅ **Test with student account**
+   - Not with teacher account!
+   - On different devices
+   - On school network
+
+✅ **Have backup plan**
+   - Prepare paper alternative
+   - Plan B without digital tools
+
+✅ **Communicate clearly**
+   - Why SEB is used
+   - What's allowed and what's not
+   - How students get help
+
+---
+
+### DON'T:
+
+❌ **Do NOT allow `*.google.com` globally**
+   - Opens Gmail, YouTube, etc.
+   - Defeats focus mode
+   - **Only** use `sites.google.com` + `*.googleusercontent.com`!
+
+❌ **Do NOT distribute unencrypted .seb files**
+   - Students could modify settings
+   - Security vulnerability
+
+❌ **Do NOT use for high-stakes exams**
+   - Not tamper-proof on BYOD
+   - Only for classwork
+
+❌ **Do NOT be too restrictive**
+   - Students will get frustrated
+   - Resistance against tool
+   - Start with "Balanced", not "Strict"
+
+❌ **Do NOT skip testing**
+   - Always test before distribution
+   - Murphy's Law: "What can go wrong..."
 
 ---
 

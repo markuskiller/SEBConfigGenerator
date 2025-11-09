@@ -1,37 +1,128 @@
 # Schnellstart-Anleitung für Lehrkräfte
-## SEB Konfigurations-Generator in 5 Minuten
+## SEB Konfigurations-Generator mit Google Sites Hub
 
 ### Was ist dieses Tool?
 
-Erstellt Safe Exam Browser (SEB) Konfigurationen, die Schüler*innen helfen, sich auf Bildungsaufgaben (wie OneNote oder Google Docs) auf ihren eigenen Geräten zu konzentrieren, indem Ablenkungen blockiert werden.
+Erstellt Safe Exam Browser (SEB) Konfigurationen, die Schüler*innen helfen, sich auf Bildungsaufgaben zu konzentrieren, indem Ablenkungen blockiert werden.
 
 **Wichtig:** Dies ist NICHT für Abschlussprüfungen gedacht! Es ist für:
 - ✅ Digitale Arbeitsblätter während des Unterrichts
 - ✅ Kollaborative Schreibaufgaben
 - ✅ Fokus-Modus für Unterrichtsaktivitäten
-- ✅ Ersatz für Papier, wenn digitaler Zugang benötigt wird
+- ✅ Interaktive Tool-Nutzung (Kahoot, Mentimeter, Padlet)
+
+---
+
+## 🌟 Empfohlener Ansatz: Google Sites als Zentrale
+
+### Warum Google Sites?
+
+**Der beste Weg für Schulen:**
+
+1. **Eine zentrale Einstiegsseite** - Alle Aktivitäten der Lektion an einem Ort
+2. **Einfache Kontrolle** - Sehen Sie sofort, wer im SEB-Modus ist
+3. **Flexible Stundenplanung** - Verschiedene Tools über Links nacheinander nutzen
+4. **Sicherheit** - "Geheime" URL verhindert unerlaubten Zugriff
+
+### Wie funktioniert es?
+
+```
+SuS startet .seb-Datei
+    ↓
+Öffnet automatisch Ihre Sites-Seite
+    ↓
+SuS klickt Links zu Aktivitäten (Kahoot, Mentimeter, etc.)
+    ↓
+Alles funktioniert - nur erlaubte Domains erreichbar
+    ↓
+Keine Ablenkungen (YouTube, Social Media blockiert)
+```
 
 ---
 
 ## Schritt-für-Schritt: Ihre erste Konfiguration
 
-### 1. Tool öffnen
+### Schritt 1: Google Sites Einstiegsseite erstellen
+
+1. **Google Sites öffnen:** [sites.google.com](https://sites.google.com)
+
+2. **Neue Seite erstellen:**
+   - Klicken Sie auf "+" (Neue Website)
+   - Name: `Lektion_[Datum]_[Fach]` (z.B. "Lektion_2024_11_09_Mathe")
+
+3. **Sichtbarkeit einstellen:**
+   - Einstellungen → Teilen
+   - **"Jeder mit Link"** auswählen
+   - ✅ URL wird komplex/geheim (z.B. `sites.google.com/view/xy7z3abc`)
+
+4. **Inhalt hinzufügen - Beispiel:**
+
+```
+┌─────────────────────────────────────────────────┐
+│  🎓 Mathematik - Quadratische Gleichungen       │
+│  ═══════════════════════════════════════════    │
+│                                                 │
+│  ✅ CHECK: Siehst du diesen Text?              │
+│     → Du bist im SEB-Fokus-Modus!              │
+│                                                 │
+│  📋 Ablauf heute (45 Minuten):                 │
+│  ────────────────────────────────              │
+│  1️⃣ [10 Min] Kahoot Quiz - Wiederholung       │
+│     🔗 Link: https://kahoot.it                 │
+│     📌 PIN: 1234567                            │
+│                                                 │
+│  2️⃣ [15 Min] Mentimeter Umfrage               │
+│     🔗 Link: https://menti.com                 │
+│     📌 Code: 8765 4321                         │
+│                                                 │
+│  3️⃣ [20 Min] Padlet - Lösungsstrategien       │
+│     🔗 Link: https://padlet.com/klasse/mathe   │
+│                                                 │
+│  💡 Hilfe benötigt? → Hand heben!              │
+└─────────────────────────────────────────────────┘
+```
+
+5. **Veröffentlichen und URL kopieren**
+
+---
+
+### Schritt 2: Generator öffnen
 Gehen Sie zu: `[IHRE_SCHUL_URL]/seb-generator/` (oder öffnen Sie `index.html`)
 
-### 2. Dienst auswählen
-Klicken Sie auf eine dieser Schaltflächen:
+### Schritt 3: Dienste auswählen (mehrere möglich!)
+Klicken Sie auf die benötigten Tools:
+- **Kahoot!** - Quiz und Umfragen
+- **Mentimeter** - Live-Umfragen
+- **Padlet** - Digitale Pinnwand
+- **Whiteboard.fi** - Kollaboratives Whiteboard
+- **Miro** - Digitales Whiteboard
 - **OneNote Online** - Für digitale Notizbücher
 - **Word Online** - Für Dokumentenbearbeitung
-- **Google Docs** - Für Google Workspace
 
-### 3. Sicherheitsstufe festlegen
+### Schritt 4: Start-URL und Custom Domains
+
+1. **Start-URL eingeben:**
+   ```
+   https://sites.google.com/view/ihre-geheime-seite-xyz123
+   ```
+
+2. **Custom Domains hinzufügen:**
+   ```
+   sites.google.com
+   *.googleusercontent.com
+   fonts.googleapis.com
+   fonts.gstatic.com
+   ```
+   **⚠️ Wichtig:** NICHT `*.google.com` verwenden (zu weitreichend - öffnet Gmail, YouTube!)
+
+### Schritt 5: Sicherheitsstufe festlegen
 **Empfehlung:** Beginnen Sie mit **"Ausgewogen"**
 
 - **Locker** = Erlaubt mehr Flexibilität (gut für Unterrichtsarbeit)
 - **Ausgewogen** = Gute Mischung aus Fokus und Benutzerfreundlichkeit ⭐
 - **Streng** = Maximale Einschränkungen (kann Schüler*innen frustrieren)
 
-### 4. Optionen konfigurieren
+### Schritt 6: Optionen konfigurieren
 Aktivieren Sie, was Schüler*innen benötigen:
 
 | Option | Wann aktivieren |
@@ -41,14 +132,14 @@ Aktivieren Sie, was Schüler*innen benötigen:
 | Neu-Laden-Button | ✅ Wenn Seiten einfrieren könnten |
 | Vor/Zurück | ✅ Für mehrseitige Dokumente |
 
-### 5. Konfiguration herunterladen
-Klicken Sie auf: **"SEB Konfiguration herunterladen (.seb)"**
+### Schritt 7: Konfiguration herunterladen
+Klicken Sie auf: **"📥 SEB Konfiguration herunterladen (.seb)"**
 
-Speichert als: `OneNote_Config.seb` (oder ähnlich)
+Speichert als: `Multi_Service_Config.seb` (mehrere Dienste) oder `[Dienst]_Config.seb`
 
-### 6. Im SEB Config Tool importieren und finalisieren
+### Schritt 8: Im SEB Config Tool importieren und finalisieren
 
-Die heruntergeladene `.seb`-Datei ist eine Vorlage, die verfeinert werden muss:
+**⚠️ Die heruntergeladene `.seb`-Datei ist nur eine Vorlage!**
 
 1. [SEB Config Tool](https://safeexambrowser.org/download_de.html) herunterladen (einmalige Einrichtung)
 2. **SEB Config Tool** öffnen
@@ -64,24 +155,33 @@ Die heruntergeladene `.seb`-Datei ist eine Vorlage, die verfeinert werden muss:
 
 **Wichtig:** Nur die verschlüsselte, finalisierte `.seb`-Datei an Schüler*innen verteilen!
 
-### 7. An Schüler*innen verteilen
+### Schritt 9: An Schüler*innen verteilen
 
 **E-Mail-Vorlage:**
 ```
-Betreff: Digitale Aufgabe - Einrichtung
+Betreff: SEB-Setup für Lektion am [Datum]
 
 Hallo zusammen,
 
-für die Aktivität am Dienstag benötigt ihr Safe Exam Browser:
+für die digitale Lektion am [Tag] benötigt ihr:
 
-1. SEB herunterladen: https://safeexambrowser.org/download_de.html
-2. Config-Datei herunterladen: [OneNote_Final.seb anhängen]
-3. Doppelklick auf die .seb-Datei - SEB startet automatisch
-4. Mit eurem Schul-Account anmelden, wenn ihr dazu aufgefordert werdet
+1️⃣ Safe Exam Browser installieren:
+   https://safeexambrowser.org/download_de.html
 
-Hinweis: Die Konfigurationsdatei ist zu eurer Sicherheit verschlüsselt.
+2️⃣ Config-Datei herunterladen:
+   [Lektion_2024_11_09_Final.seb anhängen]
 
-Bis Dienstag!
+3️⃣ Doppelklick auf die .seb-Datei
+   → SEB startet automatisch
+   → Ihr landet auf der Einstiegsseite
+
+4️⃣ Dort findet ihr alle Links zu den Aktivitäten
+   (Kahoot, Mentimeter, etc.)
+
+Die Konfiguration ist verschlüsselt für eure Sicherheit.
+
+Bis [Tag]!
+[Ihr Name]
 ```
 
 ---
@@ -211,62 +311,120 @@ A: Verschlüsselung verhindert, dass Schüler*innen die Einstellungen ändern un
 
 ---
 
-## Praxis-Szenarien
+## 💡 Praxis-Szenarien mit Sites-Hub
 
-### Szenario 1: OneNote Unterrichtsnotizen
-**Ziel:** Schüler*innen machen Notizen während der Vorlesung
+### Szenario 1: Interaktive Geschichtsstunde
 
-**Konfiguration:**
-- Dienst: OneNote Online
-- Sicherheit: Locker
-- Optionen: ✅ Rechtschreibprüfung, ✅ Vor/Zurück
-- Dauer: 45-minütige Unterrichtsstunde
+**Setup:**
+```
+Dienste: Kahoot + Mentimeter + Padlet
+Start-URL: sites.google.com/view/geschichte-2024
+Dauer: 45 Minuten
+```
 
-**Ergebnis:** Schüler*innen bleiben fokussiert, weniger Ablenkungen als bei offenen Laptops
+**Sites-Inhalt:**
+```
+1. Kahoot Quiz (10 Min) - Wiederholung letzte Stunde
+2. Mentimeter Umfrage (15 Min) - Meinungen zu historischen Ereignissen
+3. Padlet Sammlung (20 Min) - Quellen und Zitate sammeln
+```
 
----
-
-### Szenario 2: Zeitlich begrenzte Schreibaufgabe
-**Ziel:** 30-minütige Schreibaufgabe in Word Online
-
-**Konfiguration:**
-- Dienst: Word Online
-- Sicherheit: Ausgewogen
-- Optionen: ✅ Rechtschreibprüfung, ❌ Downloads (Cloud-Speicherung erzwingen)
-- Hinweis: Zeitlimit in SEB-Einstellungen hinzufügen
-
-**Ergebnis:** Schüler*innen können nicht im Internet surfen, müssen sich aufs Schreiben konzentrieren
+**Ergebnis:** SuS fokussiert, alle Tools funktionieren nahtlos, klare Struktur
 
 ---
 
-### Szenario 3: Kollaboratives Google Doc
-**Ziel:** Gruppen-Bearbeitungsprojekt
+### Szenario 2: Mathe-Übungsstunde
 
-**Konfiguration:**
-- Dienst: Google Docs
-- Sicherheit: Locker
-- Optionen: ✅ Alle aktiviert
-- Hinzufügen: *.google.com für volle Kollaborationsfunktionen
+**Setup:**
+```
+Dienste: Whiteboard.fi + OneNote
+Start-URL: sites.google.com/view/mathe-uebung
+Dauer: 60 Minuten
+```
 
-**Ergebnis:** Schüler*innen können zusammenarbeiten ohne Ablenkungen
+**Sites-Inhalt:**
+```
+1. Whiteboard.fi (30 Min) - Gemeinsames Lösen von Aufgaben
+2. OneNote (30 Min) - Individuelle Übungen im Notizbuch
+```
+
+**Ergebnis:** Abwechslungsreiche Stunde, visuelle Zusammenarbeit + individuelle Arbeit
 
 ---
 
-## Best Practices
+### Szenario 3: Projektarbeit in Gruppen
 
-### ✅ TUN:
-- Konfigurationen mit Schüler-Accounts testen, bevor Sie sie im Unterricht verwenden
-- Klar kommunizieren, warum Sie SEB verwenden
-- Einen Papier-Backup-Plan haben
-- Mit permissiven Einstellungen beginnen
-- Feedback von Schüler*innen einholen
+**Setup:**
+```
+Dienste: Padlet + Miro + Word Online
+Start-URL: sites.google.com/view/projekt-gruppen
+Dauer: 90 Minuten
+```
 
-### ❌ NICHT TUN:
-- Für Prüfungen mit hohem Einsatz auf BYOD verwenden
-- Annehmen, dass es manipulationssicher ist
-- Zu restriktiv machen (Schüler*innen werden widerstehen)
-- Testphase überspringen
-- Vergessen zu aktualisieren, wenn Dienste sich ändern
+**Sites-Inhalt:**
+```
+Phase 1: Brainstorming mit Padlet (30 Min)
+Phase 2: Mind Map mit Miro (30 Min)
+Phase 3: Dokumentation in Word (30 Min)
+```
+
+**Ergebnis:** Flexible Gruppenarbeit ohne Ablenkungen, klarer Workflow
+
+---
+
+## ✅ Best Practices mit Sites-Hub
+
+### TUN:
+
+✅ **Sites-Seite vor jeder Lektion aktualisieren**
+   - Neue PINs/Codes für Kahoot/Mentimeter
+   - Aktuelle Links zu Padlet/Miro
+   - Zeitplan anpassen
+
+✅ **Klare visuelle Struktur auf Sites**
+   - Nummerierung verwenden (1️⃣ 2️⃣ 3️⃣)
+   - Zeitangaben hinzufügen
+   - Emojis für bessere Orientierung
+
+✅ **Mit Schüler-Account testen**
+   - Nicht mit Lehrer-Account!
+   - Auf verschiedenen Geräten
+   - Im Schulnetzwerk
+
+✅ **Backup-Plan haben**
+   - Papier-Alternative vorbereiten
+   - Plan B ohne digitale Tools
+
+✅ **Klar kommunizieren**
+   - Warum SEB verwendet wird
+   - Was erlaubt ist und was nicht
+   - Wie SuS Hilfe bekommen
+
+---
+
+### NICHT TUN:
+
+❌ **NICHT `*.google.com` global freigeben**
+   - Öffnet Gmail, YouTube, etc.
+   - Zunichte gemachter Fokus-Modus
+   - **Nur** `sites.google.com` + `*.googleusercontent.com` verwenden!
+
+❌ **NICHT unverschlüsselte .seb-Dateien verteilen**
+   - SuS könnten Einstellungen ändern
+   - Sicherheitslücke
+
+❌ **NICHT für Prüfungen mit hohem Einsatz verwenden**
+   - Auf BYOD nicht manipulationssicher
+   - Nur für Unterrichtsarbeit geeignet
+
+❌ **NICHT zu restriktiv**
+   - SuS werden frustriert
+   - Widerstand gegen Tool
+   - Start mit "Ausgewogen", nicht "Streng"
+
+❌ **NICHT Testphase überspringen**
+   - Immer vor Verteilung testen
+   - Murphy's Law: "Was schiefgehen kann..."
 
 ---
 
