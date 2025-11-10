@@ -1,9 +1,9 @@
-# Schnellstart-Anleitung für Lehrkräfte
-## SEB Konfigurations-Generator mit Google Sites Hub
+# Schnellstart-Anleitung für Lehrpersonen
+## SEB Konfigurations-Generator mit Google Sites
 
 ### Was ist dieses Tool?
 
-Erstellt Safe Exam Browser (SEB) Konfigurationen, die Schüler*innen helfen, sich auf Bildungsaufgaben zu konzentrieren, indem Ablenkungen blockiert werden.
+Erstellt Safe Exam Browser (SEB) Konfigurationen, die Schüler*innen helfen, sich auf den Unterricht zu konzentrieren, indem Ablenkungen blockiert werden.
 
 **Wichtig:** Dies ist NICHT für Abschlussprüfungen gedacht! Es ist für:
 - ✅ Digitale Arbeitsblätter während des Unterrichts
@@ -13,23 +13,23 @@ Erstellt Safe Exam Browser (SEB) Konfigurationen, die Schüler*innen helfen, sic
 
 ---
 
-## 🌟 Empfohlener Ansatz: Google Sites als Zentrale
+## 🌟 Empfohlener Ansatz: 'Google Sites'-Seite als Start-Seite wählen
 
 ### Warum Google Sites?
 
-**Der beste Weg für Schulen:**
+**Technisch einfachster Weg, um einen Fokus-Modus im Unterricht zu erreichen, wenn man nicht vollumfänglich auf ein LMS setzen möchte/kann:**
 
 1. **Eine zentrale Einstiegsseite** - Alle Aktivitäten der Lektion an einem Ort
 2. **Einfache Kontrolle** - Sehen Sie sofort, wer im SEB-Modus ist
-3. **Flexible Stundenplanung** - Verschiedene Tools über Links nacheinander nutzen
-4. **Sicherheit** - "Geheime" URL verhindert unerlaubten Zugriff
+3. **Flexible Unterrichtsplanung** - Verschiedene Tools über Links nacheinander nutzen
+4. **Kontrolle** - "Geheime" URL verhindert Zugriff ausserhalb der SEB-Umgebung
 
 ### Wie funktioniert es?
 
 ```
 SuS startet .seb-Datei
     ↓
-Öffnet automatisch Ihre Sites-Seite
+Öffnet automatisch Ihre Google-Sites-Seite
     ↓
 SuS klickt Links zu Aktivitäten (Kahoot, Mentimeter, etc.)
     ↓
@@ -48,46 +48,49 @@ Keine Ablenkungen (YouTube, Social Media blockiert)
 
 2. **Neue Seite erstellen:**
    - Klicken Sie auf "+" (Neue Website)
-   - Name: `Lektion_[Datum]_[Fach]` (z.B. "Lektion_2024_11_09_Mathe")
+   - Name: `[Fach]_[Klasse]_[Datum]` (z.B. "Englisch_G22e_2025-11-10")
 
-3. **Sichtbarkeit einstellen:**
-   - Einstellungen → Teilen
-   - **"Jeder mit Link"** auswählen
-   - ✅ URL wird komplex/geheim (z.B. `sites.google.com/view/xy7z3abc`)
-
-4. **Inhalt hinzufügen - Beispiel:**
+3. **Inhalt hinzufügen - Beispiel:**
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  🎓 Mathematik - Quadratische Gleichungen       │
+│  Englisch - Revision Conditionals 10/11/2025    │
 │  ═══════════════════════════════════════════    │
 │                                                 │
-│  ✅ CHECK: Siehst du diesen Text?              │
-│     → Du bist im SEB-Fokus-Modus!              │
+│    CHECK: Visueller Hinweis für LP              │
+│           Farbe / Bild -> auf                   │
+│           Bildschirm ist einfach                │
+│           ersichtlich ob SuS im                 │
+│           SEB-Modus sind                        │
+│                                                 │                        
+│    Ablauf heute (45 Minuten):                   │
+│  ────────────────────────────────               │
+│  1 [10 Min] Kahoot Quiz - Wiederholung          │
+│        Link: https://kahoot.it                  │
 │                                                 │
-│  📋 Ablauf heute (45 Minuten):                 │
-│  ────────────────────────────────              │
-│  1️⃣ [10 Min] Kahoot Quiz - Wiederholung       │
-│     🔗 Link: https://kahoot.it                 │
-│     📌 PIN: 1234567                            │
 │                                                 │
-│  2️⃣ [15 Min] Mentimeter Umfrage               │
-│     🔗 Link: https://menti.com                 │
-│     📌 Code: 8765 4321                         │
+│  2 [15 Min] Mentimeter Umfrage                  │
+│        Link: https://menti.com                  │
 │                                                 │
-│  3️⃣ [20 Min] Padlet - Lösungsstrategien       │
-│     🔗 Link: https://padlet.com/klasse/mathe   │
 │                                                 │
-│  💡 Hilfe benötigt? → Hand heben!              │
+│  3 [20 Min] Padlet - Lösungsstrategien          │
+│        Link: https://padlet.com/klasse/mathe    │
+│                                                 │
+│  Hilfe benötigt? → Hand heben!                  │
 └─────────────────────────────────────────────────┘
 ```
 
-5. **Veröffentlichen und URL kopieren**
+3. **Sichtbarkeit einstellen, Veröffentlichen und URL kopieren**:**
+   - **"Publizieren"** auswählen
+   - ❌ **Seite nicht indexieren lassen**
+   - ✅ URL bewusst komplex/geheim wählen (z.B. `sites.google.com/view/Englisch_G22e_2025-11-10xy7z3abc`)
 
 ---
 
 ### Schritt 2: Generator öffnen
-Gehen Sie zu: `[IHRE_SCHUL_URL]/seb-generator/` (oder öffnen Sie `index.html`)
+Gehen Sie zu: `https://markuskiller.github.io/SEBConfigGenerator/` (oder <a href="https://raw.githubusercontent.com/markuskiller/SEBConfigGenerator/main/index.html" download="SEBConfigGenerator.html"></a>laden Sie `index.html` herunter und rufen Sie den Generator lokal im Browser auf).
+
+⚠️ Wichtig: Bei beiden Methoden werden keinerlei Daten übermittelt, die gesamte Verarbeitung passiert lokal in Ihrem Browser.
 
 ### Schritt 3: Dienste auswählen (mehrere möglich!)
 
@@ -105,6 +108,11 @@ Gehen Sie zu: `[IHRE_SCHUL_URL]/seb-generator/` (oder öffnen Sie `index.html`)
 - **OneNote Online** - Für digitale Notizbücher
 - **Word Online** - Für Dokumentenbearbeitung
 
+Für obiges Beispiel im Englisch-Unterricht werden folgende Dienste ausgewählt:
+- Kahoot
+- Menti
+- Padlet
+
 ### Schritt 4: Start-URL und Custom Domains
 
 1. **Start-URL eingeben:**
@@ -112,36 +120,16 @@ Gehen Sie zu: `[IHRE_SCHUL_URL]/seb-generator/` (oder öffnen Sie `index.html`)
    https://sites.google.com/view/ihre-geheime-seite-xyz123
    ```
 
-2. **Custom Domains hinzufügen:**
-   ```
-   sites.google.com
-   *.googleusercontent.com
-   fonts.googleapis.com
-   fonts.gstatic.com
-   ```
-   **⚠️ Wichtig:** NICHT `*.google.com` verwenden (zu weitreichend - öffnet Gmail, YouTube!)
+Für obiges Beispiel: `sites.google.com/view/Englisch_G22e_2025-11-10xy7z3abc`
 
 ### Schritt 5: Sicherheitsstufe festlegen
-**Empfehlung:** Beginnen Sie mit **"Ausgewogen"**
 
-- **Locker** = Erlaubt mehr Flexibilität (gut für Unterrichtsarbeit)
-- **Ausgewogen** = Gute Mischung aus Fokus und Benutzerfreundlichkeit ⭐
-- **Streng** = Maximale Einschränkungen (kann Schüler*innen frustrieren)
-
-### Schritt 6: Optionen konfigurieren
-Aktivieren Sie, was Schüler*innen benötigen:
-
-| Option | Wann aktivieren |
-|--------|-----------------|
-| Downloads erlauben | ✅ Wenn sie Dateien speichern müssen |
-| Rechtschreibprüfung | ✅ Immer für Schreibaufgaben aktivieren |
-| Neu-Laden-Button | ✅ Wenn Seiten einfrieren könnten |
-| Vor/Zurück | ✅ Für mehrseitige Dokumente |
+### Schritt 6: Mit Standardwerten fortfahren
 
 ### Schritt 7: Konfiguration herunterladen
 Klicken Sie auf: **"📥 SEB Konfiguration herunterladen (.seb)"**
 
-Speichert als: `Multi_Service_Config.seb` (mehrere Dienste) oder `[Dienst]_Config.seb`
+Wird unter `Multi_Service_Config.seb` (mehrere Dienste), `[Dienst]_Config.seb` (ausgewählter Dienst) oder unter dem manuell eingegebenen Dateinamen gespeichert.
 
 ### Schritt 8: Im SEB Config Tool importieren und finalisieren
 
@@ -157,40 +145,10 @@ Speichert als: `Multi_Service_Config.seb` (mehrere Dienste) oder `[Dienst]_Confi
 5. **Konfiguration verschlüsseln:**
    - Konfigurieren → Mit Passwort oder Zertifikat verschlüsseln
 6. **Als finale .seb-Datei speichern:**
-   - Datei → Speichern unter → `OneNote_Final.seb`
+   - Datei → Speichern unter → `Lektion_[Datum]_[Klasse].seb`
 
 **Wichtig:** Nur die verschlüsselte, finalisierte `.seb`-Datei an Schüler*innen verteilen!
 
-### Schritt 9: An Schüler*innen verteilen
-
-**E-Mail-Vorlage:**
-```
-Betreff: SEB-Setup für Lektion am [Datum]
-
-Hallo zusammen,
-
-für die digitale Lektion am [Tag] benötigt ihr:
-
-1️⃣ Safe Exam Browser installieren:
-   https://safeexambrowser.org/download_de.html
-
-2️⃣ Config-Datei herunterladen:
-   [Lektion_2024_11_09_Final.seb anhängen]
-
-3️⃣ Doppelklick auf die .seb-Datei
-   → SEB startet automatisch
-   → Ihr landet auf der Einstiegsseite
-
-4️⃣ Dort findet ihr alle Links zu den Aktivitäten
-   (Kahoot, Mentimeter, etc.)
-
-Die Konfiguration ist verschlüsselt für eure Sicherheit.
-
-Bis [Tag]!
-[Ihr Name]
-```
-
----
 
 ## Testen (ZUERST MACHEN!)
 
@@ -205,6 +163,14 @@ Bis [Tag]!
    - YouTube öffnen (sollte blockiert sein ✅)
 
 **Wenn etwas nicht funktioniert:** Siehe Fehlerbehebung unten
+
+### Schritt 9: An Schüler*innen verteilen
+
+**Teams-Post-Vorlage:**
+
+---
+
+
 
 ---
 
