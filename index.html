@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';">
     <title>SEB Konfigurations-Generator</title>
     <style>
         /* ============================================================================
@@ -499,6 +500,7 @@ const TRANSLATIONS = {
         groupWithLogin: "Mit Anmeldung",
         groupAllowedTools: "Erlaubte Hilfsmittel",
         selectSubject: "Fach auswählen",
+        // Subject translations - add more as needed (subjectFrench, subjectSpanish, etc.)
         subjectGerman: "Deutsch",
         subjectEnglish: "Englisch",
         step2: "2. Konfigurationseinstellungen",
@@ -598,6 +600,7 @@ const TRANSLATIONS = {
         groupWithLogin: "Login Required",
         groupAllowedTools: "Allowed Reference Tools",
         selectSubject: "Select Subject",
+        // Subject translations - add more as needed (subjectFrench, subjectSpanish, etc.)
         subjectGerman: "German",
         subjectEnglish: "English",
         step2: "2. Configuration Settings",
@@ -757,13 +760,29 @@ const PRESETS = {
     }
 };
 
+// ============================================================================
+// SUBJECTS CONFIGURATION - Easily extensible for additional languages
+// ============================================================================
+const SUBJECTS = {
+    german: {
+        toolPresets: ['duden', 'dwds']
+    },
+    english: {
+        toolPresets: ['oxford', 'cambridge']
+    }
+    // Add more subjects here as needed:
+    // french: { toolPresets: ['larousse', 'reverso'] },
+    // spanish: { toolPresets: ['rae', 'wordreference'] },
+    // italian: { toolPresets: ['treccani', 'dizionario'] }
+};
+
 const PRESET_GROUPS = {
     noLogin: ['whiteboard', 'kahoot', 'mentimeter', 'slido', 'forms', 'padlet', 'miro', 'etherpad'],
     withLogin: ['onenote', 'word'],
-    allowedTools: {
-        german: ['duden', 'dwds'],
-        english: ['oxford', 'cambridge']
-    }
+    // Generate allowedTools from SUBJECTS configuration
+    allowedTools: Object.fromEntries(
+        Object.entries(SUBJECTS).map(([key, config]) => [key, config.toolPresets])
+    )
 };
 
 const SECURITY_LEVELS = {
@@ -782,7 +801,7 @@ const SECURITY_LEVELS = {
 // VERSION & BUILD INFO
 // ============================================================================
 const APP_VERSION = 'v0.9';
-const BUILD_DATE = new Date('2025-11-09T23:50:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const BUILD_DATE = new Date('2025-11-10T06:50:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -958,17 +977,36 @@ function renderPresets() {
     group3Title.innerHTML = `📚 ${t('groupAllowedTools')}`;
     container.appendChild(group3Title);
     
-    // Subject selector
+    // Subject selector - dynamically generated from SUBJECTS configuration
     const subjectSelector = document.createElement('div');
     subjectSelector.style.cssText = 'grid-column: 1 / -1; margin-bottom: 15px;';
-    subjectSelector.innerHTML = `
-        <label style="color: #2c3e5a; font-weight: 600; display: block; margin-bottom: 8px;">${t('selectSubject')}:</label>
-        <select id="subjectSelect" style="width: 100%; padding: 10px; border: 2px solid #dfe6f0; border-radius: 8px; background: #f5f7fb; color: #2c3e5a; font-size: 1em; cursor: pointer;">
-            <option value="">-- ${t('selectSubject')} --</option>
-            <option value="german">${t('subjectGerman')}</option>
-            <option value="english">${t('subjectEnglish')}</option>
-        </select>
-    `;
+    
+    const subjectLabel = document.createElement('label');
+    subjectLabel.style.cssText = 'color: #2c3e5a; font-weight: 600; display: block; margin-bottom: 8px;';
+    subjectLabel.textContent = `${t('selectSubject')}:`;
+    subjectSelector.appendChild(subjectLabel);
+    
+    const subjectSelect = document.createElement('select');
+    subjectSelect.id = 'subjectSelect';
+    subjectSelect.style.cssText = 'width: 100%; padding: 10px; border: 2px solid #dfe6f0; border-radius: 8px; background: #f5f7fb; color: #2c3e5a; font-size: 1em; cursor: pointer;';
+    
+    // Default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = `-- ${t('selectSubject')} --`;
+    subjectSelect.appendChild(defaultOption);
+    
+    // Dynamically add options from SUBJECTS configuration
+    Object.keys(SUBJECTS).forEach(subjectKey => {
+        const option = document.createElement('option');
+        option.value = subjectKey;
+        // Capitalize first letter for translation key: german -> subjectGerman
+        const translationKey = 'subject' + subjectKey.charAt(0).toUpperCase() + subjectKey.slice(1);
+        option.textContent = t(translationKey);
+        subjectSelect.appendChild(option);
+    });
+    
+    subjectSelector.appendChild(subjectSelect);
     container.appendChild(subjectSelector);
     
     // Tools container (initially hidden)
@@ -1077,6 +1115,8 @@ function selectSecurityLevel(key) {
 }
 
 function getAllDomains() {
+    const MAX_CUSTOM_DOMAINS = 500;  // Limit custom domains to prevent performance issues
+    
     // Combine domains from all selected presets
     const presetDomains = [];
     selectedPresets.forEach(presetKey => {
@@ -1087,6 +1127,7 @@ function getAllDomains() {
     
     const customDomains = document.getElementById('customDomains').value
         .split('\n')
+        .slice(0, MAX_CUSTOM_DOMAINS)  // Limit number of lines
         .map(d => d.trim())
         .filter(d => d && !d.startsWith('#'));
     
@@ -1126,21 +1167,41 @@ function updatePreview() {
     const container = document.getElementById('domainPreview');
     document.getElementById('domainCount').textContent = domains.length;
     
+    // Clear container safely
+    container.innerHTML = '';
+    
+    // Show warning if duplicates were removed (add first)
+    if (duplicatesRemoved > 0) {
+        const warningDiv = document.createElement('div');
+        warningDiv.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;padding:10px;margin-bottom:10px;border-radius:4px;color:#856404;font-size:0.9em;';
+        const warningText = currentLang === 'de' 
+            ? `⚠️ ${duplicatesRemoved} doppelte Domain(s) wurden entfernt`
+            : `⚠️ ${duplicatesRemoved} duplicate domain(s) removed`;
+        warningDiv.textContent = warningText;
+        container.appendChild(warningDiv);
+    }
+    
     // Show selected services info
-    let html = '';
     if (selectedPresets.length > 1) {
         const serviceNames = selectedPresets.map(key => 
             t('preset' + key.charAt(0).toUpperCase() + key.slice(1))
         ).join(', ');
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = 'background:#d4edda;border-left:4px solid #28a745;padding:10px;margin-bottom:10px;border-radius:4px;color:#155724;font-size:0.9em;';
         const infoText = currentLang === 'de'
             ? `✓ Ausgewählte Dienste: ${serviceNames}`
             : `✓ Selected services: ${serviceNames}`;
-        html += `<div style="background:#d4edda;border-left:4px solid #28a745;padding:10px;margin-bottom:10px;border-radius:4px;color:#155724;font-size:0.9em;">${infoText}</div>`;
+        infoDiv.textContent = infoText;
+        container.appendChild(infoDiv);
     }
     
-    html += domains
-        .map(domain => `<div class="domain-item">✓ ${domain}</div>`)
-        .join('');
+    // Add allowed domains (XSS-safe with textContent)
+    domains.forEach(domain => {
+        const div = document.createElement('div');
+        div.className = 'domain-item';
+        div.textContent = `✓ ${domain}`;
+        container.appendChild(div);
+    });
     
     // Show blocked domains if any
     const blockedDomains = [];
@@ -1152,34 +1213,38 @@ function updatePreview() {
     });
     
     // Add custom blocked domains from user input
+    const MAX_BLOCKED_DOMAINS = 500;  // Limit blocked domains to prevent performance issues
     const customBlockedInput = document.getElementById('blockedDomains').value;
     if (customBlockedInput.trim()) {
         const customBlockedDomains = customBlockedInput
             .split('\n')
+            .slice(0, MAX_BLOCKED_DOMAINS)  // Limit number of lines
             .map(domain => domain.trim())
             .filter(domain => domain && !domain.startsWith('#'));
         blockedDomains.push(...customBlockedDomains);
     }
     
     if (blockedDomains.length > 0) {
+        const blockedTitleDiv = document.createElement('div');
+        blockedTitleDiv.style.cssText = 'margin-top:20px;padding-top:15px;border-top:2px solid #dfe6f0;';
+        const blockedTitleStrong = document.createElement('strong');
+        blockedTitleStrong.style.color = '#2c3e5a';
         const blockedTitle = currentLang === 'de' 
             ? '🚫 Blockierte Domains (explizit gesperrt)'
             : '🚫 Blocked Domains (explicitly denied)';
-        html += `<div style="margin-top:20px;padding-top:15px;border-top:2px solid #dfe6f0;"><strong style="color:#2c3e5a;">${blockedTitle}</strong></div>`;
-        html += blockedDomains
-            .map(domain => `<div class="domain-item" style="color:#dc3545;">✗ ${domain}</div>`)
-            .join('');
+        blockedTitleStrong.textContent = blockedTitle;
+        blockedTitleDiv.appendChild(blockedTitleStrong);
+        container.appendChild(blockedTitleDiv);
+        
+        // Add blocked domains (XSS-safe with textContent)
+        blockedDomains.forEach(domain => {
+            const div = document.createElement('div');
+            div.className = 'domain-item';
+            div.style.color = '#dc3545';
+            div.textContent = `✗ ${domain}`;
+            container.appendChild(div);
+        });
     }
-    
-    // Show warning if duplicates were removed
-    if (duplicatesRemoved > 0) {
-        const warningText = currentLang === 'de' 
-            ? `⚠️ ${duplicatesRemoved} doppelte Domain(s) wurden entfernt`
-            : `⚠️ ${duplicatesRemoved} duplicate domain(s) removed`;
-        html = `<div style="background:#fff3cd;border-left:4px solid #ffc107;padding:10px;margin-bottom:10px;border-radius:4px;color:#856404;font-size:0.9em;">${warningText}</div>` + html;
-    }
-    
-    container.innerHTML = html;
 }
 
 // ============================================================================
@@ -1188,7 +1253,18 @@ function updatePreview() {
 function generateConfigXML() {
     const securitySettings = SECURITY_LEVELS[currentSecurityLevel].settings;
     const domains = getAllDomains();
-    const startUrl = document.getElementById('startUrl').value;
+    const startUrlInput = document.getElementById('startUrl').value;
+    
+    // Validate start URL
+    if (!isValidURL(startUrlInput)) {
+        const errorMsg = currentLang === 'de'
+            ? 'Ungültige Start-URL. Bitte geben Sie eine gültige http:// oder https:// URL ein.'
+            : 'Invalid start URL. Please enter a valid http:// or https:// URL.';
+        alert(errorMsg);
+        return null;
+    }
+    
+    const startUrl = startUrlInput;
     
     // Build URL filter rules XML (whitelist - action: 1)
     let urlFilterRulesXML = '';
@@ -1229,8 +1305,10 @@ function generateConfigXML() {
     // Add custom blocked domains (blacklist - action: 0) from user input
     const customBlockedInput = document.getElementById('blockedDomains').value;
     if (customBlockedInput.trim()) {
+        const MAX_BLOCKED_DOMAINS = 500;  // Limit blocked domains to prevent performance issues
         const customBlockedDomains = customBlockedInput
             .split('\n')
+            .slice(0, MAX_BLOCKED_DOMAINS)  // Limit number of lines
             .map(domain => domain.trim())
             .filter(domain => domain && !domain.startsWith('#'));
         
@@ -1333,9 +1411,41 @@ function escapeXML(str) {
         .replace(/'/g, '&apos;');
 }
 
+function sanitizeFilename(filename) {
+    // Remove potentially dangerous characters, allow only safe ones
+    // Uses Unicode property escapes to support all language characters (French, German, Italian, Spanish, etc.)
+    return filename
+        .replace(/[^\p{L}\p{N}_\-]/gu, '_')  // Allow Unicode letters, numbers, underscore, dash
+        .replace(/_{2,}/g, '_')  // Replace multiple underscores with single one
+        .replace(/^_+|_+$/g, '')  // Remove leading/trailing underscores
+        .substring(0, 100)  // Limit length to 100 characters
+        || 'SEB_Config';  // Fallback if empty after sanitization
+}
+
+function isValidURL(url) {
+    // Validate URL format and protocol
+    if (!url || !url.trim()) {
+        return false;
+    }
+    try {
+        const parsed = new URL(url);
+        // Only allow http and https protocols
+        return ['http:', 'https:'].includes(parsed.protocol);
+    } catch {
+        return false;
+    }
+}
+
 function downloadConfig() {
     const configXML = generateConfigXML();
-    const configName = document.getElementById('configName').value || 'SEB_Config';
+    
+    // Check if validation failed
+    if (!configXML) {
+        return;
+    }
+    
+    const rawConfigName = document.getElementById('configName').value || 'SEB_Config';
+    const configName = sanitizeFilename(rawConfigName);
     const blob = new Blob([configXML], { type: 'application/xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
