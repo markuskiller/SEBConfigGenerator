@@ -979,10 +979,32 @@ function parseSharePointLink(url, serviceType) {
                 }
             }
             
-            if (!result.pageId) {
-                const pageIdMatch = webUrl.match(/page-id=\{([^}]+)\}/);
-                if (pageIdMatch) {
-                    result.pageId = pageIdMatch[1];
+            // Extract section-id and page-id from wd=target(...) parameter (web URL format)
+            // Format: wd=target(SectionPath.one|{SECTION-ID}/PageName|{PAGE-ID}/)
+            if (!result.sectionId || !result.pageId) {
+                const wdMatch = webUrl.match(/[&?]wd=([^&]+)/);
+                if (wdMatch) {
+                    const wdDecoded = decodeURIComponent(wdMatch[1]);
+                    
+                    // Extract section ID: .one|{GUID}/
+                    if (!result.sectionId) {
+                        const sectionIdMatch = wdDecoded.match(/\.one\|([A-F0-9-]+)\//i);
+                        if (sectionIdMatch) {
+                            result.sectionId = sectionIdMatch[1];
+                        }
+                    }
+                    
+                    // Extract page ID: Must come AFTER the section ID pattern
+                    // Look for: /PageName|{GUID}/ that comes after .one|{SECTION-ID}/
+                    if (!result.pageId) {
+                        const afterSection = wdDecoded.match(/\.one\|[A-F0-9-]+\/(.+)/i);
+                        if (afterSection) {
+                            const pageIdMatch = afterSection[1].match(/\|([A-F0-9-]+)\//i);
+                            if (pageIdMatch) {
+                                result.pageId = pageIdMatch[1];
+                            }
+                        }
+                    }
                 }
             }
         } else if (serviceType === 'word') {
@@ -1008,8 +1030,8 @@ function parseSharePointLink(url, serviceType) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.12.3';
-const BUILD_DATE = new Date('2025-11-10T08:23:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.12.4';
+const BUILD_DATE = new Date('2025-11-10T08:30:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1540,25 +1562,28 @@ function getSharePointUrlPatterns() {
         }
         
         if (serviceType === 'onenote') {
-            if (restrictions.notebook && parsedLink.notebook) {
-                patterns.push({
-                    expression: `*/${encodeURIComponent(parsedLink.notebook)}/*`,
-                    active: true,
-                    action: 1
-                });
-            }
+            // IMPORTANT: SEB opens OneNote pages via the web URL (_layouts/Doc.aspx?...),
+            // NOT via the onenote: protocol URL. Therefore, we must use GUIDs from the
+            // web link's wd=target(...) parameter, which contains:
+            // - Section GUID (937FFC30-10F8-7546-9E1D-BECCA08633E1)
+            // - Page GUID (F07BB273-C7EF-1548-9CFF-A866F644BE47)
             
-            if (restrictions.section && parsedLink.section) {
+            // NOTE: Notebook restriction not implemented for web URLs
+            // The wd=target(...) parameter encodes the entire hierarchy path
+            
+            if (restrictions.section && parsedLink.sectionId) {
+                // Match section GUID in wd=target(...) parameter
                 patterns.push({
-                    expression: `*/${encodeURIComponent(parsedLink.section)}*`,
+                    expression: `*${parsedLink.sectionId}*`,
                     active: true,
                     action: 1
                 });
             }
             
             if (restrictions.page && parsedLink.pageId) {
+                // Match page GUID in wd=target(...) parameter
                 patterns.push({
-                    expression: `*page-id={${parsedLink.pageId}}*`,
+                    expression: `*${parsedLink.pageId}*`,
                     active: true,
                     action: 1
                 });
