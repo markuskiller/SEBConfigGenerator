@@ -891,6 +891,7 @@ function parseSharePointLink(url, serviceType) {
             pageId: null,
             sectionId: null,
             folder: null,
+            fileName: null,
             fileId: null
         };
         
@@ -1014,6 +1015,12 @@ function parseSharePointLink(url, serviceType) {
                 result.fileId = fileIdMatch[1];
             }
             
+            // Extract file name from path
+            const fileNameMatch = parsed.pathname.match(/\/([^\/]+\.docx?)$/i);
+            if (fileNameMatch) {
+                result.fileName = decodeURIComponent(fileNameMatch[1]);
+            }
+            
             // Extract folder from path (between /sites/xxx/ and the file)
             const folderMatch = parsed.pathname.match(/\/sites\/[^\/]+\/(.+?)\/[^\/]+\.docx?/i);
             if (folderMatch) {
@@ -1030,8 +1037,8 @@ function parseSharePointLink(url, serviceType) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.12.5';
-const BUILD_DATE = new Date('2025-11-10T08:47:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.12.6';
+const BUILD_DATE = new Date('2025-11-10T08:55:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1582,7 +1589,7 @@ function getSharePointUrlPatterns() {
                     active: true,
                     action: 1,
                     label: currentLang === 'de' ? 'Abschnitt' : 'Section',
-                    name: parsedLink.sectionName || null
+                    name: parsedLink.section || null
                 });
             }
             
