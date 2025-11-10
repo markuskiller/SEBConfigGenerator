@@ -881,17 +881,31 @@ function parseSharePointLink(url, serviceType) {
     if (!url || !url.trim()) return null;
     
     try {
-        const parsed = new URL(url);
         const result = {
             isSharePoint: false,
             domain: null,
             teamsSite: null,
             notebook: null,
             section: null,
+            pageName: null,
             pageId: null,
+            sectionId: null,
             folder: null,
             fileId: null
         };
+        
+        // OneNote links often contain two parts separated by space: web URL and onenote: protocol
+        // Example: "https://.../_layouts/Doc.aspx?... onenote:https://.../Notebook/Section.one#PageName&section-id={...}&page-id={...}"
+        let webUrl = url;
+        let oneNoteProtocolUrl = null;
+        
+        if (url.includes(' onenote:')) {
+            const parts = url.split(' onenote:');
+            webUrl = parts[0].trim();
+            oneNoteProtocolUrl = 'https:' + parts[1].trim(); // Re-add https: prefix
+        }
+        
+        const parsed = new URL(webUrl);
         
         // Check if it's a SharePoint URL
         if (!parsed.hostname.includes('sharepoint.com')) {
@@ -908,22 +922,68 @@ function parseSharePointLink(url, serviceType) {
         }
         
         if (serviceType === 'onenote') {
-            // Extract notebook from path (e.g., /SiteAssets/Englisch%20G22e-Notizbuch/)
-            const notebookMatch = parsed.pathname.match(/\/([^\/]+)-Notizbuch/i);
-            if (notebookMatch) {
-                result.notebook = decodeURIComponent(notebookMatch[1] + '-Notizbuch');
+            // If we have the onenote: protocol URL, parse it for precise information
+            if (oneNoteProtocolUrl) {
+                try {
+                    const oneNoteUrl = new URL(oneNoteProtocolUrl);
+                    
+                    // Extract notebook name from path: /SiteAssets/Englisch%20G22e-Notizbuch/
+                    const notebookMatch = oneNoteUrl.pathname.match(/\/SiteAssets\/([^\/]+)/);
+                    if (notebookMatch) {
+                        result.notebook = decodeURIComponent(notebookMatch[1]);
+                    }
+                    
+                    // Extract section (.one file): /_Inhaltsbibliothek/Language%20Hub%20(Years%203-4).one
+                    const sectionMatch = oneNoteUrl.pathname.match(/\/([^\/]+\.one)/i);
+                    if (sectionMatch) {
+                        result.section = decodeURIComponent(sectionMatch[1]);
+                    }
+                    
+                    // Extract page name from hash: #Participle%20clauses
+                    if (oneNoteUrl.hash) {
+                        const pageNameMatch = oneNoteUrl.hash.match(/#([^&]+)/);
+                        if (pageNameMatch) {
+                            result.pageName = decodeURIComponent(pageNameMatch[1]);
+                        }
+                    }
+                    
+                    // Extract section-id from hash
+                    const sectionIdMatch = oneNoteUrl.hash.match(/section-id=\{([^}]+)\}/);
+                    if (sectionIdMatch) {
+                        result.sectionId = sectionIdMatch[1];
+                    }
+                    
+                    // Extract page-id from hash
+                    const pageIdMatch = oneNoteUrl.hash.match(/page-id=\{([^}]+)\}/);
+                    if (pageIdMatch) {
+                        result.pageId = pageIdMatch[1];
+                    }
+                } catch (e) {
+                    // Fallback to web URL parsing if onenote: URL parsing fails
+                    console.warn('OneNote protocol URL parsing failed, falling back to web URL', e);
+                }
             }
             
-            // Extract section (.one file)
-            const sectionMatch = parsed.pathname.match(/\/([^\/]+\.one)/i);
-            if (sectionMatch) {
-                result.section = decodeURIComponent(sectionMatch[1]);
+            // Fallback: try to extract from web URL if onenote: protocol wasn't available
+            if (!result.notebook) {
+                const notebookMatch = webUrl.match(/\/([^\/]+)-Notizbuch/i);
+                if (notebookMatch) {
+                    result.notebook = decodeURIComponent(notebookMatch[1] + '-Notizbuch');
+                }
             }
             
-            // Extract page ID
-            const pageIdMatch = url.match(/page-id=\{([^}]+)\}/);
-            if (pageIdMatch) {
-                result.pageId = pageIdMatch[1];
+            if (!result.section) {
+                const sectionMatch = webUrl.match(/\/([^\/]+\.one)/i);
+                if (sectionMatch) {
+                    result.section = decodeURIComponent(sectionMatch[1]);
+                }
+            }
+            
+            if (!result.pageId) {
+                const pageIdMatch = webUrl.match(/page-id=\{([^}]+)\}/);
+                if (pageIdMatch) {
+                    result.pageId = pageIdMatch[1];
+                }
             }
         } else if (serviceType === 'word') {
             // Extract file ID (sourcedoc)
@@ -948,8 +1008,8 @@ function parseSharePointLink(url, serviceType) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.11.0';
-const BUILD_DATE = new Date('2025-11-10T07:50:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.12.0';
+const BUILD_DATE = new Date('2025-11-10T08:00:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1302,11 +1362,14 @@ function renderSharePointOptions(serviceType, parsedLink) {
         }
         
         if (parsedLink.pageId) {
+            const detectedInfo = parsedLink.pageName 
+                ? `${t('pageDetected')}: ${parsedLink.pageName}`
+                : `${t('pageDetected')}`;
             const checkbox = createSharePointCheckbox(
                 serviceType,
                 'page',
                 t('restrictToPage'),
-                `${t('pageDetected')}`
+                detectedInfo
             );
             optionsDiv.appendChild(checkbox);
         }
