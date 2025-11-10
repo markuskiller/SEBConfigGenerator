@@ -1037,8 +1037,8 @@ function parseSharePointLink(url, serviceType) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.12.7';
-const BUILD_DATE = new Date('2025-11-10T09:17:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.13.0';
+const BUILD_DATE = new Date('2025-11-10T11:45:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1539,6 +1539,81 @@ function selectSecurityLevel(key) {
     renderSecurityLevels();
 }
 
+function getSharePointRestrictionInfo() {
+    // Returns information about SharePoint restrictions for display purposes
+    // No longer generates URL filter patterns - restrictions are now handled via specific whitelist URLs
+    const info = [];
+    
+    ['onenote', 'word'].forEach(serviceType => {
+        const config = sharepointConfig[serviceType];
+        if (!config.parsedLink || !config.parsedLink.isSharePoint) return;
+        
+        const { parsedLink, restrictions } = config;
+        
+        // Build the replaced and replacement URLs for display
+        let genericUrl = `*.sharepoint.com`;
+        let specificUrl = `https://${parsedLink.domain}`;
+        let restrictionLevel = '';
+        let restrictionName = '';
+        
+        // Determine the most specific restriction level
+        if (serviceType === 'onenote') {
+            if (restrictions.page && parsedLink.pageId && parsedLink.pageName) {
+                specificUrl += `/.../*wd=*${parsedLink.pageId}*`;
+                restrictionLevel = currentLang === 'de' ? 'Seite' : 'Page';
+                restrictionName = parsedLink.pageName;
+            } else if (restrictions.section && parsedLink.sectionId && parsedLink.section) {
+                specificUrl += `/.../*${parsedLink.sectionId}*`;
+                restrictionLevel = currentLang === 'de' ? 'Abschnitt' : 'Section';
+                restrictionName = parsedLink.section;
+            } else if (restrictions.notebook && parsedLink.notebook) {
+                specificUrl += `/SiteAssets/${parsedLink.notebook}/*`;
+                restrictionLevel = currentLang === 'de' ? 'Notizbuch' : 'Notebook';
+                restrictionName = parsedLink.notebook;
+            } else if (restrictions.teamsSite && parsedLink.teamsSite) {
+                specificUrl += `/sites/${parsedLink.teamsSite}/*`;
+                restrictionLevel = currentLang === 'de' ? 'Teams-Site' : 'Teams Site';
+                restrictionName = parsedLink.teamsSite;
+            } else if (restrictions.schoolSharepoint) {
+                specificUrl += '/*';
+                restrictionLevel = currentLang === 'de' ? 'Schul-SharePoint' : 'School SharePoint';
+                restrictionName = parsedLink.domain;
+            }
+        } else if (serviceType === 'word') {
+            if (restrictions.file && parsedLink.fileId && parsedLink.fileName) {
+                specificUrl += `/.../*sourcedoc={${parsedLink.fileId}}*`;
+                restrictionLevel = currentLang === 'de' ? 'Datei' : 'File';
+                restrictionName = parsedLink.fileName;
+            } else if (restrictions.folder && parsedLink.folder) {
+                specificUrl += `/${parsedLink.folder}/*`;
+                restrictionLevel = currentLang === 'de' ? 'Ordner' : 'Folder';
+                restrictionName = parsedLink.folder;
+            } else if (restrictions.teamsSite && parsedLink.teamsSite) {
+                specificUrl += `/sites/${parsedLink.teamsSite}/*`;
+                restrictionLevel = currentLang === 'de' ? 'Teams-Site' : 'Teams Site';
+                restrictionName = parsedLink.teamsSite;
+            } else if (restrictions.schoolSharepoint) {
+                specificUrl += '/*';
+                restrictionLevel = currentLang === 'de' ? 'Schul-SharePoint' : 'School SharePoint';
+                restrictionName = parsedLink.domain;
+            }
+        }
+        
+        if (restrictionLevel) {
+            info.push({
+                genericUrl,
+                specificUrl,
+                restrictionLevel,
+                restrictionName,
+                serviceType
+            });
+        }
+    });
+    
+    return info;
+}
+
+// Legacy function name for backwards compatibility - now returns restriction info
 function getSharePointUrlPatterns() {
     const patterns = [];
     
@@ -1709,18 +1784,54 @@ function getAllDomains() {
             });
         }
         
-        // Add back specific domains based on level
-        if (sharepointRestrictionLevel === 1 && specificSharePointDomain) {
-            // Level 1: Add specific tenant + wildcard for subdomains
-            filteredPresetDomains.push(specificSharePointDomain);
-            filteredPresetDomains.push(`*.${specificSharePointDomain}`);
-        } else if (sharepointRestrictionLevel >= 2 && specificSharePointDomain) {
-            // Level 2+: Only specific tenant domain (no wildcards)
-            filteredPresetDomains.push(specificSharePointDomain);
+        // Add back specific SharePoint URLs based on restriction level
+        // The more specific the restriction, the more specific the URL
+        if (sharepointRestrictionLevel >= 1) {
+            ['onenote', 'word'].forEach(serviceType => {
+                const config = sharepointConfig[serviceType];
+                if (!config.parsedLink || !config.parsedLink.isSharePoint) return;
+                
+                const { parsedLink, restrictions } = config;
+                
+                // Build the specific URL based on the most restrictive level
+                let specificUrl = `https://${parsedLink.domain}`;
+                
+                // Add Teams site if available
+                if (parsedLink.teamsSite && (restrictions.teamsSite || restrictions.notebook || restrictions.section || restrictions.page || restrictions.folder || restrictions.file)) {
+                    specificUrl += `/sites/${parsedLink.teamsSite}`;
+                }
+                
+                if (serviceType === 'onenote') {
+                    if (restrictions.page && parsedLink.pageId) {
+                        // Most specific: Page level - use full _layouts URL with page ID
+                        // This allows only this specific page
+                        specificUrl += `/*wd=*${parsedLink.pageId}*`;
+                    } else if (restrictions.section && parsedLink.sectionId) {
+                        // Section level - use section ID in URL
+                        specificUrl += `/*${parsedLink.sectionId}*`;
+                    } else if (restrictions.notebook && parsedLink.notebook) {
+                        // Notebook level - use SiteAssets path
+                        specificUrl += `/SiteAssets/${encodeURIComponent(parsedLink.notebook)}/*`;
+                    } else {
+                        // School or Teams site level only
+                        specificUrl += '/*';
+                    }
+                } else if (serviceType === 'word') {
+                    if (restrictions.file && parsedLink.fileId) {
+                        // File level - use sourcedoc parameter
+                        specificUrl += `/*sourcedoc={${parsedLink.fileId}}*`;
+                    } else if (restrictions.folder && parsedLink.folder) {
+                        // Folder level
+                        specificUrl += `/${encodeURIComponent(parsedLink.folder)}/*`;
+                    } else {
+                        // School or Teams site level only
+                        specificUrl += '/*';
+                    }
+                }
+                
+                filteredPresetDomains.push(specificUrl);
+            });
         }
-        
-        // For level 3+ and 4, the actual URL filtering happens via getSharePointUrlPatterns()
-        // which adds specific path-based rules to the XML config
     }
     
     // Combine and remove duplicates (case-insensitive)
@@ -1875,76 +1986,62 @@ function updatePreview() {
         container.appendChild(div);
     });
     
-    // Show SharePoint URL patterns if restrictions are active (Level 2+)
-    const urlPatterns = getSharePointUrlPatterns();
+    // Show SharePoint restriction info box if active
+    const restrictionInfo = getSharePointRestrictionInfo();
     
-    // Show restriction info box if any SharePoint restrictions are active
-    if (restrictionLabels.length > 0 || urlPatterns.length > 0) {
-        const patternSectionDiv = document.createElement('div');
-        patternSectionDiv.style.cssText = 'margin-top:20px;padding:15px;background:#e7f3ff;border-left:4px solid #17a2b8;border-radius:4px;';
+    if (restrictionInfo.length > 0) {
+        const restrictionSectionDiv = document.createElement('div');
+        restrictionSectionDiv.style.cssText = 'margin-top:20px;padding:15px;background:#e7f3ff;border-left:4px solid #17a2b8;border-radius:4px;';
         
-        const patternTitleStrong = document.createElement('strong');
-        patternTitleStrong.style.cssText = 'color:#2c3e5a;display:block;margin-bottom:10px;font-size:1em;';
-        const patternTitle = currentLang === 'de' 
-            ? '🔗 Erlaubte URL-Muster (SharePoint-Einschränkungen)'
-            : '🔗 Allowed URL Patterns (SharePoint Restrictions)';
-        patternTitleStrong.textContent = patternTitle;
-        patternSectionDiv.appendChild(patternTitleStrong);
+        const restrictionTitleStrong = document.createElement('strong');
+        restrictionTitleStrong.style.cssText = 'color:#2c3e5a;display:block;margin-bottom:10px;font-size:1em;';
+        const restrictionTitle = currentLang === 'de' 
+            ? '🔗 SharePoint-Einschränkungen (Spezifisch ersetzt Generisch)'
+            : '🔗 SharePoint Restrictions (Specific Replaces Generic)';
+        restrictionTitleStrong.textContent = restrictionTitle;
+        restrictionSectionDiv.appendChild(restrictionTitleStrong);
         
-        // Add restriction hierarchy info if available
-        if (restrictionLabels.length > 0) {
-            const restrictionInfoDiv = document.createElement('div');
-            restrictionInfoDiv.style.cssText = 'font-size:0.9em;color:#0c5460;margin-bottom:10px;padding:8px;background:#fff;border-radius:4px;border:1px solid #bee5eb;';
-            const restrictionText = restrictionLabels.join(' → ');
-            const infoText = currentLang === 'de'
-                ? `🔒 Einschränkungen: ${restrictionText}`
-                : `🔒 Restrictions: ${restrictionText}`;
-            restrictionInfoDiv.textContent = infoText;
-            patternSectionDiv.appendChild(restrictionInfoDiv);
-        }
+        const restrictionExplain = document.createElement('div');
+        restrictionExplain.style.cssText = 'font-size:0.85em;color:#0c5460;margin-bottom:15px;font-style:italic;';
+        const explainText = currentLang === 'de'
+            ? 'Generische Wildcards werden durch spezifische URLs ersetzt. Andere Domains (Login, 2FA etc.) bleiben unberührt:'
+            : 'Generic wildcards are replaced by specific URLs. Other domains (login, 2FA etc.) remain unaffected:';
+        restrictionExplain.textContent = explainText;
+        restrictionSectionDiv.appendChild(restrictionExplain);
         
-        // Show pattern explanation and patterns only if there are actual patterns
-        if (urlPatterns.length > 0) {
-            const patternExplain = document.createElement('div');
-            patternExplain.style.cssText = 'font-size:0.85em;color:#0c5460;margin-bottom:10px;font-style:italic;';
-            const explainText = currentLang === 'de'
-                ? 'Nur URLs die ALLE folgenden Muster enthalten sind erlaubt:'
-                : 'Only URLs containing ALL of the following patterns are allowed:';
-            patternExplain.textContent = explainText;
-            patternSectionDiv.appendChild(patternExplain);
+        // Display each restriction replacement
+        restrictionInfo.forEach(info => {
+            const replacementDiv = document.createElement('div');
+            replacementDiv.style.cssText = 'padding:12px;margin:10px 0;background:#fff;border-radius:4px;border:1px solid #bee5eb;';
             
-            // Add URL patterns with special styling
-            urlPatterns.forEach(pattern => {
-                const div = document.createElement('div');
-                div.style.cssText = 'padding:8px 12px;margin:5px 0;background:#fff;border-left:3px solid #17a2b8;border-radius:4px;color:#0c5460;';
-                
-                // Show label and name if available
-                if (pattern.label && pattern.name) {
-                    const labelSpan = document.createElement('span');
-                    labelSpan.style.cssText = 'font-weight:600;color:#17a2b8;display:block;margin-bottom:4px;font-size:0.9em;';
-                    labelSpan.textContent = `${pattern.label} (${pattern.name})`;
-                    div.appendChild(labelSpan);
-                }
-                
-                const patternSpan = document.createElement('span');
-                patternSpan.style.cssText = 'font-family:monospace;font-size:0.9em;display:block;';
-                patternSpan.textContent = pattern.expression;
-                div.appendChild(patternSpan);
-                
-                patternSectionDiv.appendChild(div);
-            });
-        } else {
-            // No patterns available, show informative message
-            const noteDiv = document.createElement('div');
-            noteDiv.style.cssText = 'font-size:0.85em;color:#856404;margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;border:1px solid #ffeaa7;';
-            const noteText = currentLang === 'de'
-                ? '⚠️ Hinweis: Für diese Einschränkungsebene können keine spezifischen URL-Muster generiert werden. Die Einschränkung erfolgt nur über die Domain-Whitelist.'
-                : '⚠️ Note: No specific URL patterns can be generated for this restriction level. Access is controlled via domain whitelist only.';
-            noteDiv.textContent = noteText;
-            patternSectionDiv.appendChild(noteDiv);
-        }
+            // Show restriction level and name
+            const levelDiv = document.createElement('div');
+            levelDiv.style.cssText = 'font-weight:600;color:#17a2b8;margin-bottom:8px;font-size:0.95em;';
+            levelDiv.textContent = `${info.restrictionLevel}: ${info.restrictionName}`;
+            replacementDiv.appendChild(levelDiv);
+            
+            // Show generic URL (crossed out)
+            const genericDiv = document.createElement('div');
+            genericDiv.style.cssText = 'font-family:monospace;font-size:0.85em;color:#999;text-decoration:line-through;margin-bottom:4px;';
+            genericDiv.textContent = `❌ ${info.genericUrl}`;
+            replacementDiv.appendChild(genericDiv);
+            
+            // Show arrow
+            const arrowDiv = document.createElement('div');
+            arrowDiv.style.cssText = 'color:#17a2b8;margin:4px 0;font-size:1.2em;';
+            arrowDiv.textContent = '⬇️';
+            replacementDiv.appendChild(arrowDiv);
+            
+            // Show specific URL (highlighted)
+            const specificDiv = document.createElement('div');
+            specificDiv.style.cssText = 'font-family:monospace;font-size:0.85em;color:#0c5460;font-weight:600;margin-top:4px;word-break:break-all;';
+            specificDiv.textContent = `✅ ${info.specificUrl}`;
+            replacementDiv.appendChild(specificDiv);
+            
+            restrictionSectionDiv.appendChild(replacementDiv);
+        });
         
-        container.appendChild(patternSectionDiv);
+        container.appendChild(restrictionSectionDiv);
     }
     
     // Show blocked domains if any
@@ -2026,21 +2123,8 @@ function generateConfigXML() {
 `;
     });
     
-    // Add SharePoint URL patterns (if configured)
-    const sharepointPatterns = getSharePointUrlPatterns();
-    sharepointPatterns.forEach(pattern => {
-        urlFilterRulesXML += `\t\t<dict>
-\t\t\t<key>action</key>
-\t\t\t<integer>${pattern.action}</integer>
-\t\t\t<key>active</key>
-\t\t\t<${pattern.active ? 'true' : 'false'}/>
-\t\t\t<key>expression</key>
-\t\t\t<string>${escapeXML(pattern.expression)}</string>
-\t\t\t<key>regex</key>
-\t\t\t<false/>
-\t\t</dict>
-`;
-    });
+    // NOTE: SharePoint restrictions are now handled via specific URLs in the whitelist above
+    // No separate URL filter patterns needed - this prevents conflicts with login/2FA domains
     
     // Add blocked domains (blacklist - action: 0) from selected presets
     selectedPresets.forEach(presetKey => {
