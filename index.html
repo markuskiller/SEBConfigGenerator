@@ -1037,8 +1037,8 @@ function parseSharePointLink(url, serviceType) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.12.6';
-const BUILD_DATE = new Date('2025-11-10T08:55:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.12.7';
+const BUILD_DATE = new Date('2025-11-10T09:17:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1579,8 +1579,17 @@ function getSharePointUrlPatterns() {
             // - Section GUID (937FFC30-10F8-7546-9E1D-BECCA08633E1)
             // - Page GUID (F07BB273-C7EF-1548-9CFF-A866F644BE47)
             
-            // NOTE: Notebook restriction not implemented for web URLs
-            // The wd=target(...) parameter encodes the entire hierarchy path
+            // Notebook restriction: Use notebook name in URL path
+            // The notebook name appears in the path as /SiteAssets/{NotebookName}/
+            if (restrictions.notebook && parsedLink.notebook) {
+                patterns.push({
+                    expression: `*/SiteAssets/${encodeURIComponent(parsedLink.notebook)}/*`,
+                    active: true,
+                    action: 1,
+                    label: currentLang === 'de' ? 'Notizbuch' : 'Notebook',
+                    name: parsedLink.notebook || null
+                });
+            }
             
             if (restrictions.section && parsedLink.sectionId) {
                 // Match section GUID in wd=target(...) parameter
@@ -1868,7 +1877,9 @@ function updatePreview() {
     
     // Show SharePoint URL patterns if restrictions are active (Level 2+)
     const urlPatterns = getSharePointUrlPatterns();
-    if (urlPatterns.length > 0) {
+    
+    // Show restriction info box if any SharePoint restrictions are active
+    if (restrictionLabels.length > 0 || urlPatterns.length > 0) {
         const patternSectionDiv = document.createElement('div');
         patternSectionDiv.style.cssText = 'margin-top:20px;padding:15px;background:#e7f3ff;border-left:4px solid #17a2b8;border-radius:4px;';
         
@@ -1892,34 +1903,46 @@ function updatePreview() {
             patternSectionDiv.appendChild(restrictionInfoDiv);
         }
         
-        const patternExplain = document.createElement('div');
-        patternExplain.style.cssText = 'font-size:0.85em;color:#0c5460;margin-bottom:10px;font-style:italic;';
-        const explainText = currentLang === 'de'
-            ? 'Nur URLs die ALLE folgenden Muster enthalten sind erlaubt:'
-            : 'Only URLs containing ALL of the following patterns are allowed:';
-        patternExplain.textContent = explainText;
-        patternSectionDiv.appendChild(patternExplain);
-        
-        // Add URL patterns with special styling
-        urlPatterns.forEach(pattern => {
-            const div = document.createElement('div');
-            div.style.cssText = 'padding:8px 12px;margin:5px 0;background:#fff;border-left:3px solid #17a2b8;border-radius:4px;color:#0c5460;';
+        // Show pattern explanation and patterns only if there are actual patterns
+        if (urlPatterns.length > 0) {
+            const patternExplain = document.createElement('div');
+            patternExplain.style.cssText = 'font-size:0.85em;color:#0c5460;margin-bottom:10px;font-style:italic;';
+            const explainText = currentLang === 'de'
+                ? 'Nur URLs die ALLE folgenden Muster enthalten sind erlaubt:'
+                : 'Only URLs containing ALL of the following patterns are allowed:';
+            patternExplain.textContent = explainText;
+            patternSectionDiv.appendChild(patternExplain);
             
-            // Show label and name if available
-            if (pattern.label && pattern.name) {
-                const labelSpan = document.createElement('span');
-                labelSpan.style.cssText = 'font-weight:600;color:#17a2b8;display:block;margin-bottom:4px;font-size:0.9em;';
-                labelSpan.textContent = `${pattern.label} (${pattern.name})`;
-                div.appendChild(labelSpan);
-            }
-            
-            const patternSpan = document.createElement('span');
-            patternSpan.style.cssText = 'font-family:monospace;font-size:0.9em;display:block;';
-            patternSpan.textContent = pattern.expression;
-            div.appendChild(patternSpan);
-            
-            patternSectionDiv.appendChild(div);
-        });
+            // Add URL patterns with special styling
+            urlPatterns.forEach(pattern => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding:8px 12px;margin:5px 0;background:#fff;border-left:3px solid #17a2b8;border-radius:4px;color:#0c5460;';
+                
+                // Show label and name if available
+                if (pattern.label && pattern.name) {
+                    const labelSpan = document.createElement('span');
+                    labelSpan.style.cssText = 'font-weight:600;color:#17a2b8;display:block;margin-bottom:4px;font-size:0.9em;';
+                    labelSpan.textContent = `${pattern.label} (${pattern.name})`;
+                    div.appendChild(labelSpan);
+                }
+                
+                const patternSpan = document.createElement('span');
+                patternSpan.style.cssText = 'font-family:monospace;font-size:0.9em;display:block;';
+                patternSpan.textContent = pattern.expression;
+                div.appendChild(patternSpan);
+                
+                patternSectionDiv.appendChild(div);
+            });
+        } else {
+            // No patterns available, show informative message
+            const noteDiv = document.createElement('div');
+            noteDiv.style.cssText = 'font-size:0.85em;color:#856404;margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;border:1px solid #ffeaa7;';
+            const noteText = currentLang === 'de'
+                ? '⚠️ Hinweis: Für diese Einschränkungsebene können keine spezifischen URL-Muster generiert werden. Die Einschränkung erfolgt nur über die Domain-Whitelist.'
+                : '⚠️ Note: No specific URL patterns can be generated for this restriction level. Access is controlled via domain whitelist only.';
+            noteDiv.textContent = noteText;
+            patternSectionDiv.appendChild(noteDiv);
+        }
         
         container.appendChild(patternSectionDiv);
     }
