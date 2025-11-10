@@ -388,6 +388,19 @@
                     <label data-i18n="configName">Konfigurationsname</label>
                     <input type="text" id="configName" placeholder="Meine_Schule_OneNote">
                 </div>
+                
+                <!-- SharePoint Link Configuration (shown only for OneNote/Word) -->
+                <div class="form-group" id="sharepointLinkGroup" style="display: none;">
+                    <label data-i18n="sharepointLinkLabel">SharePoint-Link (Optional - für erweiterte Filterung)</label>
+                    <input type="url" id="sharepointLink" data-i18n-placeholder="sharepointLinkPlaceholder" placeholder="https://schule.sharepoint.com/sites/...">
+                    <div id="sharepointHelp" style="margin-top: 8px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 0.9em; color: #856404; display: none;">
+                        <!-- Help text will be inserted here dynamically -->
+                    </div>
+                    <div id="sharepointOptions" style="margin-top: 15px; display: none;">
+                        <!-- SharePoint options will be rendered here dynamically -->
+                    </div>
+                </div>
+                
                 <div class="form-group">
                     <label data-i18n="securityLevel">Sicherheitsstufe</label>
                     <div class="security-level" id="securityLevel"></div>
@@ -509,6 +522,28 @@ const TRANSLATIONS = {
         step4: "4. Vorschau & Download",
         startUrl: "Start-URL",
         configName: "Konfigurationsname",
+        
+        // SharePoint configuration
+        sharepointLinkLabel: "SharePoint-Link (Optional - für erweiterte Filterung)",
+        sharepointLinkPlaceholder: "https://schule.sharepoint.com/sites/...",
+        sharepointOptionsTitle: "📎 SharePoint-Einschränkungen",
+        sharepointPastePrompt: "Fügen Sie einen SharePoint-Link ein, um erweiterte Filteroptionen zu aktivieren",
+        sharepointHelpOneNote: "💡 OneNote: Rechtsklick auf Seite → 'Link zu dieser Seite kopieren'. Achtung: Seiteneinschränkung nur sinnvoll in kollaborativen Bereichen/Abschnitten.",
+        sharepointHelpWord: "💡 Word: Link aus Browser-Adresszeile kopieren (wenn Dokument geöffnet). Achtung bei Kollaboration: Datei muss in Ordner mit Schreibzugriff sein. Für eigene Versionen: 'nur diese Datei' nicht auswählen → Ordnerzugriff ermöglichen.",
+        restrictToSchoolSharepoint: "Nur SharePoint unserer Schule",
+        restrictToTeamsSite: "Nur diese Teams-Site/Gruppe",
+        restrictToNotebook: "Nur dieses Notizbuch",
+        restrictToSection: "Nur dieser Abschnitt",
+        restrictToPage: "Nur diese Seite",
+        restrictToFolder: "Nur Dateien in diesem Ordner",
+        restrictToFile: "Nur diese Datei",
+        sharepointDetected: "SharePoint-Domäne erkannt",
+        teamsSiteDetected: "Teams-Site erkannt",
+        notebookDetected: "Notizbuch erkannt",
+        sectionDetected: "Abschnitt erkannt",
+        pageDetected: "Seite erkannt",
+        folderDetected: "Ordner erkannt",
+        fileDetected: "Datei erkannt",
         securityLevel: "Sicherheitsstufe",
         additionalOptions: "Zusätzliche Optionen",
         allowDownloads: "Datei-Downloads erlauben",
@@ -614,6 +649,28 @@ const TRANSLATIONS = {
         step4: "4. Preview & Download",
         startUrl: "Start URL",
         configName: "Configuration Name",
+        
+        // SharePoint configuration
+        sharepointLinkLabel: "SharePoint Link (Optional - for advanced filtering)",
+        sharepointLinkPlaceholder: "https://school.sharepoint.com/sites/...",
+        sharepointOptionsTitle: "📎 SharePoint Restrictions",
+        sharepointPastePrompt: "Paste a SharePoint link to enable advanced filtering options",
+        sharepointHelpOneNote: "💡 OneNote: Right-click on page → 'Copy link to this page'. Note: Page-level restriction only makes sense for collaborative sections/areas.",
+        sharepointHelpWord: "💡 Word: Copy link from browser address bar (when document is open). Note for collaboration: File must be in folder with write access. For saving own versions: Don't select 'only this file' → enable folder access.",
+        restrictToSchoolSharepoint: "Only our school's SharePoint",
+        restrictToTeamsSite: "Only this Teams site/group",
+        restrictToNotebook: "Only this notebook",
+        restrictToSection: "Only this section",
+        restrictToPage: "Only this page",
+        restrictToFolder: "Only files in this folder",
+        restrictToFile: "Only this file",
+        sharepointDetected: "SharePoint domain detected",
+        teamsSiteDetected: "Teams site detected",
+        notebookDetected: "Notebook detected",
+        sectionDetected: "Section detected",
+        pageDetected: "Page detected",
+        folderDetected: "Folder detected",
+        fileDetected: "File detected",
         securityLevel: "Security Level",
         additionalOptions: "Additional Options",
         allowDownloads: "Allow file downloads",
@@ -818,10 +875,81 @@ const SECURITY_LEVELS = {
 };
 
 // ============================================================================
+// SHAREPOINT LINK PARSING
+// ============================================================================
+function parseSharePointLink(url, serviceType) {
+    if (!url || !url.trim()) return null;
+    
+    try {
+        const parsed = new URL(url);
+        const result = {
+            isSharePoint: false,
+            domain: null,
+            teamsSite: null,
+            notebook: null,
+            section: null,
+            pageId: null,
+            folder: null,
+            fileId: null
+        };
+        
+        // Check if it's a SharePoint URL
+        if (!parsed.hostname.includes('sharepoint.com')) {
+            return null;
+        }
+        
+        result.isSharePoint = true;
+        result.domain = parsed.hostname;
+        
+        // Extract Teams site (e.g., /sites/msteams_763fd2/)
+        const siteMatch = parsed.pathname.match(/\/sites\/([^\/]+)/);
+        if (siteMatch) {
+            result.teamsSite = siteMatch[1];
+        }
+        
+        if (serviceType === 'onenote') {
+            // Extract notebook from path (e.g., /SiteAssets/Englisch%20G22e-Notizbuch/)
+            const notebookMatch = parsed.pathname.match(/\/([^\/]+)-Notizbuch/i);
+            if (notebookMatch) {
+                result.notebook = decodeURIComponent(notebookMatch[1] + '-Notizbuch');
+            }
+            
+            // Extract section (.one file)
+            const sectionMatch = parsed.pathname.match(/\/([^\/]+\.one)/i);
+            if (sectionMatch) {
+                result.section = decodeURIComponent(sectionMatch[1]);
+            }
+            
+            // Extract page ID
+            const pageIdMatch = url.match(/page-id=\{([^}]+)\}/);
+            if (pageIdMatch) {
+                result.pageId = pageIdMatch[1];
+            }
+        } else if (serviceType === 'word') {
+            // Extract file ID (sourcedoc)
+            const fileIdMatch = url.match(/sourcedoc[=%]+\{([^}]+)\}/i);
+            if (fileIdMatch) {
+                result.fileId = fileIdMatch[1];
+            }
+            
+            // Extract folder from path (between /sites/xxx/ and the file)
+            const folderMatch = parsed.pathname.match(/\/sites\/[^\/]+\/(.+?)\/[^\/]+\.docx?/i);
+            if (folderMatch) {
+                result.folder = decodeURIComponent(folderMatch[1]);
+            }
+        }
+        
+        return result;
+    } catch (e) {
+        return null;
+    }
+}
+
+// ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.9.1';
-const BUILD_DATE = new Date('2025-11-10T07:00:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.11.0';
+const BUILD_DATE = new Date('2025-11-10T07:50:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -844,6 +972,12 @@ let currentLang = 'de';
 let selectedPresets = []; // Start with no preset selected - user must choose
 let currentSecurityLevel = 'balanced';
 let currentSelectedSubject = ''; // Track selected subject for allowed tools
+
+// SharePoint link state
+let sharepointConfig = {
+    onenote: { parsedLink: null, restrictions: {} },
+    word: { parsedLink: null, restrictions: {} }
+};
 
 // ============================================================================
 // LANGUAGE MANAGEMENT
@@ -882,6 +1016,21 @@ function setLanguage(lang) {
     
     // Update version info
     updateVersionInfo(lang);
+    
+    // Update SharePoint help text if visible
+    const sharepointHelp = document.getElementById('sharepointHelp');
+    if (sharepointHelp && sharepointHelp.style.display !== 'none') {
+        const hasOneNote = selectedPresets.includes('onenote');
+        const hasWord = selectedPresets.includes('word');
+        
+        if (hasOneNote && !hasWord) {
+            sharepointHelp.textContent = t('sharepointHelpOneNote');
+        } else if (hasWord && !hasOneNote) {
+            sharepointHelp.textContent = t('sharepointHelpWord');
+        } else if (hasOneNote && hasWord) {
+            sharepointHelp.textContent = t('sharepointHelpOneNote') + '\n\n' + t('sharepointHelpWord');
+        }
+    }
     
     // Re-render dynamic content
     renderPresets();
@@ -1088,6 +1237,139 @@ function renderSecurityLevels() {
     });
 }
 
+function renderSharePointOptions(serviceType, parsedLink) {
+    const container = document.getElementById('sharepointOptions');
+    if (!parsedLink || !parsedLink.isSharePoint) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+    
+    container.style.display = 'block';
+    container.innerHTML = '';
+    
+    // Title
+    const title = document.createElement('h4');
+    title.style.cssText = 'color: #2c3e5a; margin: 0 0 10px 0; font-size: 0.95em;';
+    title.textContent = t('sharepointOptionsTitle');
+    container.appendChild(title);
+    
+    const optionsDiv = document.createElement('div');
+    optionsDiv.style.cssText = 'background: #f5f7fb; border-radius: 8px; padding: 15px; border: 2px solid #dfe6f0;';
+    
+    // School SharePoint option
+    if (parsedLink.domain) {
+        const checkbox = createSharePointCheckbox(
+            serviceType,
+            'schoolSharepoint',
+            t('restrictToSchoolSharepoint'),
+            `${t('sharepointDetected')}: ${parsedLink.domain}`
+        );
+        optionsDiv.appendChild(checkbox);
+    }
+    
+    // Teams site option
+    if (parsedLink.teamsSite) {
+        const checkbox = createSharePointCheckbox(
+            serviceType,
+            'teamsSite',
+            t('restrictToTeamsSite'),
+            `${t('teamsSiteDetected')}: ${parsedLink.teamsSite}`
+        );
+        optionsDiv.appendChild(checkbox);
+    }
+    
+    // OneNote-specific options
+    if (serviceType === 'onenote') {
+        if (parsedLink.notebook) {
+            const checkbox = createSharePointCheckbox(
+                serviceType,
+                'notebook',
+                t('restrictToNotebook'),
+                `${t('notebookDetected')}: ${parsedLink.notebook}`
+            );
+            optionsDiv.appendChild(checkbox);
+        }
+        
+        if (parsedLink.section) {
+            const checkbox = createSharePointCheckbox(
+                serviceType,
+                'section',
+                t('restrictToSection'),
+                `${t('sectionDetected')}: ${parsedLink.section}`
+            );
+            optionsDiv.appendChild(checkbox);
+        }
+        
+        if (parsedLink.pageId) {
+            const checkbox = createSharePointCheckbox(
+                serviceType,
+                'page',
+                t('restrictToPage'),
+                `${t('pageDetected')}`
+            );
+            optionsDiv.appendChild(checkbox);
+        }
+    }
+    
+    // Word-specific options
+    if (serviceType === 'word') {
+        if (parsedLink.folder) {
+            const checkbox = createSharePointCheckbox(
+                serviceType,
+                'folder',
+                t('restrictToFolder'),
+                `${t('folderDetected')}: ${parsedLink.folder}`
+            );
+            optionsDiv.appendChild(checkbox);
+        }
+        
+        if (parsedLink.fileId) {
+            const checkbox = createSharePointCheckbox(
+                serviceType,
+                'file',
+                t('restrictToFile'),
+                `${t('fileDetected')}`
+            );
+            optionsDiv.appendChild(checkbox);
+        }
+    }
+    
+    container.appendChild(optionsDiv);
+}
+
+function createSharePointCheckbox(serviceType, restrictionType, label, detectedInfo) {
+    const div = document.createElement('div');
+    div.style.cssText = 'margin-bottom: 10px;';
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `sp_${serviceType}_${restrictionType}`;
+    checkbox.style.cssText = 'margin-right: 8px;';
+    checkbox.onchange = () => {
+        if (!sharepointConfig[serviceType].restrictions) {
+            sharepointConfig[serviceType].restrictions = {};
+        }
+        sharepointConfig[serviceType].restrictions[restrictionType] = checkbox.checked;
+        updatePreview();
+    };
+    
+    const labelEl = document.createElement('label');
+    labelEl.htmlFor = checkbox.id;
+    labelEl.style.cssText = 'color: #2c3e5a; font-weight: 600; cursor: pointer;';
+    labelEl.textContent = label;
+    
+    const infoEl = document.createElement('div');
+    infoEl.style.cssText = 'margin-left: 28px; font-size: 0.85em; color: #5b9bd5;';
+    infoEl.textContent = detectedInfo;
+    
+    div.appendChild(checkbox);
+    div.appendChild(labelEl);
+    div.appendChild(infoEl);
+    
+    return div;
+}
+
 function togglePreset(key) {
     // Check if this is an allowed tool (Hilfsmittel)
     const isAllowedTool = Object.values(PRESET_GROUPS.allowedTools).flat().includes(key);
@@ -1097,6 +1379,29 @@ function togglePreset(key) {
         selectedPresets.push(key);
     } else {
         selectedPresets.splice(index, 1);
+    }
+    
+    // Show/hide SharePoint link field for OneNote and Word
+    const sharepointLinkGroup = document.getElementById('sharepointLinkGroup');
+    const sharepointHelp = document.getElementById('sharepointHelp');
+    const hasOneNote = selectedPresets.includes('onenote');
+    const hasWord = selectedPresets.includes('word');
+    const hasOneNoteOrWord = hasOneNote || hasWord;
+    
+    sharepointLinkGroup.style.display = hasOneNoteOrWord ? 'block' : 'none';
+    
+    // Show appropriate help text
+    if (hasOneNote && !hasWord) {
+        sharepointHelp.style.display = 'block';
+        sharepointHelp.textContent = t('sharepointHelpOneNote');
+    } else if (hasWord && !hasOneNote) {
+        sharepointHelp.style.display = 'block';
+        sharepointHelp.textContent = t('sharepointHelpWord');
+    } else if (hasOneNote && hasWord) {
+        sharepointHelp.style.display = 'block';
+        sharepointHelp.textContent = t('sharepointHelpOneNote') + '\n\n' + t('sharepointHelpWord');
+    } else {
+        sharepointHelp.style.display = 'none';
     }
     
     // No longer enforce "at least one main preset" - allow using only Hilfsmittel
@@ -1142,6 +1447,83 @@ function selectSecurityLevel(key) {
     renderSecurityLevels();
 }
 
+function getSharePointUrlPatterns() {
+    const patterns = [];
+    
+    // Check both OneNote and Word configurations
+    ['onenote', 'word'].forEach(serviceType => {
+        const config = sharepointConfig[serviceType];
+        if (!config.parsedLink || !config.parsedLink.isSharePoint) return;
+        
+        const { parsedLink, restrictions } = config;
+        
+        // Build URL patterns based on enabled restrictions
+        if (restrictions.schoolSharepoint && parsedLink.domain) {
+            // Restrict to specific SharePoint domain
+            patterns.push({
+                expression: `*${parsedLink.domain}*`,
+                active: true,
+                action: 1 // Allow
+            });
+        }
+        
+        if (restrictions.teamsSite && parsedLink.teamsSite) {
+            // Restrict to specific Teams site
+            patterns.push({
+                expression: `*/sites/${parsedLink.teamsSite}/*`,
+                active: true,
+                action: 1 // Allow
+            });
+        }
+        
+        if (serviceType === 'onenote') {
+            if (restrictions.notebook && parsedLink.notebook) {
+                patterns.push({
+                    expression: `*/${encodeURIComponent(parsedLink.notebook)}/*`,
+                    active: true,
+                    action: 1
+                });
+            }
+            
+            if (restrictions.section && parsedLink.section) {
+                patterns.push({
+                    expression: `*/${encodeURIComponent(parsedLink.section)}*`,
+                    active: true,
+                    action: 1
+                });
+            }
+            
+            if (restrictions.page && parsedLink.pageId) {
+                patterns.push({
+                    expression: `*page-id={${parsedLink.pageId}}*`,
+                    active: true,
+                    action: 1
+                });
+            }
+        }
+        
+        if (serviceType === 'word') {
+            if (restrictions.folder && parsedLink.folder) {
+                patterns.push({
+                    expression: `*/${encodeURIComponent(parsedLink.folder)}/*`,
+                    active: true,
+                    action: 1
+                });
+            }
+            
+            if (restrictions.file && parsedLink.fileId) {
+                patterns.push({
+                    expression: `*sourcedoc={${parsedLink.fileId}}*`,
+                    active: true,
+                    action: 1
+                });
+            }
+        }
+    });
+    
+    return patterns;
+}
+
 function getAllDomains() {
     const MAX_CUSTOM_DOMAINS = 500;  // Limit custom domains to prevent performance issues
     
@@ -1159,8 +1541,63 @@ function getAllDomains() {
         .map(d => d.trim())
         .filter(d => d && !d.startsWith('#'));
     
+    // Check SharePoint restrictions and determine the most restrictive level
+    let sharepointRestrictionLevel = 0; // 0=none, 1=school, 2=site, 3=notebook/folder, 4=page/file
+    let specificSharePointDomain = null;
+    
+    ['onenote', 'word'].forEach(serviceType => {
+        const config = sharepointConfig[serviceType];
+        if (config.parsedLink && config.parsedLink.isSharePoint && config.parsedLink.domain) {
+            const r = config.restrictions;
+            
+            // Determine restriction level (most specific wins)
+            if (r.page || r.file) {
+                sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 4);
+            } else if (r.section || r.notebook || r.folder) {
+                sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 3);
+            } else if (r.teamsSite) {
+                sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 2);
+            } else if (r.schoolSharepoint) {
+                sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 1);
+            }
+            
+            if (r.schoolSharepoint) {
+                specificSharePointDomain = config.parsedLink.domain;
+            }
+        }
+    });
+    
+    // Apply domain filtering based on restriction level
+    let filteredPresetDomains = presetDomains;
+    
+    if (sharepointRestrictionLevel >= 1) {
+        // Level 1+: Remove *.sharepoint.com wildcard
+        filteredPresetDomains = filteredPresetDomains.filter(d => d !== '*.sharepoint.com');
+        
+        if (sharepointRestrictionLevel >= 2) {
+            // Level 2+: Remove tenant wildcard (*.kshch0.sharepoint.com)
+            // This is added by level 1, so we prevent adding it
+            filteredPresetDomains = filteredPresetDomains.filter(d => 
+                !d.startsWith('*.') || !d.includes('.sharepoint.com')
+            );
+        }
+        
+        // Add back specific domains based on level
+        if (sharepointRestrictionLevel === 1 && specificSharePointDomain) {
+            // Level 1: Add specific tenant + wildcard for subdomains
+            filteredPresetDomains.push(specificSharePointDomain);
+            filteredPresetDomains.push(`*.${specificSharePointDomain}`);
+        } else if (sharepointRestrictionLevel >= 2 && specificSharePointDomain) {
+            // Level 2+: Only specific tenant domain (no wildcards)
+            filteredPresetDomains.push(specificSharePointDomain);
+        }
+        
+        // For level 3+ and 4, the actual URL filtering happens via getSharePointUrlPatterns()
+        // which adds specific path-based rules to the XML config
+    }
+    
     // Combine and remove duplicates (case-insensitive)
-    const allDomains = [...presetDomains, ...customDomains];
+    const allDomains = [...filteredPresetDomains, ...customDomains];
     const uniqueDomains = [];
     const seen = new Set();
     
@@ -1207,6 +1644,73 @@ function updatePreview() {
             : `⚠️ ${duplicatesRemoved} duplicate domain(s) removed`;
         warningDiv.textContent = warningText;
         container.appendChild(warningDiv);
+    }
+    
+    // Show SharePoint restriction info if active
+    let sharepointRestrictionLevel = 0;
+    let specificSharePointDomain = null;
+    let restrictionLabels = [];
+    
+    ['onenote', 'word'].forEach(serviceType => {
+        const config = sharepointConfig[serviceType];
+        if (config.parsedLink && config.parsedLink.isSharePoint && config.parsedLink.domain) {
+            const r = config.restrictions;
+            
+            // Collect active restrictions
+            if (r.schoolSharepoint) {
+                specificSharePointDomain = config.parsedLink.domain;
+                restrictionLabels.push(currentLang === 'de' ? 'Schul-SharePoint' : 'School SharePoint');
+            }
+            if (r.teamsSite) {
+                restrictionLabels.push(currentLang === 'de' ? 'Teams-Site' : 'Teams Site');
+            }
+            if (r.notebook) {
+                restrictionLabels.push(currentLang === 'de' ? 'Notizbuch' : 'Notebook');
+            }
+            if (r.section) {
+                restrictionLabels.push(currentLang === 'de' ? 'Abschnitt' : 'Section');
+            }
+            if (r.page) {
+                restrictionLabels.push(currentLang === 'de' ? 'Seite' : 'Page');
+            }
+            if (r.folder) {
+                restrictionLabels.push(currentLang === 'de' ? 'Ordner' : 'Folder');
+            }
+            if (r.file) {
+                restrictionLabels.push(currentLang === 'de' ? 'Datei' : 'File');
+            }
+            
+            // Determine level
+            if (r.page || r.file) {
+                sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 4);
+            } else if (r.section || r.notebook || r.folder) {
+                sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 3);
+            } else if (r.teamsSite) {
+                sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 2);
+            } else if (r.schoolSharepoint) {
+                sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 1);
+            }
+        }
+    });
+    
+    if (sharepointRestrictionLevel > 0 && restrictionLabels.length > 0) {
+        const spInfoDiv = document.createElement('div');
+        spInfoDiv.style.cssText = 'background:#d1ecf1;border-left:4px solid #17a2b8;padding:10px;margin-bottom:10px;border-radius:4px;color:#0c5460;font-size:0.9em;';
+        
+        let spInfoText = '';
+        if (sharepointRestrictionLevel === 1) {
+            spInfoText = currentLang === 'de'
+                ? `🔒 SharePoint: *.sharepoint.com → ${specificSharePointDomain}`
+                : `🔒 SharePoint: *.sharepoint.com → ${specificSharePointDomain}`;
+        } else if (sharepointRestrictionLevel >= 2) {
+            const restrictionText = restrictionLabels.join(' → ');
+            spInfoText = currentLang === 'de'
+                ? `🔒 Einschränkungen: ${restrictionText} (Wildcards entfernt)`
+                : `🔒 Restrictions: ${restrictionText} (wildcards removed)`;
+        }
+        
+        spInfoDiv.textContent = spInfoText;
+        container.appendChild(spInfoDiv);
     }
     
     // Show selected services/tools info
@@ -1313,6 +1817,22 @@ function generateConfigXML() {
 \t\t\t<true/>
 \t\t\t<key>expression</key>
 \t\t\t<string>${escapeXML(domain)}</string>
+\t\t\t<key>regex</key>
+\t\t\t<false/>
+\t\t</dict>
+`;
+    });
+    
+    // Add SharePoint URL patterns (if configured)
+    const sharepointPatterns = getSharePointUrlPatterns();
+    sharepointPatterns.forEach(pattern => {
+        urlFilterRulesXML += `\t\t<dict>
+\t\t\t<key>action</key>
+\t\t\t<integer>${pattern.action}</integer>
+\t\t\t<key>active</key>
+\t\t\t<${pattern.active ? 'true' : 'false'}/>
+\t\t\t<key>expression</key>
+\t\t\t<string>${escapeXML(pattern.expression)}</string>
 \t\t\t<key>regex</key>
 \t\t\t<false/>
 \t\t</dict>
@@ -1738,6 +2258,29 @@ function attachEventListeners() {
     document.getElementById('customDomains').addEventListener('input', updatePreview);
     document.getElementById('blockedDomains').addEventListener('input', updatePreview);
     document.getElementById('startUrl').addEventListener('input', updatePreview);
+    
+    // SharePoint link parsing
+    document.getElementById('sharepointLink').addEventListener('input', function() {
+        const url = this.value.trim();
+        if (!url) {
+            document.getElementById('sharepointOptions').style.display = 'none';
+            return;
+        }
+        
+        // Determine which service type is selected
+        let serviceType = null;
+        if (selectedPresets.includes('onenote')) {
+            serviceType = 'onenote';
+        } else if (selectedPresets.includes('word')) {
+            serviceType = 'word';
+        }
+        
+        if (serviceType) {
+            const parsed = parseSharePointLink(url, serviceType);
+            sharepointConfig[serviceType].parsedLink = parsed;
+            renderSharePointOptions(serviceType, parsed);
+        }
+    });
     
     // Browser helper
     document.getElementById('browserHelperBtn').addEventListener('click', showBrowserHelper);
