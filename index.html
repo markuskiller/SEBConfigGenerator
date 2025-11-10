@@ -1008,7 +1008,7 @@ function parseSharePointLink(url, serviceType) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.12.1';
+const APP_VERSION = 'v0.12.2';
 const BUILD_DATE = new Date('2025-11-10T08:05:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
@@ -1614,17 +1614,18 @@ function getAllDomains() {
             const r = config.restrictions;
             
             // Determine restriction level (most specific wins)
+            // Any restriction implies schoolSharepoint is active
             if (r.page || r.file) {
                 sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 4);
+                specificSharePointDomain = config.parsedLink.domain;
             } else if (r.section || r.notebook || r.folder) {
                 sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 3);
+                specificSharePointDomain = config.parsedLink.domain;
             } else if (r.teamsSite) {
                 sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 2);
+                specificSharePointDomain = config.parsedLink.domain;
             } else if (r.schoolSharepoint) {
                 sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 1);
-            }
-            
-            if (r.schoolSharepoint) {
                 specificSharePointDomain = config.parsedLink.domain;
             }
         }
@@ -1634,15 +1635,23 @@ function getAllDomains() {
     let filteredPresetDomains = presetDomains;
     
     if (sharepointRestrictionLevel >= 1) {
-        // Level 1+: Remove *.sharepoint.com wildcard
-        filteredPresetDomains = filteredPresetDomains.filter(d => d !== '*.sharepoint.com');
+        // Level 1+: Remove SharePoint-related wildcards that would bypass restrictions
+        const sharePointWildcardsToRemove = [
+            '*.sharepoint.com',
+            '*.sharepointonline.com'
+        ];
+        
+        filteredPresetDomains = filteredPresetDomains.filter(d => 
+            !sharePointWildcardsToRemove.includes(d.toLowerCase())
+        );
         
         if (sharepointRestrictionLevel >= 2) {
-            // Level 2+: Remove tenant wildcard (*.kshch0.sharepoint.com)
-            // This is added by level 1, so we prevent adding it
-            filteredPresetDomains = filteredPresetDomains.filter(d => 
-                !d.startsWith('*.') || !d.includes('.sharepoint.com')
-            );
+            // Level 2+: Also remove any tenant-specific wildcards (e.g., *.kshch0.sharepoint.com)
+            filteredPresetDomains = filteredPresetDomains.filter(d => {
+                const lowerD = d.toLowerCase();
+                // Remove anything that starts with *. and contains sharepoint
+                return !(lowerD.startsWith('*.') && (lowerD.includes('.sharepoint.com') || lowerD.includes('.sharepointonline.com')));
+            });
         }
         
         // Add back specific domains based on level
@@ -1719,31 +1728,7 @@ function updatePreview() {
         if (config.parsedLink && config.parsedLink.isSharePoint && config.parsedLink.domain) {
             const r = config.restrictions;
             
-            // Collect active restrictions
-            if (r.schoolSharepoint) {
-                specificSharePointDomain = config.parsedLink.domain;
-                restrictionLabels.push(currentLang === 'de' ? 'Schul-SharePoint' : 'School SharePoint');
-            }
-            if (r.teamsSite) {
-                restrictionLabels.push(currentLang === 'de' ? 'Teams-Site' : 'Teams Site');
-            }
-            if (r.notebook) {
-                restrictionLabels.push(currentLang === 'de' ? 'Notizbuch' : 'Notebook');
-            }
-            if (r.section) {
-                restrictionLabels.push(currentLang === 'de' ? 'Abschnitt' : 'Section');
-            }
-            if (r.page) {
-                restrictionLabels.push(currentLang === 'de' ? 'Seite' : 'Page');
-            }
-            if (r.folder) {
-                restrictionLabels.push(currentLang === 'de' ? 'Ordner' : 'Folder');
-            }
-            if (r.file) {
-                restrictionLabels.push(currentLang === 'de' ? 'Datei' : 'File');
-            }
-            
-            // Determine level
+            // Determine level first
             if (r.page || r.file) {
                 sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 4);
             } else if (r.section || r.notebook || r.folder) {
@@ -1752,6 +1737,34 @@ function updatePreview() {
                 sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 2);
             } else if (r.schoolSharepoint) {
                 sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 1);
+            }
+            
+            // Build hierarchical label list (all parent levels are implicitly active)
+            if (sharepointRestrictionLevel >= 1) {
+                specificSharePointDomain = config.parsedLink.domain;
+                restrictionLabels.push(currentLang === 'de' ? 'Schul-SharePoint' : 'School SharePoint');
+            }
+            if (sharepointRestrictionLevel >= 2 && r.teamsSite) {
+                restrictionLabels.push(currentLang === 'de' ? 'Teams-Site' : 'Teams Site');
+            }
+            if (sharepointRestrictionLevel >= 3) {
+                if (r.notebook) {
+                    restrictionLabels.push(currentLang === 'de' ? 'Notizbuch' : 'Notebook');
+                }
+                if (r.section) {
+                    restrictionLabels.push(currentLang === 'de' ? 'Abschnitt' : 'Section');
+                }
+                if (r.folder) {
+                    restrictionLabels.push(currentLang === 'de' ? 'Ordner' : 'Folder');
+                }
+            }
+            if (sharepointRestrictionLevel >= 4) {
+                if (r.page) {
+                    restrictionLabels.push(currentLang === 'de' ? 'Seite' : 'Page');
+                }
+                if (r.file) {
+                    restrictionLabels.push(currentLang === 'de' ? 'Datei' : 'File');
+                }
             }
         }
     });
