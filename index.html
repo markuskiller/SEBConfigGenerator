@@ -503,6 +503,7 @@ const TRANSLATIONS = {
         // Subject translations - add more as needed (subjectFrench, subjectSpanish, etc.)
         subjectGerman: "Deutsch",
         subjectEnglish: "Englisch",
+        subjectFrench: "Französisch",
         step2: "2. Konfigurationseinstellungen",
         step3: "3. Benutzerdefinierte Domains (Optional)",
         step4: "4. Vorschau & Download",
@@ -570,6 +571,10 @@ const TRANSLATIONS = {
         presetOxfordDesc: "Englisches Lernwörterbuch",
         presetCambridge: "Cambridge Dictionary",
         presetCambridgeDesc: "Cambridge Englisch Wörterbuch",
+        presetLarousse: "Larousse",
+        presetLarousseDesc: "Französisches Wörterbuch und Enzyklopädie",
+        presetReverso: "Reverso",
+        presetReversoDesc: "Französisches Kontext-Wörterbuch und Übersetzung",
         
         // Security levels
         securityRelaxed: "Locker",
@@ -603,6 +608,7 @@ const TRANSLATIONS = {
         // Subject translations - add more as needed (subjectFrench, subjectSpanish, etc.)
         subjectGerman: "German",
         subjectEnglish: "English",
+        subjectFrench: "French",
         step2: "2. Configuration Settings",
         step3: "3. Custom Domains (Optional)",
         step4: "4. Preview & Download",
@@ -670,6 +676,10 @@ const TRANSLATIONS = {
         presetOxfordDesc: "English learner's dictionary",
         presetCambridge: "Cambridge Dictionary",
         presetCambridgeDesc: "Cambridge English Dictionary",
+        presetLarousse: "Larousse",
+        presetLarousseDesc: "French dictionary and encyclopedia",
+        presetReverso: "Reverso",
+        presetReversoDesc: "French contextual dictionary and translation",
         
         // Security levels
         securityRelaxed: "Relaxed",
@@ -757,6 +767,14 @@ const PRESETS = {
     cambridge: {
         startUrl: "https://dictionary.cambridge.org",
         domains: ["dictionary.cambridge.org","*.cambridge.org"]
+    },
+    larousse: {
+        startUrl: "https://www.larousse.fr/dictionnaires",
+        domains: ["larousse.fr","*.larousse.fr"]
+    },
+    reverso: {
+        startUrl: "https://www.reverso.net/",
+        domains: ["reverso.net","*.reverso.net","context.reverso.net"]
     }
 };
 
@@ -769,9 +787,11 @@ const SUBJECTS = {
     },
     english: {
         toolPresets: ['oxford', 'cambridge']
+    },
+    french: {
+        toolPresets: ['larousse', 'reverso']
     }
     // Add more subjects here as needed:
-    // french: { toolPresets: ['larousse', 'reverso'] },
     // spanish: { toolPresets: ['rae', 'wordreference'] },
     // italian: { toolPresets: ['treccani', 'dizionario'] }
 };
