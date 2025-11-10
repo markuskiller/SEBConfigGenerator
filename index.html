@@ -1636,9 +1636,11 @@ function getAllDomains() {
     
     if (sharepointRestrictionLevel >= 1) {
         // Level 1+: Remove SharePoint-related wildcards that would bypass restrictions
+        // NOTE: *.sharepointonline.com is removed here - needs integration testing to verify
+        // it's not required for 2FA/login. If login issues occur, may need to keep this wildcard.
         const sharePointWildcardsToRemove = [
             '*.sharepoint.com',
-            '*.sharepointonline.com'
+            '*.sharepointonline.com'  // TODO: Verify not needed for 2FA during integration tests
         ];
         
         filteredPresetDomains = filteredPresetDomains.filter(d => 
