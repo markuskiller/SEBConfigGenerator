@@ -820,8 +820,8 @@ const SECURITY_LEVELS = {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.9';
-const BUILD_DATE = new Date('2025-11-10T06:50:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.9.1';
+const BUILD_DATE = new Date('2025-11-10T07:00:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1099,28 +1099,36 @@ function togglePreset(key) {
         selectedPresets.splice(index, 1);
     }
     
-    // Ensure at least one main preset is selected when deselecting (not counting allowed tools)
-    const mainPresets = selectedPresets.filter(p => !Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
-    if (mainPresets.length === 0 && !isAllowedTool && index !== -1) {
-        // Only restore if we were deselecting (index !== -1)
-        selectedPresets = [key];
-    }
+    // No longer enforce "at least one main preset" - allow using only Hilfsmittel
+    // Users can now select only reference tools (e.g., Duden) with a custom start URL
     
-    // Update start URL to first selected main preset
+    // Update start URL to first selected main preset (if any)
     const firstMainPreset = selectedPresets.find(p => !Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
     if (firstMainPreset && PRESETS[firstMainPreset]) {
         document.getElementById('startUrl').value = PRESETS[firstMainPreset].startUrl;
-    } else {
-        document.getElementById('startUrl').value = '';
+    } else if (selectedPresets.length > 0 && !firstMainPreset) {
+        // If only Hilfsmittel selected, use first tool's start URL as suggestion
+        const firstTool = selectedPresets[0];
+        if (PRESETS[firstTool]) {
+            document.getElementById('startUrl').value = PRESETS[firstTool].startUrl;
+        }
     }
     
     // Update config name
     const mainPresetsForName = selectedPresets.filter(p => !Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
+    const toolPresetsForName = selectedPresets.filter(p => Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
+    
     if (mainPresetsForName.length === 1) {
         const presetName = t('preset' + mainPresetsForName[0].charAt(0).toUpperCase() + mainPresetsForName[0].slice(1));
         document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config`;
     } else if (mainPresetsForName.length > 1) {
         document.getElementById('configName').value = `Multi_Service_Config`;
+    } else if (toolPresetsForName.length === 1) {
+        // Only one Hilfsmittel selected
+        const presetName = t('preset' + toolPresetsForName[0].charAt(0).toUpperCase() + toolPresetsForName[0].slice(1));
+        document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config`;
+    } else if (toolPresetsForName.length > 1) {
+        document.getElementById('configName').value = `Reference_Tools_Config`;
     } else {
         document.getElementById('configName').value = '';
     }
@@ -1201,16 +1209,25 @@ function updatePreview() {
         container.appendChild(warningDiv);
     }
     
-    // Show selected services info
-    if (selectedPresets.length > 1) {
+    // Show selected services/tools info
+    if (selectedPresets.length > 0) {
         const serviceNames = selectedPresets.map(key => 
             t('preset' + key.charAt(0).toUpperCase() + key.slice(1))
         ).join(', ');
         const infoDiv = document.createElement('div');
         infoDiv.style.cssText = 'background:#d4edda;border-left:4px solid #28a745;padding:10px;margin-bottom:10px;border-radius:4px;color:#155724;font-size:0.9em;';
         const infoText = currentLang === 'de'
-            ? `✓ Ausgewählte Dienste: ${serviceNames}`
-            : `✓ Selected services: ${serviceNames}`;
+            ? `✓ Ausgewählt: ${serviceNames}`
+            : `✓ Selected: ${serviceNames}`;
+        infoDiv.textContent = infoText;
+        container.appendChild(infoDiv);
+    } else if (customDomains.length > 0) {
+        // Show info when only custom domains are used
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = 'background:#d1ecf1;border-left:4px solid #17a2b8;padding:10px;margin-bottom:10px;border-radius:4px;color:#0c5460;font-size:0.9em;';
+        const infoText = currentLang === 'de'
+            ? `ℹ️ Nur benutzerdefinierte Domains`
+            : `ℹ️ Custom domains only`;
         infoDiv.textContent = infoText;
         container.appendChild(infoDiv);
     }
