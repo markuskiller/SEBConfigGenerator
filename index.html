@@ -1548,7 +1548,9 @@ function getSharePointUrlPatterns() {
             patterns.push({
                 expression: `*${parsedLink.domain}*`,
                 active: true,
-                action: 1 // Allow
+                action: 1, // Allow
+                label: currentLang === 'de' ? 'Schul-SharePoint' : 'School SharePoint',
+                name: parsedLink.domain || null
             });
         }
         
@@ -1557,7 +1559,9 @@ function getSharePointUrlPatterns() {
             patterns.push({
                 expression: `*/sites/${parsedLink.teamsSite}/*`,
                 active: true,
-                action: 1 // Allow
+                action: 1, // Allow
+                label: currentLang === 'de' ? 'Teams-Site' : 'Teams Site',
+                name: parsedLink.teamsSite || null
             });
         }
         
@@ -1576,7 +1580,9 @@ function getSharePointUrlPatterns() {
                 patterns.push({
                     expression: `*${parsedLink.sectionId}*`,
                     active: true,
-                    action: 1
+                    action: 1,
+                    label: currentLang === 'de' ? 'Abschnitt' : 'Section',
+                    name: parsedLink.sectionName || null
                 });
             }
             
@@ -1585,7 +1591,9 @@ function getSharePointUrlPatterns() {
                 patterns.push({
                     expression: `*${parsedLink.pageId}*`,
                     active: true,
-                    action: 1
+                    action: 1,
+                    label: currentLang === 'de' ? 'Seite' : 'Page',
+                    name: parsedLink.pageName || null
                 });
             }
         }
@@ -1595,7 +1603,9 @@ function getSharePointUrlPatterns() {
                 patterns.push({
                     expression: `*/${encodeURIComponent(parsedLink.folder)}/*`,
                     active: true,
-                    action: 1
+                    action: 1,
+                    label: currentLang === 'de' ? 'Ordner' : 'Folder',
+                    name: parsedLink.folder || null
                 });
             }
             
@@ -1603,7 +1613,9 @@ function getSharePointUrlPatterns() {
                 patterns.push({
                     expression: `*sourcedoc={${parsedLink.fileId}}*`,
                     active: true,
-                    action: 1
+                    action: 1,
+                    label: currentLang === 'de' ? 'Datei' : 'File',
+                    name: parsedLink.fileName || null
                 });
             }
         }
@@ -1861,6 +1873,18 @@ function updatePreview() {
         patternTitleStrong.textContent = patternTitle;
         patternSectionDiv.appendChild(patternTitleStrong);
         
+        // Add restriction hierarchy info if available
+        if (restrictionLabels.length > 0) {
+            const restrictionInfoDiv = document.createElement('div');
+            restrictionInfoDiv.style.cssText = 'font-size:0.9em;color:#0c5460;margin-bottom:10px;padding:8px;background:#fff;border-radius:4px;border:1px solid #bee5eb;';
+            const restrictionText = restrictionLabels.join(' → ');
+            const infoText = currentLang === 'de'
+                ? `🔒 Einschränkungen: ${restrictionText}`
+                : `🔒 Restrictions: ${restrictionText}`;
+            restrictionInfoDiv.textContent = infoText;
+            patternSectionDiv.appendChild(restrictionInfoDiv);
+        }
+        
         const patternExplain = document.createElement('div');
         patternExplain.style.cssText = 'font-size:0.85em;color:#0c5460;margin-bottom:10px;font-style:italic;';
         const explainText = currentLang === 'de'
@@ -1872,8 +1896,21 @@ function updatePreview() {
         // Add URL patterns with special styling
         urlPatterns.forEach(pattern => {
             const div = document.createElement('div');
-            div.style.cssText = 'padding:8px 12px;margin:5px 0;background:#fff;border-left:3px solid #17a2b8;border-radius:4px;font-family:monospace;font-size:0.9em;color:#0c5460;';
-            div.textContent = `${pattern.expression}`;
+            div.style.cssText = 'padding:8px 12px;margin:5px 0;background:#fff;border-left:3px solid #17a2b8;border-radius:4px;color:#0c5460;';
+            
+            // Show label and name if available
+            if (pattern.label && pattern.name) {
+                const labelSpan = document.createElement('span');
+                labelSpan.style.cssText = 'font-weight:600;color:#17a2b8;display:block;margin-bottom:4px;font-size:0.9em;';
+                labelSpan.textContent = `${pattern.label} (${pattern.name})`;
+                div.appendChild(labelSpan);
+            }
+            
+            const patternSpan = document.createElement('span');
+            patternSpan.style.cssText = 'font-family:monospace;font-size:0.9em;display:block;';
+            patternSpan.textContent = pattern.expression;
+            div.appendChild(patternSpan);
+            
             patternSectionDiv.appendChild(div);
         });
         
