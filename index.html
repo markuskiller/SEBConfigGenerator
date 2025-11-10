@@ -768,13 +768,13 @@ const PRESETS = {
     onenote: {
         startUrl: "https://www.onenote.com/notebooks",
         // Note: *.sharepoint.com covers school-specific SharePoint sites (e.g., school1.sharepoint.com)
-        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.onenote.com","onenote.officeapps.live.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","browser.events.data.microsoft.com","chc-onenote.officeapps.live.com","common.online.office.com","euc-common.online.office.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
+        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office.net","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.onenote.com","onenote.officeapps.live.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","*.static.microsoft","browser.events.data.microsoft.com","chc-onenote.officeapps.live.com","common.online.office.com","euc-common.online.office.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
         blockedDomains: ["outlook.office.com","outlook.office365.com","teams.microsoft.com","teams.live.com"]
     },
     word: {
         startUrl: "https://www.office.com/launch/word",
         // Note: *.sharepoint.com covers school-specific SharePoint sites (e.g., school1.sharepoint.com)
-        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","browser.events.data.microsoft.com","common.online.office.com","euc-common.online.office.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
+        domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office.net","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","*.static.microsoft","browser.events.data.microsoft.com","common.online.office.com","euc-common.online.office.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
         blockedDomains: ["outlook.office.com","outlook.office365.com","teams.microsoft.com","teams.live.com"]
     },
     whiteboard: {
@@ -1037,8 +1037,8 @@ function parseSharePointLink(url, serviceType) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.13.0';
-const BUILD_DATE = new Date('2025-11-10T11:45:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.13.1';
+const BUILD_DATE = new Date('2025-11-10T12:26:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
