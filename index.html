@@ -528,7 +528,7 @@ const TRANSLATIONS = {
         sharepointLinkPlaceholder: "https://schule.sharepoint.com/sites/...",
         sharepointOptionsTitle: "📎 SharePoint-Einschränkungen",
         sharepointPastePrompt: "Fügen Sie einen SharePoint-Link ein, um erweiterte Filteroptionen zu aktivieren",
-        sharepointHelpOneNote: "💡 OneNote: Rechtsklick auf Seite → 'Link zu dieser Seite kopieren'. Achtung: Seiteneinschränkung nur sinnvoll in kollaborativen Bereichen/Abschnitten.",
+        sharepointHelpOneNote: "💡 OneNote: Rechtsklick auf Seite → 'Link zu dieser Seite kopieren'. Achtung: Abschnitts- oder Seiteneinschränkung nur sinnvoll in kollaborativen Bereichen/Abschnitten eines Notizbuchs (ausser reiner Lesezugriff reicht aus).",
         sharepointHelpWord: "💡 Word: Link aus Browser-Adresszeile kopieren (wenn Dokument geöffnet). Achtung bei Kollaboration: Datei muss in Ordner mit Schreibzugriff sein. Für eigene Versionen: 'nur diese Datei' nicht auswählen → Ordnerzugriff ermöglichen.",
         restrictToSchoolSharepoint: "Nur SharePoint unserer Schule",
         restrictToTeamsSite: "Nur diese Teams-Site/Gruppe",
@@ -655,7 +655,7 @@ const TRANSLATIONS = {
         sharepointLinkPlaceholder: "https://school.sharepoint.com/sites/...",
         sharepointOptionsTitle: "📎 SharePoint Restrictions",
         sharepointPastePrompt: "Paste a SharePoint link to enable advanced filtering options",
-        sharepointHelpOneNote: "💡 OneNote: Right-click on page → 'Copy link to this page'. Note: Page-level restriction only makes sense for collaborative sections/areas.",
+        sharepointHelpOneNote: "💡 OneNote: Right-click on page → 'Copy link to this page'. Note: Section or page restrictions only make sense for collaborative sections/areas of a notebook (unless read-only access is sufficient).",
         sharepointHelpWord: "💡 Word: Copy link from browser address bar (when document is open). Note for collaboration: File must be in folder with write access. For saving own versions: Don't select 'only this file' → enable folder access.",
         restrictToSchoolSharepoint: "Only our school's SharePoint",
         restrictToTeamsSite: "Only this Teams site/group",
@@ -1008,8 +1008,8 @@ function parseSharePointLink(url, serviceType) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.12.0';
-const BUILD_DATE = new Date('2025-11-10T08:00:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.12.1';
+const BUILD_DATE = new Date('2025-11-10T08:05:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
