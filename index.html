@@ -530,6 +530,8 @@ const TRANSLATIONS = {
         sharepointPastePrompt: "Fügen Sie einen SharePoint-Link ein, um erweiterte Filteroptionen zu aktivieren",
         sharepointHelpOneNote: "💡 OneNote: Rechtsklick auf Seite → 'Link zu dieser Seite kopieren'. Achtung: Abschnitts- oder Seiteneinschränkung nur sinnvoll in kollaborativen Bereichen/Abschnitten eines Notizbuchs (ausser reiner Lesezugriff reicht aus).",
         sharepointHelpWord: "💡 Word: Link aus Browser-Adresszeile kopieren (wenn Dokument geöffnet). Achtung bei Kollaboration: Datei muss in Ordner mit Schreibzugriff sein. Für eigene Versionen: 'nur diese Datei' nicht auswählen → Ordnerzugriff ermöglichen.",
+        experimentalWarningTitle: "⚠️ Experimentelle Funktion",
+        experimentalWarningText: "OneNote/Word Online mit SharePoint-Einschränkungen ist in der Beta-Phase. Unbedingt gründlich testen, bevor die Konfiguration an Schüler*innen verteilt wird. In vielen Fällen funktioniert es nur, wenn 'Network Capture' in exakt derselben Umgebung kurz vor dem Einsatz im Unterricht durchgeführt wird.",
         restrictToSchoolSharepoint: "Nur SharePoint unserer Schule",
         restrictToTeamsSite: "Nur diese Teams-Site/Gruppe",
         restrictToNotebook: "Nur dieses Notizbuch",
@@ -657,6 +659,8 @@ const TRANSLATIONS = {
         sharepointPastePrompt: "Paste a SharePoint link to enable advanced filtering options",
         sharepointHelpOneNote: "💡 OneNote: Right-click on page → 'Copy link to this page'. Note: Section or page restrictions only make sense for collaborative sections/areas of a notebook (unless read-only access is sufficient).",
         sharepointHelpWord: "💡 Word: Copy link from browser address bar (when document is open). Note for collaboration: File must be in folder with write access. For saving own versions: Don't select 'only this file' → enable folder access.",
+        experimentalWarningTitle: "⚠️ Experimental Feature",
+        experimentalWarningText: "OneNote/Word Online with SharePoint restrictions is in beta. Thoroughly test before deploying to students. In many cases it only works if 'Network Capture' is run in exactly the same environment soon before the config is used in class.",
         restrictToSchoolSharepoint: "Only our school's SharePoint",
         restrictToTeamsSite: "Only this Teams site/group",
         restrictToNotebook: "Only this notebook",
@@ -1481,6 +1485,37 @@ function togglePreset(key) {
     const hasOneNoteOrWord = hasOneNote || hasWord;
     
     sharepointLinkGroup.style.display = hasOneNoteOrWord ? 'block' : 'none';
+    
+    // Show/hide experimental warning for OneNote and Word
+    let experimentalWarning = document.getElementById('experimentalWarning');
+    if (!experimentalWarning) {
+        // Create warning element if it doesn't exist
+        experimentalWarning = document.createElement('div');
+        experimentalWarning.id = 'experimentalWarning';
+        experimentalWarning.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;padding:15px;margin:15px 0;border-radius:4px;color:#856404;';
+        
+        const warningTitle = document.createElement('strong');
+        warningTitle.style.cssText = 'display:block;margin-bottom:8px;font-size:1.05em;';
+        experimentalWarning.appendChild(warningTitle);
+        
+        const warningText = document.createElement('div');
+        warningText.style.cssText = 'font-size:0.95em;line-height:1.5;';
+        experimentalWarning.appendChild(warningText);
+        
+        // Insert warning before sharepointLinkGroup
+        sharepointLinkGroup.parentNode.insertBefore(experimentalWarning, sharepointLinkGroup);
+    }
+    
+    // Update warning content and visibility
+    if (hasOneNoteOrWord) {
+        experimentalWarning.style.display = 'block';
+        const warningTitle = experimentalWarning.querySelector('strong');
+        const warningText = experimentalWarning.querySelector('div');
+        warningTitle.textContent = t('experimentalWarningTitle');
+        warningText.textContent = t('experimentalWarningText');
+    } else {
+        experimentalWarning.style.display = 'none';
+    }
     
     // Show appropriate help text
     if (hasOneNote && !hasWord) {
