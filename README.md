@@ -105,16 +105,6 @@ Der beste Weg, SEB im Bildungsumfeld zu nutzen:
 
 **Ergebnis:** SuS bleiben fokussiert, alle Tools funktionieren, keine Ablenkungen
 
-## 🔒 Warum keine globale Google-Freigabe?
-
-**Wichtig:** Google Sites sollte **NICHT** als Preset global erlaubt werden!
-
-❌ **Falsch:** `*.google.com` als Preset  
-→ SuS könnten zu Gmail, YouTube, etc. navigieren
-
-✅ **Richtig:** Sites-URL als Start-URL + minimale Domains  
-→ Nur Ihre spezifische Seite + CDN-Ressourcen erlaubt
-
 ## 🌟 Verfügbare Dienste
 
 | Dienst | Typ | Session-Join ohne Login |

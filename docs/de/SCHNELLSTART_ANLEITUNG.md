@@ -122,11 +122,11 @@ Für obiges Beispiel im Englisch-Unterricht werden folgende Dienste ausgewählt:
 
 Für obiges Beispiel: `sites.google.com/view/Englisch_G22e_2025-11-10xy7z3abc`
 
-### Schritt 5: Sicherheitsstufe festlegen
+### Schritt 5: Mit Standardwerten fortfahren
 
-### Schritt 6: Mit Standardwerten fortfahren
+Für eine funktionierende SEB-Konfigurations-Vorlage können die Standardwerte im Normalfall unverändert übernommen werden. Das Finetuning kann im SEB-Config-Tool erfolgen.
 
-### Schritt 7: Konfiguration herunterladen
+### Schritt 6: Konfiguration herunterladen
 Klicken Sie auf: **"📥 SEB Konfiguration herunterladen (.seb)"**
 
 Wird unter `Multi_Service_Config.seb` (mehrere Dienste), `[Dienst]_Config.seb` (ausgewählter Dienst) oder unter dem manuell eingegebenen Dateinamen gespeichert.
@@ -138,39 +138,37 @@ Wird unter `Multi_Service_Config.seb` (mehrere Dienste), `[Dienst]_Config.seb` (
 1. [SEB Config Tool](https://safeexambrowser.org/download_de.html) herunterladen (einmalige Einrichtung)
 2. **SEB Config Tool** öffnen
 3. **Datei → Öffnen** → Ihre heruntergeladene `.seb`-Datei wählen
-4. **Einstellungen überprüfen und verfeinern:**
-   - Administrator-Passwort hinzufügen
+4. **Reiter 'General' → Einstellungen überprüfen und verfeinern:**
+   - Administrator-Passwort hinzufügen (wird benötigt, um Konfigurationsdatei später anzupassen)
    - Beenden-Passwort hinzufügen (falls gewünscht)
    - Zusätzliche Einschränkungen konfigurieren
-5. **Konfiguration verschlüsseln:**
-   - Konfigurieren → Mit Passwort oder Zertifikat verschlüsseln
+5. **Reiter 'Config' → Konfiguration verschlüsseln & START-Passwort setzen:**
+   - Konfigurieren → Mit Passwort und/oder Zertifikat verschlüsseln
+   - **⚠️ Das 'SETTINGS'-Passwort ist gleichzeitig das START-Passwort für die SuS**
 6. **Als finale .seb-Datei speichern:**
    - Datei → Speichern unter → `Lektion_[Datum]_[Klasse].seb`
 
 **Wichtig:** Nur die verschlüsselte, finalisierte `.seb`-Datei an Schüler*innen verteilen!
 
+### Schritt 9: Testen & Verteilen
 
-## Testen (ZUERST MACHEN!)
-
-**Vor der Weitergabe an Schüler*innen:**
+## Testen - ⚠️ Vor der Weitergabe an Schüler*innen:**
 
 1. SEB auf Ihrem Computer installieren
 2. Doppelklick auf Ihre `.seb`-Config-Datei
 3. Versuchen Sie:
-   - Mit einem SCHÜLER-ACCOUNT anmelden (nicht Ihr Lehrer-Account!)
-   - Auf Notizbuch/Dokument zugreifen
-   - Etwas tippen und speichern
-   - YouTube öffnen (sollte blockiert sein ✅)
+   - Mit einem SCHÜLER-(TEST-)ACCOUNT anmelden (nicht mit LP-Account)
+   - Auf freigegebene Ressourcen zugreifen
+   - Etwas tippen und speichern, falls vorgesehen
+   - Falls das Erstellen/Besuchen von Links über eine freigegebene Seite möglich ist, versuchen eine Seite aufzurufen, die gesperrt sein sollte (z.B. MS Teams)
 
 **Wenn etwas nicht funktioniert:** Siehe Fehlerbehebung unten
 
-### Schritt 9: An Schüler*innen verteilen
+## In geeigneter Form an Schüler*innen verteilen
 
-**Teams-Post-Vorlage:**
+Oft ist es sinnvoll, den [SafeExamBrowser](https://safeexambrowser.org/download_de.html) gemeinsam im Unterricht zu installieren (einmal pro Semester bzw. bei Verfügbarkeit einer neuen Version).
 
----
-
-
+Die Konfiguration kann jeweils über den üblichen Kommunikationskanal mit der Möglichkeit zum Datenaustausch (z.B. MS Teams oder E-Mail) an die SuS verteilt werden.
 
 ---
 
@@ -186,25 +184,27 @@ Wird unter `Multi_Service_Config.seb` (mehrere Dienste), `[Dienst]_Config.seb` (
 3. Laden Sie die Capture-Datei hoch
 4. Fügen Sie entdeckte Domains zur Konfiguration hinzu
 
-**Oder:** Bitten Sie IT, Schul-Firewall-Einstellungen zu prüfen
+**Oder:** Bitten Sie IT, Schul-Firewall-Einstellungen zu prüfen und beim der Analyse der notwendigen Domain-Verbindungen zu unterstützen.
 
 ---
 
 ### Problem: "MFA/Zwei-Faktor-Authentifizierung funktioniert nicht"
 
-**Lösung:** Fügen Sie diese Domains in "Benutzerdefinierte Domains" hinzu:
+**Lösung:** Fügen Sie alle notwendigen Domains im Abschnitt "Benutzerdefinierte Domains" hinzu. Gehen Sie dazu gemäss Hilfestellungen im Abschnitt 'Network Capture' vor:
 
-**Für Microsoft:**
+**Für Microsoft (z.B.):**
 ```
 *.msftauth.net
 *.msauth.net
 login.microsoftonline.com
+...
 ```
 
-**Für Google:**
+**Für Google (z.B.):**
 ```
 accounts.google.com
 *.googleusercontent.com
+...
 ```
 
 ---
@@ -215,7 +215,7 @@ accounts.google.com
 1. Von "Streng" → "Ausgewogen" oder "Locker" wechseln
 2. Mehr Optionen aktivieren (Downloads, Neu-Laden, etc.)
 
-**Denken Sie daran:** Auf eigenen Geräten können entschlossene Schüler*innen es umgehen. Das ist in Ordnung - es geht um **Fokus**, nicht **Überwachung**.
+**Denken Sie daran:** Auf eigenen Geräten können entschlossene Schüler*innen die Restriktionen immer umgehen, wenn genügend Wissen, Zeit & Motivation vorhanden ist. Das ist in Ordnung - es geht um **Fokus**, nicht primär **Überwachung**. Solche Probleme müssen auf der pädagogischen Ebene gelöst werden.
 
 ---
 
@@ -225,7 +225,7 @@ accounts.google.com
 1. Zu "Ausgewogen" oder "Streng" wechseln
 2. Sicherstellen, dass URL-Filterung aktiviert ist
 
-**Realitäts-Check:** Auf BYOD können entschlossene Schüler*innen umgehen. Das ist okay - es ist ein Fokus-Tool, keine Mauer.
+**Denken Sie daran:** Auf eigenen Geräten können entschlossene Schüler*innen die Restriktionen immer umgehen, wenn genügend Wissen, Zeit & Motivation vorhanden ist. Das ist in Ordnung - es geht um **Fokus**, nicht primär **Überwachung**. Solche Probleme müssen auf der pädagogischen Ebene gelöst werden.
 
 ---
 
@@ -240,17 +240,15 @@ accounts.google.com
 
 ## Erweitert: Eigenen Dienst hinzufügen
 
-**Beispiel:** Sie möchten Kahoot für Quiz erlauben
+**Beispiel:** Sie möchten Wikipedia für Quiz erlauben
 
 1. Gehen Sie zum Tool
 2. Im Bereich **"Benutzerdefinierte Domains"** hinzufügen:
 ```
-*.kahoot.com
-*.kahoot.it
-play.kahoot.it
+de.wikipedia.org
 ```
 
-3. Start-URL setzen: `https://kahoot.it`
+3. Wikipedia als Start-URL setzen oder innerhalb der bereits freigegebenen Ressourcen (z.B. auf der Google-Site-Einstiegsseite) auf `https://de.wikipedia.org` verlinken
 4. Konfiguration generieren
 
 ---
@@ -261,25 +259,25 @@ play.kahoot.it
 A: Ja, Safe Exam Browser (kostenloser Download)
 
 **F: Funktioniert das auf Handys/Tablets?**
-A: Nein, SEB ist nur für Windows/Mac (experimentelle Chromebook-Unterstützung)
+A: Nicht auf allen Tablets, SEB ist für Windows/macOS und iPadOS verfügbar.
 
 **F: Können Schüler*innen es danach deinstallieren?**
 A: Ja! Es ist nur eine App. Ermutigen Sie Schüler*innen, es für zukünftige Nutzung zu behalten.
 
 **F: Ist das sicher genug für Abschlussprüfungen?**
-A: **Nein.** Verwenden Sie dies für Unterrichtsarbeit, nicht für Prüfungen mit hohem Einsatz.
+A: **Nein.** Verwenden Sie dies für Unterrichtsarbeit, nicht für summative Prüfungen.
 
-**F: Was ist, wenn Schüler*innen kein eigenes Gerät haben?**
-A: Haben Sie Papier-Arbeitsblätter als Backup, oder nutzen Sie Schulcomputer
+**F: Was ist, wenn Schüler*innen kein eigenes Gerät haben bzw. ihr Gerät vergessen haben?**
+A: Nutzen Sie - falls möglich - Schulcomputer
 
 **F: Kann ich eine bestehende Konfiguration bearbeiten?**
-A: Ja! Öffnen Sie die `.seb`-Datei im SEB Config Tool, um Änderungen vorzunehmen
+A: Ja! Öffnen Sie die `.seb`-Datei im SEB Config Tool, um Änderungen vorzunehmen (aber vor Weitergabe an SuS unbedingt verschlüsseln!)
 
 **F: Brauche ich das SEB Config Tool?**
 A: **Ja!** Der Generator erstellt eine Vorlage, die im Config Tool verfeinert, verschlüsselt und finalisiert werden muss, bevor sie verteilt wird.
 
 **F: Warum muss ich die Konfiguration verschlüsseln?**
-A: Verschlüsselung verhindert, dass Schüler*innen die Einstellungen ändern und stellt sicher, dass die Konfiguration nicht einfach umgangen werden kann.
+A: Verschlüsselung verhindert, dass Schüler*innen die Einstellungen ändern und stellt sicher, dass die Konfiguration nicht einfach umgangen werden kann. Zusätzlich gilt das 'Settings'-Passwort als **START-Passwort** für den Fokus-Modus.
 
 ---
 
@@ -376,16 +374,11 @@ Phase 3: Dokumentation in Word (30 Min)
 
 ### NICHT TUN:
 
-❌ **NICHT `*.google.com` global freigeben**
-   - Öffnet Gmail, YouTube, etc.
-   - Zunichte gemachter Fokus-Modus
-   - **Nur** `sites.google.com` + `*.googleusercontent.com` verwenden!
-
 ❌ **NICHT unverschlüsselte .seb-Dateien verteilen**
    - SuS könnten Einstellungen ändern
    - Sicherheitslücke
 
-❌ **NICHT für Prüfungen mit hohem Einsatz verwenden**
+❌ **NICHT für summative Prüfungen verwenden**
    - Auf BYOD nicht manipulationssicher
    - Nur für Unterrichtsarbeit geeignet
 
@@ -439,25 +432,9 @@ Phase 3: Dokumentation in Word (30 Min)
 
 ---
 
-## Erfolgsgeschichten
-
-> "Habe dies für Vokabelübungen in OneNote verwendet. Sah 80% Reduktion 
-> bei Schüler*innen, die soziale Medien während der Unterrichtsarbeit checken." 
-> — *Lehrkraft, Klasse 9 Englisch*
-
-> "Funktioniert super für kollaboratives Schreiben in Google Docs. Schüler*innen 
-> bleiben tatsächlich die gesamte Stunde bei der Aufgabe!"
-> — *Lehrkraft, Klasse 11 Medienkunde*
-
----
-
 ## Nächste Schritte
 
 1. **Heute:** Erste Konfiguration erstellen und testen
 2. **Diese Woche:** Mit einer Klasse als Pilotprojekt verwenden
 3. **Nächster Monat:** Auf alle Klassen ausweiten, wenn erfolgreich
 4. **Teilen:** Kolleg*innen durch Teilen Ihrer Konfigurationen helfen!
-
----
-
-**Fragen?** Schauen Sie sich die vollständige README.md für detaillierte technische Dokumentation an.
