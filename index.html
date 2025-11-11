@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
     <title>SEB Konfigurations-Generator</title>
     <style>
         /* ============================================================================
@@ -509,6 +509,33 @@
                         <!-- Boolean Options (All True/False Options from XML) -->
                         <div class="section">
                             <h2><span data-i18n="allBooleanOptions">Alle True-/False-Optionen</span></h2>
+                            
+                            <!-- Experimental Warning -->
+                            <div style="background:#fff3cd;border-left:4px solid #ffc107;padding:12px 15px;margin-bottom:20px;border-radius:4px;">
+                                <strong style="color:#856404;">⚠️ <span data-i18n="experimentalFeature">Experimentelle Funktion</span></strong><br>
+                                <span style="color:#856404;font-size:0.9em;" data-i18n="booleanOptionsWarning">
+                                    Diese Funktion befindet sich in Entwicklung. Die Menü-Referenzen werden schrittweise für alle Plattformen ergänzt. Verwenden Sie diese Optionen mit Vorsicht und testen Sie die generierte Konfiguration gründlich.
+                                </span>
+                            </div>
+                            
+                            <!-- Platform Selection for Boolean Options -->
+                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding:12px;background:#f5f7fb;border-radius:8px;border:1px solid #dfe6f0;">
+                                <span style="font-weight:500;color:#2c3e5a;font-size:0.95em;">
+                                    <span data-i18n="platformReference">📚 Menü-Referenz für:</span>
+                                </span>
+                                <div style="display:flex;gap:8px;">
+                                    <button class="platform-btn" data-platform="windows" onclick="selectPlatform('windows')" style="padding:6px 16px;border:2px solid #5b9bd5;border-radius:6px;background:#fff;color:#2c3e5a;cursor:pointer;font-weight:500;transition:all 0.2s;">
+                                        🖥️ Windows
+                                    </button>
+                                    <button class="platform-btn" data-platform="macos" onclick="selectPlatform('macos')" style="padding:6px 16px;border:2px solid #dfe6f0;border-radius:6px;background:#fff;color:#6c7a89;cursor:pointer;font-weight:500;transition:all 0.2s;">
+                                        🍎 macOS
+                                    </button>
+                                    <button class="platform-btn" data-platform="ipados" onclick="selectPlatform('ipados')" style="padding:6px 16px;border:2px solid #dfe6f0;border-radius:6px;background:#fff;color:#6c7a89;cursor:pointer;font-weight:500;transition:all 0.2s;">
+                                        📱 iPadOS
+                                    </button>
+                                </div>
+                            </div>
+                            
                             <div id="booleanOptionsContainer"></div>
                         </div>
                         
@@ -657,6 +684,9 @@ const TRANSLATIONS = {
         
         // Boolean options groups
         allBooleanOptions: "Alle True-/False-Optionen",
+        platformReference: "📚 Menü-Referenz für:",
+        experimentalFeature: "Experimentelle Funktion",
+        booleanOptionsWarning: "Diese Funktion befindet sich in Entwicklung. Die Menü-Referenzen werden schrittweise für alle Plattformen ergänzt. Verwenden Sie diese Optionen mit Vorsicht und testen Sie die generierte Konfiguration gründlich.",
         booleanOptionsInfo: "Diese Optionen werden dynamisch aus der SEB-Konfigurationsvorlage geladen. Standardwerte sind bereits gesetzt.",
         browserOptions: "🌐 Browser-Einstellungen",
         securityOptions: "🔒 Sicherheit & Zugriff",
@@ -805,6 +835,9 @@ const TRANSLATIONS = {
         
         // Boolean options groups
         allBooleanOptions: "All True/False Options",
+        platformReference: "📚 Menu Reference for:",
+        experimentalFeature: "Experimental Feature",
+        booleanOptionsWarning: "This feature is under development. Menu references are being added gradually for all platforms. Use these options with caution and thoroughly test the generated configuration.",
         booleanOptionsInfo: "These options are dynamically loaded from the SEB configuration template. Default values are already set.",
         browserOptions: "🌐 Browser Settings",
         securityOptions: "🔒 Security & Access",
@@ -1182,8 +1215,11 @@ function parseSharePointLink(url, serviceType) {
 // ============================================================================
 async function loadAndParseBooleanOptions() {
     try {
-        const response = await fetch('templates/Beispiel_Config_XML.seb');
+        console.log('📥 Fetching XML template...');
+        const response = await fetch('templates/example_config.xml');
+        console.log('📄 Response status:', response.status);
         const xmlText = await response.text();
+        console.log('📝 XML text length:', xmlText.length);
         
         // Parse XML
         const parser = new DOMParser();
@@ -1191,7 +1227,7 @@ async function loadAndParseBooleanOptions() {
         
         // Extract all boolean options
         const allKeys = xmlDoc.getElementsByTagName('key');
-        const options = [];
+        const optionsMap = new Map(); // Use Map to automatically handle duplicates
         
         for (let i = 0; i < allKeys.length; i++) {
             const keyElement = allKeys[i];
@@ -1201,9 +1237,15 @@ async function loadAndParseBooleanOptions() {
             // Check if the next element is <true/> or <false/>
             if (nextSibling && (nextSibling.tagName === 'true' || nextSibling.tagName === 'false')) {
                 const defaultValue = nextSibling.tagName === 'true';
-                options.push({ key: keyName, defaultValue });
+                // Only add if not already in map (first occurrence wins)
+                if (!optionsMap.has(keyName)) {
+                    optionsMap.set(keyName, { key: keyName, defaultValue });
+                }
             }
         }
+        
+        // Convert Map to Array
+        const options = Array.from(optionsMap.values());
         
         // Categorize options into groups
         const groups = {
@@ -1257,12 +1299,103 @@ async function loadAndParseBooleanOptions() {
             parsedBooleanOptions.userSelections[opt.key] = opt.defaultValue; // Initialize with defaults
         });
         
-        console.log(`Parsed ${options.length} boolean options from XML`);
+        console.log(`✅ Parsed ${options.length} boolean options from XML`);
+        console.log('📊 Groups distribution:');
+        Object.keys(groups).forEach(key => {
+            console.log(`   - ${key}: ${groups[key].options.length} options`);
+        });
         return true;
     } catch (error) {
         console.error('Failed to load/parse boolean options from XML:', error);
         return false;
     }
+}
+
+// ============================================================================
+// LOAD BOOLEAN OPTIONS LOCATIONS FROM JSON (PLATFORM-SPECIFIC)
+// ============================================================================
+let booleanOptionsLocations = {};
+
+async function loadBooleanOptionsLocations(platform = 'windows') {
+    // Check if already loaded for this platform
+    if (booleanOptionsLocations[platform]) {
+        return booleanOptionsLocations[platform];
+    }
+    
+    try {
+        console.log(`📍 Loading boolean options locations for ${platform}...`);
+        const response = await fetch(`templates/boolean-options-locations-${platform}.json`);
+        const data = await response.json();
+        booleanOptionsLocations[platform] = data;
+        
+        const optionCount = Object.keys(data.options).length;
+        const versionInfo = data._metadata.sebVersion !== 'TBD' ? ` (SEB v${data._metadata.sebVersion})` : '';
+        console.log(`✅ Loaded locations for ${optionCount} options${versionInfo}`);
+        return data;
+    } catch (error) {
+        console.error(`Failed to load boolean options locations for ${platform}:`, error);
+        return null;
+    }
+}
+
+function getOptionLocation(key) {
+    const platformData = booleanOptionsLocations[currentPlatform];
+    if (!platformData || !platformData.options || !platformData.options[key]) {
+        return null;
+    }
+    
+    const optionData = platformData.options[key];
+    
+    // For Windows format (with macDifferent field)
+    if (currentPlatform === 'windows') {
+        const windowsLoc = optionData.windows;
+        const macDiff = optionData.macDifferent;
+        
+        if (macDiff) {
+            return `${windowsLoc} (Mac: ${macDiff})`;
+        }
+        return windowsLoc;
+    }
+    
+    // For macOS/iPadOS format (direct location)
+    return optionData.location || optionData.windows || null;
+}
+
+function getTranslatedText(key) {
+    const platformData = booleanOptionsLocations[currentPlatform];
+    if (!platformData || !platformData._translations || !platformData._translations[currentLang]) {
+        return key === 'notDocumented' ? 
+            (currentLang === 'de' ? 'Noch nicht dokumentiert' : 'Not yet documented') :
+            (currentLang === 'de' ? 'Diese Option ist noch nicht in der Dokumentation erfasst' : 'This option is not yet documented');
+    }
+    return platformData._translations[currentLang][key];
+}
+
+// Platform selection handler
+async function selectPlatform(platform) {
+    console.log(`🔄 Switching to ${platform} platform...`);
+    currentPlatform = platform;
+    
+    // Update button styles
+    document.querySelectorAll('.platform-btn').forEach(btn => {
+        const btnPlatform = btn.getAttribute('data-platform');
+        if (btnPlatform === platform) {
+            btn.style.borderColor = '#5b9bd5';
+            btn.style.color = '#2c3e5a';
+            btn.style.background = '#e8f2fa';
+        } else {
+            btn.style.borderColor = '#dfe6f0';
+            btn.style.color = '#6c7a89';
+            btn.style.background = '#fff';
+        }
+    });
+    
+    // Load locations for this platform if not already loaded
+    await loadBooleanOptionsLocations(platform);
+    
+    // Re-render options to show new locations
+    renderBooleanOptions();
+    console.log(`✅ Switched to ${platform} platform`);
 }
 
 // Generate human-readable label from key name
@@ -1282,8 +1415,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.16.0';
-const BUILD_DATE = new Date('2025-11-11T14:05:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.17.0';
+const BUILD_DATE = new Date('2025-11-11T15:00:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1320,6 +1453,9 @@ let parsedBooleanOptions = {
     options: {},
     userSelections: {} // Track user's checkbox selections
 };
+
+// Platform selection for boolean options reference
+let currentPlatform = 'windows'; // Default platform
 
 // ============================================================================
 // LANGUAGE MANAGEMENT
@@ -1372,6 +1508,11 @@ function setLanguage(lang) {
         } else if (hasOneNote && hasWord) {
             sharepointHelp.textContent = t('sharepointHelpOneNote') + '\n\n' + t('sharepointHelpWord');
         }
+    }
+    
+    // Re-render boolean options if they are already loaded (to update translated hint texts)
+    if (parsedBooleanOptions.loaded) {
+        renderBooleanOptions();
     }
     
     // Re-render dynamic content
@@ -1903,8 +2044,12 @@ function updateSecurityLevelWarning() {
 // ============================================================================
 function renderBooleanOptions() {
     const container = document.getElementById('booleanOptionsContainer');
-    if (!container) return;
+    if (!container) {
+        console.error('❌ Container not found!');
+        return;
+    }
     
+    console.log('📦 Container found, clearing content...');
     container.innerHTML = '';
     
     // Info box
@@ -1912,13 +2057,20 @@ function renderBooleanOptions() {
     infoBox.style.cssText = 'background:#e8f2fa;border-left:4px solid #5b9bd5;padding:12px 15px;margin-bottom:20px;border-radius:4px;color:#2c3e5a;font-size:0.9em;';
     infoBox.innerHTML = `<strong>ℹ️ ${t('allBooleanOptions')}</strong><br>${t('booleanOptionsInfo')}`;
     container.appendChild(infoBox);
+    console.log('ℹ️ Info box added');
     
     // Render each group
     const groupOrder = ['browser', 'security', 'interface', 'system', 'network', 'mobile', 'other'];
+    console.log('🔍 Processing groups:', groupOrder);
     
     groupOrder.forEach(groupKey => {
         const group = parsedBooleanOptions.groups[groupKey];
-        if (!group || !group.options || group.options.length === 0) return;
+        console.log(`  - Group ${groupKey}:`, group);
+        if (!group || !group.options || group.options.length === 0) {
+            console.log(`  ⚠️ Skipping ${groupKey} (no options)`);
+            return;
+        }
+        console.log(`  ✅ Rendering ${groupKey} with ${group.options.length} options`);
         
         // Group container (collapsible)
         const groupDiv = document.createElement('div');
@@ -1973,8 +2125,20 @@ function renderBooleanOptions() {
             
             const tooltip = document.createElement('div');
             tooltip.style.cssText = 'color:#8898aa;font-size:0.8em;margin-top:4px;font-style:italic;';
-            tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: [Placeholder]`;
-            tooltip.title = 'Diese Info wird in einem späteren Schritt ergänzt';
+            
+            // Get location from JSON (English labels as in original tool)
+            const location = getOptionLocation(opt.key);
+            if (location) {
+                tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${location}`;
+                tooltip.title = location;
+            } else {
+                // Use translated hint texts for undocumented options
+                const notDocText = getTranslatedText('notDocumented');
+                const notDocHint = getTranslatedText('notDocumentedHint');
+                tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${notDocText}`;
+                tooltip.title = notDocHint;
+                tooltip.style.opacity = '0.5';
+            }
             
             label.appendChild(labelText);
             label.appendChild(keyName);
@@ -3065,12 +3229,22 @@ async function toggleAdvancedSection() {
                 container.innerHTML = '<div style="text-align:center;padding:40px;color:#6c7a89;">⏳ ' + 
                     (currentLang === 'de' ? 'Lade Optionen...' : 'Loading options...') + '</div>';
                 
-                // Load and parse boolean options from XML template
-                await loadAndParseBooleanOptions();
+                // Load boolean options locations from JSON and parse options from XML template
+                console.log('🔄 Starting to load boolean options...');
+                
+                // Load locations for current platform (in parallel with XML parsing)
+                const [locationsResult, optionsResult] = await Promise.all([
+                    loadBooleanOptionsLocations(currentPlatform),
+                    loadAndParseBooleanOptions()
+                ]);
+                
+                console.log('✅ Loaded options:', parsedBooleanOptions);
                 parsedBooleanOptions.loaded = true;
                 
                 // Render boolean options
+                console.log('🎨 Rendering boolean options...');
                 renderBooleanOptions();
+                console.log('✅ Rendering complete');
             }
         }
     }
