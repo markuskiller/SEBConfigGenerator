@@ -19,6 +19,8 @@ Gemfile.lock
 
 # Ignore Mac system files
 .DS_Store
+**/.DS_Store
+*/.DS_Store
 
 # ============================================================================
 # Internal Documentation (OneDrive backup only, not in public repo)
