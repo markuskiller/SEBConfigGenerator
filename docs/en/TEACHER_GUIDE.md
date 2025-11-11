@@ -62,7 +62,7 @@ No distractions (YouTube, social media blocked)
 │           screen easily shows                   │
 │           whether students are in               │
 │           SEB mode                              │
-│                                                 │                 
+│                                                 │
 │    Schedule today (45 minutes):                 │
 │  ────────────────────────────────               │
 │  1 [10 Min] Kahoot Quiz - Review                │
@@ -164,11 +164,11 @@ Will be saved as `Multi_Service_Config.seb` (multiple services), `[Service]_Conf
 
 **If something doesn't work:** See troubleshooting below
 
-## Distribute to students in an appropriate manner
+## One-time setup & config distribution to students
 
-It often makes sense to install the [SafeExamBrowser](https://safeexambrowser.org/download_en.html) together in class (once per semester or when a new version is available).
+It often makes sense to install the [SafeExamBrowser](https://safeexambrowser.org/download_en.html) together in class (once per term or when a new version is available).
 
-The configuration can be distributed to students via the usual communication channel with file sharing capability (e.g., MS Teams or email).
+The configuration file can be distributed to students via the school's preferred communication channel with file sharing capability (e.g., MS Teams or email).
 
 ---
 
