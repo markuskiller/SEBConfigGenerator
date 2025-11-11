@@ -1043,8 +1043,8 @@ function parseSharePointLink(url, serviceType) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.13.1';
-const BUILD_DATE = new Date('2025-11-10T12:26:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.14.0';
+const BUILD_DATE = new Date('2025-11-11T13:20:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1234,6 +1234,52 @@ function renderPresets() {
         btn.onclick = () => togglePreset(key);
         container.appendChild(btn);
     });
+    
+    // Experimental warning for OneNote and Word (shown when either is selected)
+    let experimentalWarning = document.getElementById('experimentalWarning');
+    if (!experimentalWarning) {
+        // Create warning element if it doesn't exist
+        experimentalWarning = document.createElement('div');
+        experimentalWarning.id = 'experimentalWarning';
+        experimentalWarning.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;padding:15px;margin:20px 0;border-radius:4px;color:#856404;grid-column: 1 / -1;';
+        
+        const warningTitle = document.createElement('strong');
+        warningTitle.style.cssText = 'display:block;margin-bottom:8px;font-size:1.05em;';
+        experimentalWarning.appendChild(warningTitle);
+        
+        const warningText = document.createElement('div');
+        warningText.style.cssText = 'font-size:0.95em;line-height:1.5;margin-bottom:8px;';
+        experimentalWarning.appendChild(warningText);
+        
+        const warningLink = document.createElement('a');
+        warningLink.href = '#networkCaptureHelper';
+        warningLink.style.cssText = 'color:#856404;font-weight:600;text-decoration:underline;cursor:pointer;';
+        experimentalWarning.appendChild(warningLink);
+        
+        container.appendChild(experimentalWarning);
+    }
+    
+    // Update warning visibility and content
+    const hasOneNote = selectedPresets.includes('onenote');
+    const hasWord = selectedPresets.includes('word');
+    const hasOneNoteOrWord = hasOneNote || hasWord;
+    
+    if (hasOneNoteOrWord) {
+        experimentalWarning.style.display = 'block';
+        const warningTitle = experimentalWarning.querySelector('strong');
+        const warningText = experimentalWarning.querySelector('div');
+        const warningLink = experimentalWarning.querySelector('a');
+        warningTitle.textContent = t('experimentalWarningTitle');
+        
+        // Replace "Network Capture" with a link in the warning text
+        const text = t('experimentalWarningText');
+        const linkText = '<a href="#networkCaptureHelper" style="color:#856404;font-weight:600;text-decoration:underline;">Network Capture</a>';
+        warningText.innerHTML = text.replace('Network Capture', linkText);
+        
+        warningLink.textContent = t('experimentalWarningLink');
+    } else {
+        experimentalWarning.style.display = 'none';
+    }
     
     // Group 3: Allowed Tools (with subject selection)
     const group3Title = document.createElement('h3');
@@ -1488,47 +1534,25 @@ function togglePreset(key) {
     
     sharepointLinkGroup.style.display = hasOneNoteOrWord ? 'block' : 'none';
     
-    // Show/hide experimental warning for OneNote and Word
-    let experimentalWarning = document.getElementById('experimentalWarning');
-    if (!experimentalWarning) {
-        // Create warning element if it doesn't exist
-        experimentalWarning = document.createElement('div');
-        experimentalWarning.id = 'experimentalWarning';
-        experimentalWarning.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;padding:15px;margin:15px 0;border-radius:4px;color:#856404;';
-        
-        const warningTitle = document.createElement('strong');
-        warningTitle.style.cssText = 'display:block;margin-bottom:8px;font-size:1.05em;';
-        experimentalWarning.appendChild(warningTitle);
-        
-        const warningText = document.createElement('div');
-        warningText.style.cssText = 'font-size:0.95em;line-height:1.5;margin-bottom:8px;';
-        experimentalWarning.appendChild(warningText);
-        
-        const warningLink = document.createElement('a');
-        warningLink.href = '#networkCaptureHelper';
-        warningLink.style.cssText = 'color:#856404;font-weight:600;text-decoration:underline;cursor:pointer;';
-        experimentalWarning.appendChild(warningLink);
-        
-        // Insert warning before sharepointLinkGroup
-        sharepointLinkGroup.parentNode.insertBefore(experimentalWarning, sharepointLinkGroup);
-    }
-    
-    // Update warning content and visibility
-    if (hasOneNoteOrWord) {
-        experimentalWarning.style.display = 'block';
-        const warningTitle = experimentalWarning.querySelector('strong');
-        const warningText = experimentalWarning.querySelector('div');
-        const warningLink = experimentalWarning.querySelector('a');
-        warningTitle.textContent = t('experimentalWarningTitle');
-        
-        // Replace "Network Capture" with a link in the warning text
-        const text = t('experimentalWarningText');
-        const linkText = '<a href="#networkCaptureHelper" style="color:#856404;font-weight:600;text-decoration:underline;">Network Capture</a>';
-        warningText.innerHTML = text.replace('Network Capture', linkText);
-        
-        warningLink.textContent = t('experimentalWarningLink');
-    } else {
-        experimentalWarning.style.display = 'none';
+    // Update experimental warning visibility (created in renderPresets)
+    const experimentalWarning = document.getElementById('experimentalWarning');
+    if (experimentalWarning) {
+        if (hasOneNoteOrWord) {
+            experimentalWarning.style.display = 'block';
+            const warningTitle = experimentalWarning.querySelector('strong');
+            const warningText = experimentalWarning.querySelector('div');
+            const warningLink = experimentalWarning.querySelector('a');
+            warningTitle.textContent = t('experimentalWarningTitle');
+            
+            // Replace "Network Capture" with a link in the warning text
+            const text = t('experimentalWarningText');
+            const linkText = '<a href="#networkCaptureHelper" style="color:#856404;font-weight:600;text-decoration:underline;">Network Capture</a>';
+            warningText.innerHTML = text.replace('Network Capture', linkText);
+            
+            warningLink.textContent = t('experimentalWarningLink');
+        } else {
+            experimentalWarning.style.display = 'none';
+        }
     }
     
     // Show appropriate help text
