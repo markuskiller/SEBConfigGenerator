@@ -340,6 +340,7 @@
         /* Advanced Section Collapsible */
         .advanced-section {
             margin-top: 30px;
+            margin-bottom: 40px;
             border: 2px solid #5b9bd5;
             border-radius: 8px;
             overflow: hidden;
@@ -495,19 +496,6 @@
                     <h4 data-i18n="proTipTitle">💡 Profi-Tipp</h4>
                     <p data-i18n="proTipText">Verwenden Sie Wildcards (*) um alle Subdomains zu erlauben. Zum Beispiel: <code>*.microsoft.com</code> erlaubt login.microsoft.com, account.microsoft.com, usw.<br><br><strong>Hinweis:</strong> Doppelte Domains werden automatisch entfernt.</p>
                 </div>
-                
-                <!-- Help Links - Basic Section -->
-                <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #d4e6f7 0%, #e8f2fa 100%); border-left: 4px solid #5b9bd5; border-radius: 4px;">
-                    <h4 style="color: #2c3e5a; margin-bottom: 12px;">📖 <span data-i18n="helperDocsTitle">Hilfe & Anleitungen</span></h4>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <a href="#" id="quickstartLinkBasic" class="doc-link" target="_blank" rel="noopener noreferrer" style="padding: 8px 16px; background: #f5f7fb; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
-                            🚀 <span data-i18n="quickstartLink">Schnellstart (Google Sites)</span>
-                        </a>
-                        <a href="#" id="quickRefLinkBasic" class="doc-link" target="_blank" rel="noopener noreferrer" style="padding: 8px 16px; background: #f5f7fb; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
-                            📋 <span data-i18n="quickRefLink">Schnellreferenz</span>
-                        </a>
-                    </div>
-                </div>
             </div>
             
             <!-- Advanced Section (Collapsible) -->
@@ -587,6 +575,19 @@
                         4. Als finale .seb-Datei speichern<br>
                         5. Verschlüsselte Datei an Schüler*innen verteilen
                     </p>
+                </div>
+                
+                <!-- Help Links - Basic Section -->
+                <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #d4e6f7 0%, #e8f2fa 100%); border-left: 4px solid #5b9bd5; border-radius: 4px;">
+                    <h4 style="color: #2c3e5a; margin-bottom: 12px;">📖 <span data-i18n="helperDocsTitle">Hilfe & Anleitungen</span></h4>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <a href="#" id="quickstartLinkBasic" class="doc-link" target="_blank" rel="noopener noreferrer" style="padding: 8px 16px; background: #f5f7fb; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                            🚀 <span data-i18n="quickstartLink">Schnellstart (Google Sites)</span>
+                        </a>
+                        <a href="#" id="quickRefLinkBasic" class="doc-link" target="_blank" rel="noopener noreferrer" style="padding: 8px 16px; background: #f5f7fb; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                            📋 <span data-i18n="quickRefLink">Schnellreferenz</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1143,8 +1144,8 @@ function parseSharePointLink(url, serviceType) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.14.0';
-const BUILD_DATE = new Date('2025-11-11T13:20:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.15.0';
+const BUILD_DATE = new Date('2025-11-11T13:40:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
