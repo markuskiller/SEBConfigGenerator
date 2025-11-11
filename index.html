@@ -464,7 +464,7 @@
                         5. Verschlüsselte Datei an Schüler*innen verteilen
                     </p>
                 </div>
-                <div class="info-box">
+                <div class="info-box" id="networkCaptureHelper">
                     <h4>🔧 <span data-i18n="helperScriptTitle">Network Capture Helper</span></h4>
                     <p data-i18n="helperScriptText">
                         Benötigen Sie Hilfe beim Erfassen von Netzwerk-Domains? Wählen Sie die passende Methode für Ihr System:
@@ -531,7 +531,8 @@ const TRANSLATIONS = {
         sharepointHelpOneNote: "💡 OneNote: Rechtsklick auf Seite → 'Link zu dieser Seite kopieren'. Achtung: Abschnitts- oder Seiteneinschränkung nur sinnvoll in kollaborativen Bereichen/Abschnitten eines Notizbuchs (ausser reiner Lesezugriff reicht aus).",
         sharepointHelpWord: "💡 Word: Link aus Browser-Adresszeile kopieren (wenn Dokument geöffnet). Achtung bei Kollaboration: Datei muss in Ordner mit Schreibzugriff sein. Für eigene Versionen: 'nur diese Datei' nicht auswählen → Ordnerzugriff ermöglichen.",
         experimentalWarningTitle: "⚠️ Experimentelle Funktion",
-        experimentalWarningText: "OneNote/Word Online mit SharePoint-Einschränkungen ist in der Beta-Phase. Unbedingt gründlich testen, bevor die Konfiguration an Schüler*innen verteilt wird. In vielen Fällen funktioniert es nur, wenn 'Network Capture' in exakt derselben Umgebung kurz vor dem Einsatz im Unterricht durchgeführt wird.",
+        experimentalWarningText: "OneNote/Word Online mit SharePoint-Einschränkungen ist in der Beta-Phase. Unbedingt gründlich testen, bevor die Konfiguration an Schüler*innen verteilt wird. In vielen Fällen funktioniert es nur, wenn Network Capture in exakt derselben Umgebung kurz vor dem Einsatz im Unterricht durchgeführt wird.",
+        experimentalWarningLink: "→ Network Capture Helper nutzen",
         restrictToSchoolSharepoint: "Nur SharePoint unserer Schule",
         restrictToTeamsSite: "Nur diese Teams-Site/Gruppe",
         restrictToNotebook: "Nur dieses Notizbuch",
@@ -660,7 +661,8 @@ const TRANSLATIONS = {
         sharepointHelpOneNote: "💡 OneNote: Right-click on page → 'Copy link to this page'. Note: Section or page restrictions only make sense for collaborative sections/areas of a notebook (unless read-only access is sufficient).",
         sharepointHelpWord: "💡 Word: Copy link from browser address bar (when document is open). Note for collaboration: File must be in folder with write access. For saving own versions: Don't select 'only this file' → enable folder access.",
         experimentalWarningTitle: "⚠️ Experimental Feature",
-        experimentalWarningText: "OneNote/Word Online with SharePoint restrictions is in beta. Thoroughly test before deploying to students. In many cases it only works if 'Network Capture' is run in exactly the same environment soon before the config is used in class.",
+        experimentalWarningText: "OneNote/Word Online with SharePoint restrictions is in beta. Thoroughly test before deploying to students. In many cases it only works if Network Capture is run in exactly the same environment soon before the config is used in class.",
+        experimentalWarningLink: "→ Use Network Capture Helper",
         restrictToSchoolSharepoint: "Only our school's SharePoint",
         restrictToTeamsSite: "Only this Teams site/group",
         restrictToNotebook: "Only this notebook",
@@ -1499,8 +1501,13 @@ function togglePreset(key) {
         experimentalWarning.appendChild(warningTitle);
         
         const warningText = document.createElement('div');
-        warningText.style.cssText = 'font-size:0.95em;line-height:1.5;';
+        warningText.style.cssText = 'font-size:0.95em;line-height:1.5;margin-bottom:8px;';
         experimentalWarning.appendChild(warningText);
+        
+        const warningLink = document.createElement('a');
+        warningLink.href = '#networkCaptureHelper';
+        warningLink.style.cssText = 'color:#856404;font-weight:600;text-decoration:underline;cursor:pointer;';
+        experimentalWarning.appendChild(warningLink);
         
         // Insert warning before sharepointLinkGroup
         sharepointLinkGroup.parentNode.insertBefore(experimentalWarning, sharepointLinkGroup);
@@ -1511,8 +1518,15 @@ function togglePreset(key) {
         experimentalWarning.style.display = 'block';
         const warningTitle = experimentalWarning.querySelector('strong');
         const warningText = experimentalWarning.querySelector('div');
+        const warningLink = experimentalWarning.querySelector('a');
         warningTitle.textContent = t('experimentalWarningTitle');
-        warningText.textContent = t('experimentalWarningText');
+        
+        // Replace "Network Capture" with a link in the warning text
+        const text = t('experimentalWarningText');
+        const linkText = '<a href="#networkCaptureHelper" style="color:#856404;font-weight:600;text-decoration:underline;">Network Capture</a>';
+        warningText.innerHTML = text.replace('Network Capture', linkText);
+        
+        warningLink.textContent = t('experimentalWarningLink');
     } else {
         experimentalWarning.style.display = 'none';
     }
