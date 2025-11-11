@@ -646,6 +646,8 @@ const TRANSLATIONS = {
         folderDetected: "Ordner erkannt",
         fileDetected: "Datei erkannt",
         securityLevel: "Sicherheitsstufe",
+        securityLevelExperimentalTitle: "⚙️ Experimentell",
+        securityLevelExperimentalText: "Die Sicherheitsstufen 'Locker' und 'Streng' sind noch in Entwicklung und haben derzeit nur minimale Auswirkungen auf die Konfiguration.",
         additionalOptions: "Zusätzliche Optionen",
         allowDownloads: "Datei-Downloads erlauben",
         allowSpellCheck: "Rechtschreibprüfung erlauben",
@@ -779,6 +781,8 @@ const TRANSLATIONS = {
         folderDetected: "Folder detected",
         fileDetected: "File detected",
         securityLevel: "Security Level",
+        securityLevelExperimentalTitle: "⚙️ Experimental",
+        securityLevelExperimentalText: "The security levels 'Relaxed' and 'Strict' are still in development and currently have minimal impact on the configuration.",
         additionalOptions: "Additional Options",
         allowDownloads: "Allow file downloads",
         allowSpellCheck: "Allow spell check",
@@ -1144,8 +1148,8 @@ function parseSharePointLink(url, serviceType) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.15.0';
-const BUILD_DATE = new Date('2025-11-11T13:40:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.15.1';
+const BUILD_DATE = new Date('2025-11-11T13:50:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1477,6 +1481,9 @@ function renderSecurityLevels() {
         div.onclick = () => selectSecurityLevel(key);
         container.appendChild(div);
     });
+    
+    // Show/update experimental warning for relaxed and strict levels
+    updateSecurityLevelWarning();
 }
 
 function renderSharePointOptions(serviceType, parsedLink) {
@@ -1711,6 +1718,42 @@ function togglePreset(key) {
 function selectSecurityLevel(key) {
     currentSecurityLevel = key;
     renderSecurityLevels();
+}
+
+function updateSecurityLevelWarning() {
+    const container = document.getElementById('securityLevel').parentElement;
+    let warningDiv = document.getElementById('securityLevelWarning');
+    
+    // Show warning only for relaxed or strict levels
+    const showWarning = currentSecurityLevel === 'relaxed' || currentSecurityLevel === 'strict';
+    
+    if (showWarning) {
+        if (!warningDiv) {
+            // Create warning element if it doesn't exist
+            warningDiv = document.createElement('div');
+            warningDiv.id = 'securityLevelWarning';
+            warningDiv.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;padding:12px 15px;margin-top:15px;border-radius:4px;color:#856404;font-size:0.9em;';
+            
+            const warningTitle = document.createElement('strong');
+            warningTitle.style.cssText = 'display:block;margin-bottom:6px;';
+            warningDiv.appendChild(warningTitle);
+            
+            const warningText = document.createElement('div');
+            warningDiv.appendChild(warningText);
+            
+            container.appendChild(warningDiv);
+        }
+        
+        // Update content
+        const warningTitle = warningDiv.querySelector('strong');
+        const warningText = warningDiv.querySelector('div');
+        warningTitle.textContent = t('securityLevelExperimentalTitle');
+        warningText.textContent = t('securityLevelExperimentalText');
+        warningDiv.style.display = 'block';
+    } else if (warningDiv) {
+        // Hide warning for balanced level
+        warningDiv.style.display = 'none';
+    }
 }
 
 function getSharePointRestrictionInfo() {
