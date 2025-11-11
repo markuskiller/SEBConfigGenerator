@@ -506,6 +506,12 @@
                 </div>
                 <div class="advanced-content" id="advancedContent">
                     <div class="advanced-content-inner">
+                        <!-- Boolean Options (All True/False Options from XML) -->
+                        <div class="section">
+                            <h2><span data-i18n="allBooleanOptions">Alle True-/False-Optionen</span></h2>
+                            <div id="booleanOptionsContainer"></div>
+                        </div>
+                        
                         <!-- Security Level -->
                         <div class="section">
                             <h2><span data-i18n="securityLevel">Sicherheitsstufe</span></h2>
@@ -648,6 +654,19 @@ const TRANSLATIONS = {
         securityLevel: "Sicherheitsstufe",
         securityLevelExperimentalTitle: "⚙️ Experimentell",
         securityLevelExperimentalText: "Die Sicherheitsstufen 'Locker' und 'Streng' sind noch in Entwicklung und haben derzeit nur minimale Auswirkungen auf die Konfiguration.",
+        
+        // Boolean options groups
+        allBooleanOptions: "Alle True-/False-Optionen",
+        booleanOptionsInfo: "Diese Optionen werden dynamisch aus der SEB-Konfigurationsvorlage geladen. Standardwerte sind bereits gesetzt.",
+        browserOptions: "🌐 Browser-Einstellungen",
+        securityOptions: "🔒 Sicherheit & Zugriff",
+        interfaceOptions: "🖥️ Benutzeroberfläche",
+        systemOptions: "⚙️ System & Prozesse",
+        networkOptions: "🌍 Netzwerk",
+        mobileOptions: "📱 Mobile (iOS/iPadOS)",
+        otherOptions: "📋 Weitere Optionen",
+        sebConfigToolLocation: "SEB Config Tool",
+        
         additionalOptions: "Zusätzliche Optionen",
         allowDownloads: "Datei-Downloads erlauben",
         allowSpellCheck: "Rechtschreibprüfung erlauben",
@@ -783,6 +802,19 @@ const TRANSLATIONS = {
         securityLevel: "Security Level",
         securityLevelExperimentalTitle: "⚙️ Experimental",
         securityLevelExperimentalText: "The security levels 'Relaxed' and 'Strict' are still in development and currently have minimal impact on the configuration.",
+        
+        // Boolean options groups
+        allBooleanOptions: "All True/False Options",
+        booleanOptionsInfo: "These options are dynamically loaded from the SEB configuration template. Default values are already set.",
+        browserOptions: "🌐 Browser Settings",
+        securityOptions: "🔒 Security & Access",
+        interfaceOptions: "🖥️ User Interface",
+        systemOptions: "⚙️ System & Processes",
+        networkOptions: "🌍 Network",
+        mobileOptions: "📱 Mobile (iOS/iPadOS)",
+        otherOptions: "📋 Other Options",
+        sebConfigToolLocation: "SEB Config Tool",
+        
         additionalOptions: "Additional Options",
         allowDownloads: "Allow file downloads",
         allowSpellCheck: "Allow spell check",
@@ -1146,10 +1178,112 @@ function parseSharePointLink(url, serviceType) {
 }
 
 // ============================================================================
+// XML PARSER FOR BOOLEAN OPTIONS
+// ============================================================================
+async function loadAndParseBooleanOptions() {
+    try {
+        const response = await fetch('templates/Beispiel_Config_XML.seb');
+        const xmlText = await response.text();
+        
+        // Parse XML
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        
+        // Extract all boolean options
+        const allKeys = xmlDoc.getElementsByTagName('key');
+        const options = [];
+        
+        for (let i = 0; i < allKeys.length; i++) {
+            const keyElement = allKeys[i];
+            const keyName = keyElement.textContent.trim();
+            const nextSibling = keyElement.nextElementSibling;
+            
+            // Check if the next element is <true/> or <false/>
+            if (nextSibling && (nextSibling.tagName === 'true' || nextSibling.tagName === 'false')) {
+                const defaultValue = nextSibling.tagName === 'true';
+                options.push({ key: keyName, defaultValue });
+            }
+        }
+        
+        // Categorize options into groups
+        const groups = {
+            browser: { title: 'browserOptions', options: [] },
+            security: { title: 'securityOptions', options: [] },
+            interface: { title: 'interfaceOptions', options: [] },
+            system: { title: 'systemOptions', options: [] },
+            network: { title: 'networkOptions', options: [] },
+            mobile: { title: 'mobileOptions', options: [] },
+            other: { title: 'otherOptions', options: [] }
+        };
+        
+        // Categorize each option
+        options.forEach(opt => {
+            const key = opt.key;
+            let group = 'other';
+            
+            // Browser-related
+            if (key.match(/browser|window|page|zoom|plugin|java|pdf|popup|webview|reload|url|navigation|addressbar/i)) {
+                group = 'browser';
+            }
+            // Security-related
+            else if (key.match(/allow|prohibit|block|hook|detect|monitor|quit|exit|password|security|proctoring|screenshot|capture|recording|virtual|mirroring|sharing|switch/i)) {
+                group = 'security';
+            }
+            // Interface/UI-related
+            else if (key.match(/show|hide|enable|disable|display|toolbar|menu|button|icon|status|appearance/i)) {
+                group = 'interface';
+            }
+            // Mobile-specific
+            else if (key.match(/mobile|ios|ipad|touch|asam|aac|guided|orientation|formfactor/i)) {
+                group = 'mobile';
+            }
+            // System-related
+            else if (key.match(/process|application|desktop|shell|task|update|install|log|audio|battery|wlan/i)) {
+                group = 'system';
+            }
+            // Network-related
+            else if (key.match(/network|socket|ping|dns/i)) {
+                group = 'network';
+            }
+            
+            groups[group].options.push(opt);
+        });
+        
+        // Store parsed data
+        parsedBooleanOptions.groups = groups;
+        parsedBooleanOptions.options = {};
+        options.forEach(opt => {
+            parsedBooleanOptions.options[opt.key] = opt.defaultValue;
+            parsedBooleanOptions.userSelections[opt.key] = opt.defaultValue; // Initialize with defaults
+        });
+        
+        console.log(`Parsed ${options.length} boolean options from XML`);
+        return true;
+    } catch (error) {
+        console.error('Failed to load/parse boolean options from XML:', error);
+        return false;
+    }
+}
+
+// Generate human-readable label from key name
+function generateOptionLabel(key) {
+    // Remove common prefixes
+    let label = key.replace(/^(allow|enable|show|display|disable|hide|block|force|create|detect|mobile|browser|new|exam|inside|config)/, '');
+    
+    // Insert spaces before capital letters
+    label = label.replace(/([A-Z])/g, ' $1').trim();
+    
+    // Capitalize first letter
+    label = label.charAt(0).toUpperCase() + label.slice(1);
+    
+    return label || key;
+}
+
+// ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.15.1';
-const BUILD_DATE = new Date('2025-11-11T13:50:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.16.0';
+const BUILD_DATE = new Date('2025-11-11T14:05:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
     const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1177,6 +1311,14 @@ let currentSelectedSubject = ''; // Track selected subject for allowed tools
 let sharepointConfig = {
     onenote: { parsedLink: null, restrictions: {} },
     word: { parsedLink: null, restrictions: {} }
+};
+
+// Boolean options parsed from XML template (lazy loaded on demand)
+let parsedBooleanOptions = {
+    loaded: false, // Track if options have been loaded
+    groups: {},
+    options: {},
+    userSelections: {} // Track user's checkbox selections
 };
 
 // ============================================================================
@@ -1754,6 +1896,100 @@ function updateSecurityLevelWarning() {
         // Hide warning for balanced level
         warningDiv.style.display = 'none';
     }
+}
+
+// ============================================================================
+// BOOLEAN OPTIONS RENDERING
+// ============================================================================
+function renderBooleanOptions() {
+    const container = document.getElementById('booleanOptionsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Info box
+    const infoBox = document.createElement('div');
+    infoBox.style.cssText = 'background:#e8f2fa;border-left:4px solid #5b9bd5;padding:12px 15px;margin-bottom:20px;border-radius:4px;color:#2c3e5a;font-size:0.9em;';
+    infoBox.innerHTML = `<strong>ℹ️ ${t('allBooleanOptions')}</strong><br>${t('booleanOptionsInfo')}`;
+    container.appendChild(infoBox);
+    
+    // Render each group
+    const groupOrder = ['browser', 'security', 'interface', 'system', 'network', 'mobile', 'other'];
+    
+    groupOrder.forEach(groupKey => {
+        const group = parsedBooleanOptions.groups[groupKey];
+        if (!group || !group.options || group.options.length === 0) return;
+        
+        // Group container (collapsible)
+        const groupDiv = document.createElement('div');
+        groupDiv.style.cssText = 'margin-bottom:20px;border:1px solid #dfe6f0;border-radius:8px;overflow:hidden;background:#f5f7fb;';
+        
+        // Group header (clickable)
+        const groupHeader = document.createElement('div');
+        groupHeader.style.cssText = 'background:linear-gradient(135deg, #e8edf5 0%, #f5f7fb 100%);padding:12px 15px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;border-bottom:1px solid #dfe6f0;';
+        groupHeader.innerHTML = `
+            <strong style="color:#2c3e5a;font-size:1em;">${t(group.title)}</strong>
+            <span style="color:#6c7a89;font-size:0.9em;">(${group.options.length} ${currentLang === 'de' ? 'Optionen' : 'options'})</span>
+        `;
+        
+        // Options content (initially hidden)
+        const groupContent = document.createElement('div');
+        groupContent.style.cssText = 'padding:15px;display:none;';
+        
+        // Toggle functionality
+        groupHeader.addEventListener('click', () => {
+            const isHidden = groupContent.style.display === 'none';
+            groupContent.style.display = isHidden ? 'block' : 'none';
+        });
+        
+        // Render options in grid
+        const optionsGrid = document.createElement('div');
+        optionsGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;';
+        
+        group.options.forEach(opt => {
+            const optionDiv = document.createElement('div');
+            optionDiv.style.cssText = 'display:flex;align-items:flex-start;padding:8px;background:#ffffff;border-radius:4px;border:1px solid #dfe6f0;';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `bool_${opt.key}`;
+            checkbox.checked = parsedBooleanOptions.userSelections[opt.key];
+            checkbox.style.cssText = 'margin-right:8px;margin-top:2px;cursor:pointer;';
+            checkbox.addEventListener('change', (e) => {
+                parsedBooleanOptions.userSelections[opt.key] = e.target.checked;
+            });
+            
+            const label = document.createElement('label');
+            label.htmlFor = `bool_${opt.key}`;
+            label.style.cssText = 'cursor:pointer;font-size:0.9em;line-height:1.4;';
+            
+            const labelText = document.createElement('div');
+            labelText.style.cssText = 'color:#2c3e5a;font-weight:500;';
+            labelText.textContent = generateOptionLabel(opt.key);
+            
+            const keyName = document.createElement('div');
+            keyName.style.cssText = 'color:#6c7a89;font-size:0.85em;margin-top:2px;font-family:monospace;';
+            keyName.textContent = opt.key;
+            
+            const tooltip = document.createElement('div');
+            tooltip.style.cssText = 'color:#8898aa;font-size:0.8em;margin-top:4px;font-style:italic;';
+            tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: [Placeholder]`;
+            tooltip.title = 'Diese Info wird in einem späteren Schritt ergänzt';
+            
+            label.appendChild(labelText);
+            label.appendChild(keyName);
+            label.appendChild(tooltip);
+            
+            optionDiv.appendChild(checkbox);
+            optionDiv.appendChild(label);
+            optionsGrid.appendChild(optionDiv);
+        });
+        
+        groupContent.appendChild(optionsGrid);
+        groupDiv.appendChild(groupHeader);
+        groupDiv.appendChild(groupContent);
+        container.appendChild(groupDiv);
+    });
 }
 
 function getSharePointRestrictionInfo() {
@@ -2456,11 +2692,25 @@ ${urlFilterRulesXML}\t</array>
 \t<key>startURL</key>
 \t<string>${escapeXML(startUrl)}</string>
 \t<key>touchOptimized</key>
-\t<false/>
+\t<false/>`;
+    
+    // Add all boolean options from parsed XML (dynamically loaded)
+    // This includes ALL true/false options that were parsed from the template
+    let booleanOptionsXML = '';
+    if (parsedBooleanOptions.options && Object.keys(parsedBooleanOptions.options).length > 0) {
+        // Sort keys alphabetically for consistent output
+        const sortedKeys = Object.keys(parsedBooleanOptions.userSelections).sort();
+        sortedKeys.forEach(key => {
+            const value = parsedBooleanOptions.userSelections[key];
+            booleanOptionsXML += `\n\t<key>${escapeXML(key)}</key>\n\t<${value ? 'true' : 'false'}/>`;
+        });
+    }
+    
+    const finalXML = xml + booleanOptionsXML + `
 </dict>
 </plist>`;
     
-    return xml;
+    return finalXML;
 }
 
 function escapeXML(str) {
@@ -2796,7 +3046,7 @@ function attachEventListeners() {
 // ============================================================================
 // ADVANCED SECTION TOGGLE
 // ============================================================================
-function toggleAdvancedSection() {
+async function toggleAdvancedSection() {
     const content = document.getElementById('advancedContent');
     const toggle = document.querySelector('.advanced-toggle');
     
@@ -2806,13 +3056,30 @@ function toggleAdvancedSection() {
     } else {
         content.classList.add('expanded');
         toggle.classList.add('expanded');
+        
+        // Lazy load boolean options on first expand
+        if (!parsedBooleanOptions.loaded) {
+            const container = document.getElementById('booleanOptionsContainer');
+            if (container && container.children.length === 0) {
+                // Show loading indicator
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#6c7a89;">⏳ ' + 
+                    (currentLang === 'de' ? 'Lade Optionen...' : 'Loading options...') + '</div>';
+                
+                // Load and parse boolean options from XML template
+                await loadAndParseBooleanOptions();
+                parsedBooleanOptions.loaded = true;
+                
+                // Render boolean options
+                renderBooleanOptions();
+            }
+        }
     }
 }
 
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
-function init() {
+async function init() {
     // Load saved language preference or default to German
     const savedLang = localStorage.getItem('sebConfigLang') || 'de';
     setLanguage(savedLang);
