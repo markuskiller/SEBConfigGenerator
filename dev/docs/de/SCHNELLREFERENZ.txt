@@ -1,0 +1,249 @@
+# SEB Konfigurations-Generator - Schnellreferenz
+## Einseitige Visuelle Anleitung
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                SEB KONFIGURATIONS-GENERATOR                     │
+│           Fokus-Modus für Schülergeräte erstellen               │
+└─────────────────────────────────────────────────────────────────┘
+
+╔═══════════════════════════════════════════════════════════════╗
+║                     5-MINUTEN-WORKFLOW                        ║
+╚═══════════════════════════════════════════════════════════════╝
+
+1  TOOL ÖFFNEN            https://markuskiller.github.io/SEBConfigGenerator
+    └─> Funktioniert auch offline: Einfach index.html öffnen
+
+2  DIENST WÄHLEN          Klicken Sie auf eine Vorlage:
+    
+    OHNE ANMELDUNG:
+    ├─> Whiteboard.fi      (Kollaboratives Whiteboard)
+    ├─> Kahoot!            (Interaktive Quizze)
+    ├─> Mentimeter         (Live-Umfragen)
+    ├─> Slido              (Q&A und Polls)
+    ├─> Microsoft Forms    (Öffentliche Umfragen)
+    ├─> Padlet             (Digitale Pinnwand)
+    ├─> Miro               (Digitales Whiteboard)
+    └─> Etherpad           (Text-Kollaboration)
+    
+    MIT ANMELDUNG:
+    ├─> OneNote Online     (Microsoft Notizbücher)
+    └─> Word Online        (Dokumente)
+
+
+3  SICHERHEIT WÄHLEN     Wählen Sie Ihre Stufe:
+    ├─> Locker     * Fokus-Hilfe, sehr flexibel
+    ├─> Ausgewogen *** EMPFOHLEN: Gutes Gleichgewicht
+    └─> Streng     ***** Maximale Sperren (frustrierend!)
+
+4  OPTIONEN SETZEN        Was Schüler*innen brauchen:
+    ├─> [x] Downloads       (Dateien speichern)
+    ├─> [x] Rechtschreibung (Für Schreiben)
+    ├─> [x] Neu-Laden       (Falls Seiten einfrieren)
+    └─> [x] Vor/Zurück      (Mehrseitige Docs)
+
+5  HERUNTERLADEN          Klick "SEB Konfiguration herunterladen"
+    └─> Speichert: IhreConfig.seb
+
+6  IN SEB TOOL IMPORTIEREN Einmalige Einrichtung:
+    ├─> SEB Config Tool öffnen
+    ├─> Datei → Öffnen → IhreConfig.seb
+    ├─> Finetuning in SEB Configurator
+    ├─> Dringend empfohlen: Wo möglich ein Passwort setzen
+    ├─> Datei → Speichern unter → IhreConfigLektionXY.seb
+    └─> Fertig!
+
+7  VERTEILEN              .seb-Datei an Schüler*innen mailen
+    └─> Doppelklick öffnet SEB mit Ihren Einstellungen
+
+
+╔═══════════════════════════════════════════════════════════════╗
+║                    WANN SEB VERWENDEN                         ║
+╚═══════════════════════════════════════════════════════════════╝
+
+[OK] GUTE VERWENDUNG           [X] NICHT VERWENDEN FÜR
+├─> Unterrichts-Notizen        ├─> Abschlussprüfungen
+├─> Digitale Arbeitsblätter    ├─> Standardisierte Tests
+├─> Schreibaufgaben im Kurs    ├─> Hausaufgaben
+├─> Kollaborative Bearbeitung  ├─> Verhaltensmanagement
+└─> Fokus während Stunden      └─> Überwachung
+
+Kernaussage: 
+"SEB auf BYOD ist ein FOKUS-TOOL, kein Sicherheitssystem.
+ Es hilft kooperativen Schüler*innen, Ablenkungen zu vermeiden."
+
+
+╔═══════════════════════════════════════════════════════════════╗
+║               FEHLERBEHEBUNG SCHNELLLÖSUNGEN                  ║
+╚═══════════════════════════════════════════════════════════════╝
+
+┌───────────────────────────────────────────────────────────────┐
+│ PROBLEM: Kann mich nicht anmelden / Seite lädt nicht          │
+└───────────────────────────────────────────────────────────────┘
+   LÖSUNG: Authentifizierungs-Domains in "Benutzerdefinierte 
+           Domains" hinzufügen
+   
+   Für Microsoft:
+   *.msftauth.net
+   *.msauth.net
+   login.microsoftonline.com
+   
+   Für Google:
+   accounts.google.com
+   *.googleusercontent.com
+
+┌───────────────────────────────────────────────────────────────┐
+│ PROBLEM: MFA/Zwei-Faktor funktioniert nicht                   │
+└───────────────────────────────────────────────────────────────┘
+   LÖSUNG: Obige Domains hinzufügen + Schul-Firewall prüfen
+
+┌───────────────────────────────────────────────────────────────┐
+│ PROBLEM: Zu restriktiv / Schüler*innen frustriert             │
+└───────────────────────────────────────────────────────────────┘
+   LÖSUNG: Von "Streng" → "Ausgewogen" oder "Locker" wechseln
+           Mehr Optionen aktivieren (Downloads, Neu-Laden, etc.)
+
+┌───────────────────────────────────────────────────────────────┐
+│ PROBLEM: Schüler*innen greifen noch auf soziale Medien zu     │
+└───────────────────────────────────────────────────────────────┘
+   REALITÄTS-CHECK: Auf BYOD können entschlossene Schüler*innen 
+                    umgehen. Das ist okay - es geht um FOKUS, 
+                    nicht ÜBERWACHUNG.
+
+
+╔═══════════════════════════════════════════════════════════════╗
+║            NETZWERK-ERFASSUNG (FORTGESCHRITTEN)               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+Wenn Vorlagen nicht funktionieren, erfassen Sie selbst Traffic:
+
+SCHRITT 1: Fiddler Classic installieren
+           https://www.telerik.com/fiddler
+
+SCHRITT 2: Fiddler konfigurieren
+           Tools → Optionen → HTTPS
+           [x] HTTPS CONNECTs erfassen
+           [x] HTTPS-Traffic entschlüsseln
+
+SCHRITT 3: Sitzung erfassen
+           ├─> Alle Browser schließen
+           ├─> Browser-Cache löschen
+           ├─> Fiddler starten (F12)
+           ├─> Inkognito-Fenster öffnen
+           ├─> VOLLSTÄNDIGEN Login-Ablauf durchführen
+           ├─> Zielseite aufrufen
+           └─> Fiddler stoppen (F12)
+
+SCHRITT 4: Exportieren & Analysieren
+           Datei → Exportieren → HTTPArchive (.har)
+           Zu Tool's "Domains analysieren"-Tab hochladen
+
+SCHRITT 5: Entdeckte Domains verwenden
+           Wildcards zu "Benutzerdefinierte Domains" kopieren
+
+
+╔═══════════════════════════════════════════════════════════════╗
+║                      PROFI-TIPPS                              ║
+╚═══════════════════════════════════════════════════════════════╝
+
+* IMMER mit SCHÜLER-ACCOUNT testen
+   (Lehrer-Accounts haben oft andere Berechtigungen)
+
+* PERMISSIV starten, bei Bedarf verschärfen
+   (Locker → Ausgewogen → Streng)
+
+* Konfigurationen zur Wiederverwendung aufbewahren
+   (Erfolgreiche .seb-Dateien in gemeinsamen Ordner speichern)
+
+* Erwartungen an Schüler*innen kommunizieren
+   ("Dies hilft dir zu fokussieren, nicht dich zu überwachen")
+
+* Papier-Backup bereit haben
+   (Technik versagt; das ist das Leben)
+
+* Konfigurationen vierteljährlich aktualisieren
+   (Microsoft/Google ändern regelmäßig Auth-Systeme)
+
+* Funktionierende Konfigurationen mit Kolleg*innen teilen
+   (Schul-Bibliothek getesteter Konfigurationen aufbauen)
+
+
+╔═══════════════════════════════════════════════════════════════╗
+║                      HILFE BEKOMMEN                           ║
+╚═══════════════════════════════════════════════════════════════╝
+
+Dokumentation:  [Vollständige README.md im Paket]
+Lehrer-Anleitung: [SCHNELLSTART_ANLEITUNG.md - vereinfacht]
+Bereitstellung:   [DEPLOYMENT_CHECKLIST.md für IT]
+
+SEB Offiziell:  https://safeexambrowser.org/
+SEB Download:   https://safeexambrowser.org/download_de.html
+SEB Docs:       https://safeexambrowser.org/developer/
+
+Schul-Support:  [Ihre Kontaktinfo hinzufügen]
+IT-Helpdesk:    [Ihre Kontaktinfo hinzufügen]
+
+
+╔═══════════════════════════════════════════════════════════════╗
+║              DOMAIN-WILDCARD-BEISPIELE                        ║
+╚═══════════════════════════════════════════════════════════════╝
+
+Einzelne Domain:        beispiel.de
+Alle Subdomains:        *.beispiel.de
+                        → Erlaubt: login.beispiel.de
+                        → Erlaubt: api.beispiel.de
+                        → Erlaubt: alles.beispiel.de
+
+Mehrere Muster:         *.microsoft.com
+                        *.microsoftonline.com
+                        login.live.com
+                        
+Kommentar (ignoriert):  # Dies ist ein Kommentar
+                        *.beispiel.de
+
+
+╔═══════════════════════════════════════════════════════════════╗
+║                   BEREITSTELLUNGSOPTIONEN                     ║
+╚═══════════════════════════════════════════════════════════════╝
+
+┌─────────────────┬──────────────┬──────────────┬──────────────┐
+│    METHODE      │  EINRICHTUNG │  WARTUNG     │  AM BESTEN   │
+├─────────────────┼──────────────┼──────────────┼──────────────┤
+│ GitHub Pages    │  5 Min       │  Einfach     │  Meiste Sch. │
+│ Schul-Server    │  20 Min      │  Mittel      │  IT-Kontrolle│
+│ Standalone-Datei│  0 Min       │  Manuell     │  Einzelnutzer│
+└─────────────────┴──────────────┴──────────────┴──────────────┘
+
+
+╔═══════════════════════════════════════════════════════════════╗
+║                     SICHERHEITSSTUFEN                         ║
+╚═══════════════════════════════════════════════════════════════╝
+
+LOCKER (Fokus-Hilfe)
+├─> Kann SEB leicht beenden
+├─> Fenster-Modus
+├─> Symbolleiste sichtbar
+├─> Am besten für: Unterrichtsarbeit, Notizen
+└─> Sicherheit: *
+
+AUSGEWOGEN (Empfohlen) ***
+├─> Kann mit Bestätigung beenden
+├─> Fenster-Modus
+├─> Symbolleiste sichtbar
+├─> Am besten für: Meiste Unterrichtsaktivitäten
+└─> Sicherheit: ***
+
+STRENG (Maximale Sperren)
+├─> Kann SEB nicht beenden
+├─> Vollbild-Modus
+├─> Keine Symbolleiste
+├─> Am besten für: Beaufsichtigte Tests (Schulgeräte)
+└─> Sicherheit: *****
+    [!] Kann Schüler*innen auf BYOD frustrieren!
+
+
+═══════════════════════════════════════════════════════════════
+     Denken Sie daran:
+  Dieses Tool ersetzt PAPIER, nicht sichere Prüfungssysteme
+═══════════════════════════════════════════════════════════════
+```
