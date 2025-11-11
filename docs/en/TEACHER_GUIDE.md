@@ -397,33 +397,33 @@ Phase 3: Documentation in Word (30 min)
 
 1. **IT Department:** For network/firewall issues
 2. **SEB Documentation:** https://safeexambrowser.org/
-3. **This Tool's GitHub:** [Report issues or request features]
-4. **Colleague Network:** Share configs that work!
+3. **GitHub of this tool:** [Report issues or request features]
+4. **Colleague network:** Share working configurations!
 
 ---
 
 ## Checklist: Before Class
 
-- [ ] `.seb` template downloaded from generator
-- [ ] Config imported into SEB Config Tool
-- [ ] Settings refined (passwords, restrictions)
-- [ ] Config encrypted
-- [ ] Final `.seb` file saved
-- [ ] Config tested with student account
-- [ ] Students notified about SEB requirement
-- [ ] SEB download link shared
-- [ ] Encrypted `.seb` file distributed (email/LMS)
-- [ ] Paper backup prepared
+- [ ] Downloaded `.seb` template from generator
+- [ ] Imported configuration into SEB Config Tool
+- [ ] Refined settings (passwords, restrictions)
+- [ ] Encrypted configuration
+- [ ] Saved final `.seb` file
+- [ ] Tested configuration with student account
+- [ ] Informed students about SEB requirement
+- [ ] Shared SEB download link
+- [ ] Distributed encrypted `.seb` file (email/LMS)
+- [ ] Prepared paper backup
 - [ ] Tested on school network
-- [ ] Instructions ready for class
+- [ ] Instructions for class ready
 
 ---
 
 ## Time Investment
 
-**First time:** 30-45 minutes (including Config Tool setup and testing)
-**Subsequent uses:** 5-10 minutes (modify existing configs)
-**ROI:** Massive reduction in off-task behavior
+**First time:** 30-45 minutes (incl. Config Tool setup and testing)
+**Subsequent use:** 5-10 minutes (adapt existing configurations)
+**ROI:** Massive reduction in distraction behavior
 
 **Breakdown:**
 - Generator: 5 minutes (create template)
@@ -432,25 +432,9 @@ Phase 3: Documentation in Word (30 min)
 
 ---
 
-## Success Stories
-
-> "Used this for vocabulary practice in OneNote. Saw 80% reduction in 
-> students checking social media during class work." 
-> — *Teacher, Year 9 English*
-
-> "Works great for Google Docs collaborative writing. Students actually 
-> stay on task for the full period!"
-> — *Teacher, Year 11 Media Studies*
-
----
-
 ## Next Steps
 
-1. **Today:** Create your first config and test it
-2. **This week:** Use with one class as pilot
+1. **Today:** Create and test first configuration
+2. **This week:** Use as pilot project with one class
 3. **Next month:** Expand to all classes if successful
-4. **Share:** Help colleagues by sharing your configs!
-
----
-
-**Questions?** Check the full README.md for detailed technical docs.
+4. **Share:** Help colleagues by sharing your configurations!
