@@ -33,7 +33,6 @@
   - [ ] *.google.com (for Google Workspace)
   - [ ] *.googleapis.com (for Google Workspace)
 - [ ] Test from school network
-- [ ] Test from student home networks (if BYOD)
 
 ---
 
