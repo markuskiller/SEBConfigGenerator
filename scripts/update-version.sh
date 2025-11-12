@@ -29,13 +29,28 @@ fi
 BUILD_TIMESTAMP=$(date +"%Y-%m-%d %H:%M")
 BUILD_ISO=$(date +"%Y-%m-%dT%H:%M:00")
 
-# File to update
+# Files to update
 APP_FILE="js/app.js"
+APACHE_FILE="configs/apache/.htaccess"
+NGINX_FILE="configs/nginx/sebconfig.conf"
+README_FILE="configs/README.md"
 
-# Check if file exists
+# Check if files exist
 if [ ! -f "$APP_FILE" ]; then
     echo "❌ Error: $APP_FILE not found"
     exit 1
+fi
+
+if [ ! -f "$APACHE_FILE" ]; then
+    echo "⚠️  Warning: $APACHE_FILE not found (skipping)"
+fi
+
+if [ ! -f "$NGINX_FILE" ]; then
+    echo "⚠️  Warning: $NGINX_FILE not found (skipping)"
+fi
+
+if [ ! -f "$README_FILE" ]; then
+    echo "⚠️  Warning: $README_FILE not found (skipping)"
 fi
 
 echo "🔄 Updating version information..."
@@ -43,32 +58,92 @@ echo "   Version: $NEW_VERSION"
 echo "   Build:   $BUILD_TIMESTAMP"
 echo ""
 
-# Create backup
+# Create backups
 cp "$APP_FILE" "${APP_FILE}.bak"
-echo "📦 Backup created: ${APP_FILE}.bak"
+echo "📦 Backups created:"
+echo "   ${APP_FILE}.bak"
 
-# Update version in header comment (line 3)
+if [ -f "$APACHE_FILE" ]; then
+    cp "$APACHE_FILE" "${APACHE_FILE}.bak"
+    echo "   ${APACHE_FILE}.bak"
+fi
+
+if [ -f "$NGINX_FILE" ]; then
+    cp "$NGINX_FILE" "${NGINX_FILE}.bak"
+    echo "   ${NGINX_FILE}.bak"
+fi
+
+if [ -f "$README_FILE" ]; then
+    cp "$README_FILE" "${README_FILE}.bak"
+    echo "   ${README_FILE}.bak"
+fi
+
+echo ""
+
+# Update js/app.js (4 locations)
+echo "📝 Updating js/app.js..."
 sed -i '' "3s|^// Version: .*|// Version: $NEW_VERSION|" "$APP_FILE"
-
-# Update build date in header comment (line 4)
 sed -i '' "4s|^// Build: .*|// Build: $BUILD_TIMESTAMP|" "$APP_FILE"
-
-# Update APP_VERSION constant
 sed -i '' "s|const APP_VERSION = 'v[^']*';|const APP_VERSION = '$NEW_VERSION';|" "$APP_FILE"
-
-# Update BUILD_DATE constant
 sed -i '' "s|const BUILD_DATE = new Date('[^']*');|const BUILD_DATE = new Date('$BUILD_ISO');|" "$APP_FILE"
 
-echo "✅ Version updated successfully!"
+# Update configs/apache/.htaccess
+if [ -f "$APACHE_FILE" ]; then
+    echo "📝 Updating configs/apache/.htaccess..."
+    sed -i '' "s|^# Version: v.*|# Version: $NEW_VERSION|" "$APACHE_FILE"
+    sed -i '' "s|^# Updated: .*|# Updated: $(date +"%Y-%m-%d")|" "$APACHE_FILE"
+fi
+
+# Update configs/nginx/sebconfig.conf
+if [ -f "$NGINX_FILE" ]; then
+    echo "📝 Updating configs/nginx/sebconfig.conf..."
+    sed -i '' "s|^# Version: v.*|# Version: $NEW_VERSION|" "$NGINX_FILE"
+    sed -i '' "s|^# Updated: .*|# Updated: $(date +"%Y-%m-%d")|" "$NGINX_FILE"
+fi
+
+# Update configs/README.md
+if [ -f "$README_FILE" ]; then
+    echo "📝 Updating configs/README.md..."
+    sed -i '' "s|^\*\*Version:\*\* v.*|**Version:** $NEW_VERSION  |" "$README_FILE"
+    sed -i '' "s|^\*\*Last Updated:\*\* .*|**Last Updated:** $(date +"%Y-%m-%d")  |" "$README_FILE"
+fi
+
 echo ""
-echo "📝 Changes made:"
+echo "✅ Version updated successfully in all files!"
+echo ""
+echo "📝 Changes summary:"
+echo "   js/app.js (4 locations):"
 grep -n "// Version:" "$APP_FILE" | head -1
-grep -n "// Build:" "$APP_FILE" | head -1
 grep -n "const APP_VERSION" "$APP_FILE" | head -1
-grep -n "const BUILD_DATE" "$APP_FILE" | head -1
+
+if [ -f "$APACHE_FILE" ]; then
+    echo "   configs/apache/.htaccess:"
+    grep -n "# Version:" "$APACHE_FILE" | head -1
+fi
+
+if [ -f "$NGINX_FILE" ]; then
+    echo "   configs/nginx/sebconfig.conf:"
+    grep -n "# Version:" "$NGINX_FILE" | head -1
+fi
+
+if [ -f "$README_FILE" ]; then
+    echo "   configs/README.md:"
+    grep -n "Version:" "$README_FILE" | tail -1
+fi
+
 echo ""
 echo "🔍 Verify changes:"
-echo "   git diff $APP_FILE"
+echo "   git diff js/app.js"
+echo "   git diff configs/"
 echo ""
-echo "♻️  Remove backup:"
-echo "   rm ${APP_FILE}.bak"
+echo "♻️  Remove backups:"
+echo "   rm js/app.js.bak"
+if [ -f "${APACHE_FILE}.bak" ]; then
+    echo "   rm ${APACHE_FILE}.bak"
+fi
+if [ -f "${NGINX_FILE}.bak" ]; then
+    echo "   rm ${NGINX_FILE}.bak"
+fi
+if [ -f "${README_FILE}.bak" ]; then
+    echo "   rm ${README_FILE}.bak"
+fi
