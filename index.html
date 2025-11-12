@@ -3,461 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
     <title>SEB Konfigurations-Generator</title>
-    <style>
-        /* ============================================================================
-           COLOR PALETTE - Soft Navy Blue Theme (#2c3e5a)
-           ============================================================================
-           Primary: #2c3e5a (Navy Soft), #3d5170 (Navy Medium), #4a6fa5 (Blue Medium)
-           Accent: #5b9bd5 (Sky Blue), #7eb8e6 (Light Blue), #2dce89 (Success Green)
-           Backgrounds: #e8edf5 (Soft Blue-Gray), #f5f7fb (Light Blue-Gray), #dfe6f0 (Blue-Tint)
-           Text: #2c3e5a (Navy Soft), #525f7f (Gray Medium), #6c7a89 (Gray Light)
-           Version/Footer: #8898aa (Medium Gray on dark background)
-           ============================================================================ */
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
-            background: linear-gradient(135deg, #3d5170 0%, #4a6fa5 100%); 
-            min-height: 100vh; 
-            padding: 20px; 
-        }
-        
-        /* Dev Version Banner */
-        .dev-banner {
-            background: rgba(255, 255, 0, 0.748);
-            border-bottom: 2px solid rgba(255, 215, 0, 1);
-            padding: 10px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.85em;
-            color: #000000;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin-bottom: 2px;
-        }
-        
-        .dev-banner-left {
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            font-size: 0.95em;
-            color: #000000;
-        }
-        
-        .dev-banner-right {
-            display: flex;
-            gap: 20px;
-            font-family: 'Courier New', 'Consolas', monospace;
-            font-size: 0.9em;
-            color: #000000;
-        }
-        
-        .dev-banner-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .dev-banner-label {
-            opacity: 0.7;
-            font-size: 0.95em;
-        }
-        
-        .dev-banner-value {
-            font-weight: 600;
-            background: rgba(0, 0, 0, 0.08);
-            padding: 2px 6px;
-            border-radius: 3px;
-        }
-        
-        .container { 
-            max-width: 1000px; 
-            margin: 0 auto; 
-            background: #e8edf5; 
-            border-radius: 12px; 
-            box-shadow: 0 20px 60px rgba(44, 62, 90, 0.3); 
-            overflow: hidden; 
-        }
-        
-        .header { 
-            background: linear-gradient(135deg, #2c3e5a 0%, #3d5170 100%); 
-            color: #f5f7fb; 
-            padding: 40px 30px; 
-            text-align: center; 
-            position: relative; 
-        }
-        
-        .language-toggle { 
-            position: absolute; 
-            top: 20px; 
-            right: 20px; 
-            display: flex; 
-            gap: 10px; 
-        }
-        
-        .lang-btn { 
-            background: rgba(245, 247, 251, 0.15); 
-            border: 2px solid rgba(245, 247, 251, 0.4); 
-            color: #f5f7fb; 
-            padding: 8px 15px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            transition: all 0.3s; 
-        }
-        
-        .lang-btn:hover { 
-            background: rgba(245, 247, 251, 0.25); 
-            border-color: rgba(245, 247, 251, 0.6); 
-        }
-        
-        .lang-btn.active { 
-            background: #5b9bd5; 
-            color: #f5f7fb; 
-            border-color: #5b9bd5; 
-        }
-        
-        .header h1 { 
-            font-size: 2em; 
-            margin-bottom: 10px; 
-        }
-        
-        .header p { 
-            opacity: 0.9; 
-            font-size: 1.1em; 
-        }
-        
-        .content { 
-            padding: 40px 30px; 
-        }
-        
-        .section { 
-            margin-bottom: 40px; 
-        }
-        
-        .section h2 { 
-            color: #2c3e5a; 
-            margin-bottom: 20px; 
-            padding-bottom: 10px; 
-            border-bottom: 2px solid #5b9bd5; 
-        }
-        
-        .form-group { 
-            margin-bottom: 25px; 
-        }
-        
-        label { 
-            display: block; 
-            font-weight: 600; 
-            color: #2c3e5a; 
-            margin-bottom: 8px; 
-        }
-        
-        input[type="text"], 
-        input[type="url"], 
-        textarea, 
-        select { 
-            width: 100%; 
-            padding: 12px 15px; 
-            border: 2px solid #dfe6f0; 
-            border-radius: 6px; 
-            font-size: 14px; 
-            background: #f5f7fb; 
-            color: #2c3e5a; 
-            transition: all 0.3s; 
-        }
-        
-        input:focus, 
-        textarea:focus, 
-        select:focus { 
-            outline: none; 
-            border-color: #5b9bd5; 
-            background: #ffffff; 
-            box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.15); 
-        }
-        
-        textarea { 
-            min-height: 150px; 
-            font-family: 'Courier New', monospace; 
-            resize: vertical; 
-        }
-        
-        .preset-buttons { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 15px; 
-            margin-top: 15px; 
-        }
-        
-        .preset-btn { 
-            padding: 15px; 
-            border: 2px solid #dfe6f0; 
-            border-radius: 8px; 
-            background: #f5f7fb; 
-            cursor: pointer; 
-            transition: all 0.3s; 
-            text-align: left; 
-        }
-        
-        .preset-btn:hover { 
-            border-color: #5b9bd5; 
-            background: #ffffff; 
-            transform: translateY(-2px); 
-            box-shadow: 0 4px 12px rgba(91, 155, 213, 0.25); 
-        }
-        
-        .preset-btn.active { 
-            border-color: #5b9bd5; 
-            background: linear-gradient(135deg, #d4e6f7 0%, #e8f2fa 100%); 
-            box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.2); 
-        }
-        
-        .preset-btn h3 { 
-            color: #2c3e5a; 
-            margin-bottom: 5px; 
-            font-size: 1.1em; 
-        }
-        
-        .preset-btn p { 
-            color: #6c7a89; 
-            font-size: 0.9em; 
-        }
-        
-        .checkbox-group { 
-            display: flex; 
-            align-items: center; 
-            margin-bottom: 15px; 
-        }
-        
-        .checkbox-group input[type="checkbox"] { 
-            width: 20px; 
-            height: 20px; 
-            margin-right: 10px; 
-            cursor: pointer; 
-            accent-color: #5b9bd5; 
-        }
-        
-        .security-level { 
-            display: flex; 
-            gap: 15px; 
-            margin-top: 15px; 
-        }
-        
-        .security-option { 
-            flex: 1; 
-            padding: 20px; 
-            border: 2px solid #dfe6f0; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            transition: all 0.3s; 
-            background: #f5f7fb; 
-        }
-        
-        .security-option:hover { 
-            border-color: #5b9bd5; 
-            background: #ffffff; 
-        }
-        
-        .security-option.active { 
-            border-color: #5b9bd5; 
-            background: linear-gradient(135deg, #d4e6f7 0%, #e8f2fa 100%); 
-            box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.2); 
-        }
-        
-        .security-option h4 { 
-            color: #2c3e5a; 
-            margin-bottom: 8px; 
-        }
-        
-        .security-option p { 
-            color: #6c7a89; 
-            font-size: 0.9em; 
-        }
-        
-        .btn { 
-            padding: 15px 30px; 
-            border: none; 
-            border-radius: 6px; 
-            font-size: 16px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: all 0.3s; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 10px; 
-        }
-        
-        .btn-primary { 
-            background: linear-gradient(135deg, #4a6fa5 0%, #5b9bd5 100%); 
-            color: #f5f7fb; 
-            box-shadow: 0 4px 12px rgba(74, 111, 165, 0.3); 
-        }
-        
-        .btn-primary:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 10px 20px rgba(74, 111, 165, 0.4); 
-        }
-        
-        .btn-secondary { 
-            background: #f5f7fb; 
-            color: #2c3e5a; 
-            border: 2px solid #dfe6f0; 
-        }
-        
-        .btn-secondary:hover { 
-            background: #ffffff; 
-            border-color: #5b9bd5; 
-        }
-        
-        .actions { 
-            display: flex; 
-            gap: 15px; 
-            margin-top: 30px; 
-            flex-wrap: wrap; 
-        }
-        
-        .info-box { 
-            background: linear-gradient(135deg, #d4e6f7 0%, #e8f2fa 100%); 
-            border-left: 4px solid #5b9bd5; 
-            padding: 15px; 
-            margin-top: 20px; 
-            border-radius: 4px; 
-        }
-        
-        .info-box h4 { 
-            color: #2c3e5a; 
-            margin-bottom: 8px; 
-        }
-        
-        .info-box p { 
-            color: #3d5170; 
-            font-size: 0.95em; 
-            line-height: 1.6; 
-        }
-        
-        .preview { 
-            background: #f5f7fb; 
-            padding: 20px; 
-            border-radius: 8px; 
-            margin-top: 20px; 
-            border: 2px solid #dfe6f0; 
-        }
-        
-        .preview h3 { 
-            color: #2c3e5a; 
-            margin-bottom: 15px; 
-        }
-        
-        .domain-list { 
-            font-family: 'Courier New', monospace; 
-            font-size: 0.9em; 
-            color: #3d5170; 
-            line-height: 1.8; 
-            max-height: 300px; 
-            overflow-y: auto; 
-        }
-        
-        .domain-item { 
-            padding: 5px 0; 
-            border-bottom: 1px solid #dfe6f0; 
-        }
-        
-        .badge { 
-            display: inline-block; 
-            padding: 4px 10px; 
-            background: linear-gradient(135deg, #4a6fa5 0%, #5b9bd5 100%); 
-            color: #f5f7fb; 
-            border-radius: 12px; 
-            font-size: 0.85em; 
-            margin-left: 10px; 
-        }
-        
-        .doc-link { 
-            transition: all 0.3s; 
-        }
-        
-        .doc-link:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 4px 12px rgba(91, 155, 213, 0.4); 
-            opacity: 1 !important; 
-        }
-        
-        /* Advanced Section Collapsible */
-        .advanced-section {
-            margin-top: 30px;
-            margin-bottom: 40px;
-            border: 2px solid #5b9bd5;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #f5f7fb;
-        }
-        
-        .advanced-header {
-            background: linear-gradient(135deg, #4a6fa5 0%, #5b9bd5 100%);
-            color: #f5f7fb;
-            padding: 20px 30px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.3s;
-            user-select: none;
-        }
-        
-        .advanced-header:hover {
-            background: linear-gradient(135deg, #3d5170 0%, #4a6fa5 100%);
-        }
-        
-        .advanced-header h2 {
-            margin: 0;
-            font-size: 1.3em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #f5f7fb;
-            border-bottom: none;
-        }
-        
-        .advanced-toggle {
-            font-size: 1.5em;
-            transition: transform 0.3s;
-        }
-        
-        .advanced-toggle.expanded {
-            transform: rotate(180deg);
-        }
-        
-        .advanced-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease-out;
-            background: #e8edf5;
-        }
-        
-        .advanced-content.expanded {
-            max-height: 10000px;
-            transition: max-height 0.6s ease-in;
-        }
-        
-        .advanced-content-inner {
-            padding: 30px;
-        }
-        
-        @media (max-width: 768px) { 
-            .security-level, 
-            .actions { 
-                flex-direction: column; 
-            } 
-            .language-toggle { 
-                position: static; 
-                margin-bottom: 20px; 
-                justify-content: center; 
-            } 
-        }
-    </style>
+    <link rel="stylesheet" href="css/app.css">
     
     <!-- Load template data as JavaScript (works offline!) -->
     <script src="templates/xml-data.js"></script>
@@ -493,16 +41,16 @@
             </div>
             <h1>🛡️ <span data-i18n="title">SEB Konfigurations-Generator</span></h1>
             <p data-i18n="subtitle">Erstellen Sie Safe Exam Browser Konfigurationen für Fokus-Modus im Unterricht</p>
-            <p style="margin-top: 15px;">
-                <a href="#" id="mainDocLink" class="doc-link" target="_blank" rel="noopener noreferrer" style="color: #f5f7fb; text-decoration: none; opacity: 0.95; font-weight: 600; border: 2px solid rgba(245, 247, 251, 0.5); padding: 8px 16px; border-radius: 6px; display: inline-block;">
+            <p class="header-doc-link">
+                <a href="#" id="mainDocLink" class="doc-link" target="_blank" rel="noopener noreferrer">
                     📚 <span data-i18n="mainDocLink">Vollständige Anleitung</span>
                 </a>
             </p>
-            <div style="margin-top: 20px; padding: 12px 20px; background: rgba(45, 206, 137, 0.15); border: 2px solid rgba(45, 206, 137, 0.4); border-radius: 8px; color: #f5f7fb; font-size: 0.9em; line-height: 1.6;">
+            <div class="privacy-notice">
                 <strong>🔒 <span data-i18n="privacyTitle">Datenschutz:</span></strong> <span data-i18n="privacyText">Alle Daten werden ausschließlich lokal in Ihrem Browser verarbeitet. Es werden keine Konfigurationsdaten oder Eingaben an unseren Server gesendet oder gespeichert. Nur Ihre Sprachpräferenz wird lokal im Browser gespeichert.</span>
             </div>
-            <p style="margin-top: 15px; text-align: center;">
-                <a href="https://github.com/markuskiller/SEBConfigGenerator/issues/new" target="_blank" rel="noopener noreferrer" style="color: #f5f7fb; text-decoration: none; opacity: 0.9; font-size: 0.9em; border: 1px solid rgba(245, 247, 251, 0.3); padding: 6px 14px; border-radius: 6px; display: inline-block;">
+            <p class="suggest-service">
+                <a href="https://github.com/markuskiller/SEBConfigGenerator/issues/new" target="_blank" rel="noopener noreferrer">
                     💡 <span data-i18n="suggestService">Dienst oder Hilfsmittel vorschlagen</span>
                 </a>
             </p>
@@ -524,13 +72,13 @@
                 </div>
                 
                 <!-- SharePoint Link Configuration (shown only for OneNote/Word) -->
-                <div class="form-group" id="sharepointLinkGroup" style="display: none;">
+                <div class="form-group sharepoint-options-container" id="sharepointLinkGroup">
                     <label data-i18n="sharepointLinkLabel">SharePoint-Link (Optional - für erweiterte Filterung)</label>
                     <input type="url" id="sharepointLink" data-i18n-placeholder="sharepointLinkPlaceholder" placeholder="https://schule.sharepoint.com/sites/...">
-                    <div id="sharepointHelp" style="margin-top: 8px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; font-size: 0.9em; color: #856404; display: none;">
+                    <div id="sharepointHelp" class="sharepoint-help">
                         <!-- Help text will be inserted here dynamically -->
                     </div>
-                    <div id="sharepointOptions" style="margin-top: 15px; display: none;">
+                    <div id="sharepointOptions" class="sharepoint-options-container">
                         <!-- SharePoint options will be rendered here dynamically -->
                     </div>
                 </div>
@@ -584,26 +132,26 @@
                             <h2><span data-i18n="allBooleanOptions">Alle True-/False-Optionen</span></h2>
                             
                             <!-- Experimental Warning -->
-                            <div style="background:#fff3cd;border-left:4px solid #ffc107;padding:12px 15px;margin-bottom:20px;border-radius:4px;">
-                                <strong style="color:#856404;">⚠️ <span data-i18n="experimentalFeature">Experimentelle Funktion</span></strong><br>
-                                <span style="color:#856404;font-size:0.9em;" data-i18n="booleanOptionsWarning">
+                            <div class="boolean-warning">
+                                <strong>⚠️ <span data-i18n="experimentalFeature">Experimentelle Funktion</span></strong><br>
+                                <span data-i18n="booleanOptionsWarning">
                                     Diese Funktion befindet sich in Entwicklung. Die Menü-Referenzen werden schrittweise für alle Plattformen ergänzt. Verwenden Sie diese Optionen mit Vorsicht und testen Sie die generierte Konfiguration gründlich.
                                 </span>
                             </div>
                             
                             <!-- Platform Selection for Boolean Options -->
-                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding:12px;background:#f5f7fb;border-radius:8px;border:1px solid #dfe6f0;">
-                                <span style="font-weight:500;color:#2c3e5a;font-size:0.95em;">
+                            <div class="platform-selector">
+                                <span class="platform-selector-label">
                                     <span data-i18n="platformReference">📚 Menü-Referenz für:</span>
                                 </span>
-                                <div style="display:flex;gap:8px;">
-                                    <button class="platform-btn" data-platform="windows" onclick="selectPlatform('windows')" style="padding:6px 16px;border:2px solid #5b9bd5;border-radius:6px;background:#fff;color:#2c3e5a;cursor:pointer;font-weight:500;transition:all 0.2s;">
+                                <div class="platform-buttons">
+                                    <button class="platform-btn" data-platform="windows" onclick="selectPlatform('windows')">
                                         🖥️ Windows
                                     </button>
-                                    <button class="platform-btn" data-platform="macos" onclick="selectPlatform('macos')" style="padding:6px 16px;border:2px solid #dfe6f0;border-radius:6px;background:#fff;color:#6c7a89;cursor:pointer;font-weight:500;transition:all 0.2s;">
+                                    <button class="platform-btn" data-platform="macos" onclick="selectPlatform('macos')">
                                         🍎 macOS
                                     </button>
-                                    <button class="platform-btn" data-platform="ipados" onclick="selectPlatform('ipados')" style="padding:6px 16px;border:2px solid #dfe6f0;border-radius:6px;background:#fff;color:#6c7a89;cursor:pointer;font-weight:500;transition:all 0.2s;">
+                                    <button class="platform-btn" data-platform="ipados" onclick="selectPlatform('ipados')">
                                         📱 iPadOS
                                     </button>
                                 </div>
@@ -639,11 +187,11 @@
                                 <p data-i18n="helperScriptText">
                                     Benötigen Sie Hilfe beim Erfassen von Netzwerk-Domains? Wählen Sie die passende Methode für Ihr System:
                                 </p>
-                                <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                                    <a href="scripts/capture-helper.ps1" download class="btn btn-secondary" style="text-decoration: none; flex: 1; min-width: 200px;">
+                                <div class="helper-buttons">
+                                    <a href="scripts/capture-helper.ps1" download class="btn btn-secondary">
                                         <span data-i18n="downloadHelperBtn">⬇️ PowerShell (Windows)</span>
                                     </a>
-                                    <button class="btn btn-secondary" id="browserHelperBtn" style="flex: 1; min-width: 200px;">
+                                    <button class="btn btn-secondary" id="browserHelperBtn">
                                         <span data-i18n="browserHelperBtn">🌐 Browser-Methode (Alle OS)</span>
                                     </button>
                                 </div>
@@ -652,10 +200,10 @@
                         
                         <!-- Advanced Help Links -->
                         <div class="section">
-                            <div style="padding: 15px; background: linear-gradient(135deg, #d4e6f7 0%, #e8f2fa 100%); border-left: 4px solid #5b9bd5; border-radius: 4px;">
-                                <h4 style="color: #2c3e5a; margin-bottom: 12px;">📖 <span data-i18n="advancedHelpTitle">Erweiterte Hilfe</span></h4>
-                                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                    <a href="#" id="browserCaptureLink" class="doc-link" target="_blank" rel="noopener noreferrer" style="padding: 8px 16px; background: #f5f7fb; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                            <div class="help-section">
+                                <h4>📖 <span data-i18n="advancedHelpTitle">Erweiterte Hilfe</span></h4>
+                                <div class="help-links">
+                                    <a href="#" id="browserCaptureLink" class="doc-link" target="_blank" rel="noopener noreferrer">
                                         🌐 <span data-i18n="browserCaptureLink">Browser Capture</span>
                                     </a>
                                 </div>
@@ -668,7 +216,7 @@
             <div class="section">
                 <h2><span data-i18n="step4">4. Download</span></h2>
                 <div class="actions">
-                    <button class="btn btn-primary" id="generateBtn" style="width: 100%;">
+                    <button class="btn btn-primary btn-full-width" id="generateBtn">
                         <span data-i18n="downloadBtn">📥 SEB Konfiguration herunterladen (.seb)</span>
                     </button>
                 </div>
@@ -684,20 +232,20 @@
                 </div>
                 
                 <!-- Help Links - Basic Section -->
-                <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #d4e6f7 0%, #e8f2fa 100%); border-left: 4px solid #5b9bd5; border-radius: 4px;">
-                    <h4 style="color: #2c3e5a; margin-bottom: 12px;">📖 <span data-i18n="helperDocsTitle">Hilfe & Anleitungen</span></h4>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <a href="#" id="quickstartLinkBasic" class="doc-link" target="_blank" rel="noopener noreferrer" style="padding: 8px 16px; background: #f5f7fb; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                <div class="help-section help-section-spaced">
+                    <h4>📖 <span data-i18n="helperDocsTitle">Hilfe & Anleitungen</span></h4>
+                    <div class="help-links">
+                        <a href="#" id="quickstartLinkBasic" class="doc-link" target="_blank" rel="noopener noreferrer">
                             🚀 <span data-i18n="quickstartLink">Schnellstart (Google Sites)</span>
                         </a>
-                        <a href="#" id="quickRefLinkBasic" class="doc-link" target="_blank" rel="noopener noreferrer" style="padding: 8px 16px; background: #f5f7fb; color: #2c3e5a; border: 2px solid #5b9bd5; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+                        <a href="#" id="quickRefLinkBasic" class="doc-link" target="_blank" rel="noopener noreferrer">
                             📋 <span data-i18n="quickRefLink">Schnellreferenz</span>
                         </a>
                     </div>
                 </div>
             </div>
         </div>
-        <div style="text-align: center; padding: 20px; color: #8898aa; font-size: 0.85em;">
+        <div class="footer-version">
             <span id="versionInfo"></span>
         </div>
     </div>

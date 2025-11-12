@@ -792,13 +792,9 @@ currentPlatform = platform;
 document.querySelectorAll('.platform-btn').forEach(btn => {
     const btnPlatform = btn.getAttribute('data-platform');
     if (btnPlatform === platform) {
-        btn.style.borderColor = '#5b9bd5';
-        btn.style.color = '#2c3e5a';
-        btn.style.background = '#e8f2fa';
+        btn.classList.add('active');
     } else {
-        btn.style.borderColor = '#dfe6f0';
-        btn.style.color = '#6c7a89';
-        btn.style.background = '#fff';
+        btn.classList.remove('active');
     }
 });
 
@@ -1003,7 +999,7 @@ container.innerHTML = '';
 
 // Group 1: No Login Required
 const group1Title = document.createElement('h3');
-group1Title.style.cssText = 'color: #2c3e5a; margin: 20px 0 15px 0; font-size: 1.1em; grid-column: 1 / -1;';
+group1Title.classList.add('preset-group-title');
 group1Title.innerHTML = `🌐 ${t('groupNoLogin')}`;
 container.appendChild(group1Title);
 
@@ -1020,7 +1016,7 @@ PRESET_GROUPS.noLogin.forEach(key => {
 
 // Group 2: Login Required
 const group2Title = document.createElement('h3');
-group2Title.style.cssText = 'color: #2c3e5a; margin: 30px 0 15px 0; font-size: 1.1em; grid-column: 1 / -1;';
+group2Title.classList.add('preset-group-title', 'spacing-top');
 group2Title.innerHTML = `🔐 ${t('groupWithLogin')}`;
 container.appendChild(group2Title);
 
@@ -1041,19 +1037,16 @@ if (!experimentalWarning) {
     // Create warning element if it doesn't exist
     experimentalWarning = document.createElement('div');
     experimentalWarning.id = 'experimentalWarning';
-    experimentalWarning.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;padding:15px;margin:20px 0;border-radius:4px;color:#856404;grid-column: 1 / -1;';
+    experimentalWarning.classList.add('preset-experimental-warning');
     
     const warningTitle = document.createElement('strong');
-    warningTitle.style.cssText = 'display:block;margin-bottom:8px;font-size:1.05em;';
     experimentalWarning.appendChild(warningTitle);
     
     const warningText = document.createElement('div');
-    warningText.style.cssText = 'font-size:0.95em;line-height:1.5;margin-bottom:8px;';
     experimentalWarning.appendChild(warningText);
     
     const warningLink = document.createElement('a');
     warningLink.href = '#networkCaptureHelper';
-    warningLink.style.cssText = 'color:#856404;font-weight:600;text-decoration:underline;cursor:pointer;';
     experimentalWarning.appendChild(warningLink);
     
     container.appendChild(experimentalWarning);
@@ -1083,22 +1076,22 @@ if (hasOneNoteOrWord) {
 
 // Group 3: Allowed Tools (with subject selection)
 const group3Title = document.createElement('h3');
-group3Title.style.cssText = 'color: #2c3e5a; margin: 30px 0 15px 0; font-size: 1.1em; grid-column: 1 / -1;';
+group3Title.classList.add('preset-group-title', 'spacing-top');
 group3Title.innerHTML = `📚 ${t('groupAllowedTools')}`;
 container.appendChild(group3Title);
 
 // Subject selector - dynamically generated from SUBJECTS configuration
 const subjectSelector = document.createElement('div');
-subjectSelector.style.cssText = 'grid-column: 1 / -1; margin-bottom: 15px;';
+subjectSelector.classList.add('preset-subject-selector');
 
 const subjectLabel = document.createElement('label');
-subjectLabel.style.cssText = 'color: #2c3e5a; font-weight: 600; display: block; margin-bottom: 8px;';
+subjectLabel.classList.add('preset-subject-label');
 subjectLabel.textContent = `${t('selectSubject')}:`;
 subjectSelector.appendChild(subjectLabel);
 
 const subjectSelect = document.createElement('select');
 subjectSelect.id = 'subjectSelect';
-subjectSelect.style.cssText = 'width: 100%; padding: 10px; border: 2px solid #dfe6f0; border-radius: 8px; background: #f5f7fb; color: #2c3e5a; font-size: 1em; cursor: pointer;';
+subjectSelect.classList.add('preset-subject-select');
 
 // Default option
 const defaultOption = document.createElement('option');
@@ -1122,7 +1115,7 @@ container.appendChild(subjectSelector);
 // Tools container (initially hidden)
 const toolsContainer = document.createElement('div');
 toolsContainer.id = 'allowedToolsContainer';
-toolsContainer.style.cssText = 'grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;';
+toolsContainer.classList.add('preset-tools-container');
 container.appendChild(toolsContainer);
 
 // Add event listener to subject selector and restore previous selection
@@ -1194,12 +1187,12 @@ container.innerHTML = '';
 
 // Title
 const title = document.createElement('h4');
-title.style.cssText = 'color: #2c3e5a; margin: 0 0 10px 0; font-size: 0.95em;';
+title.classList.add('preset-tool-title');
 title.textContent = t('sharepointOptionsTitle');
 container.appendChild(title);
 
 const optionsDiv = document.createElement('div');
-optionsDiv.style.cssText = 'background: #f5f7fb; border-radius: 8px; padding: 15px; border: 2px solid #dfe6f0;';
+optionsDiv.classList.add('preset-tool-options');
 
 // School SharePoint option
 if (parsedLink.domain) {
@@ -1287,12 +1280,12 @@ container.appendChild(optionsDiv);
 
 function createSharePointCheckbox(serviceType, restrictionType, label, detectedInfo) {
 const div = document.createElement('div');
-div.style.cssText = 'margin-bottom: 10px;';
+div.classList.add('preset-option-item');
 
 const checkbox = document.createElement('input');
 checkbox.type = 'checkbox';
 checkbox.id = `sp_${serviceType}_${restrictionType}`;
-checkbox.style.cssText = 'margin-right: 8px;';
+checkbox.classList.add('preset-option-checkbox');
 checkbox.onchange = () => {
     if (!sharepointConfig[serviceType].restrictions) {
         sharepointConfig[serviceType].restrictions = {};
@@ -1303,11 +1296,11 @@ checkbox.onchange = () => {
 
 const labelEl = document.createElement('label');
 labelEl.htmlFor = checkbox.id;
-labelEl.style.cssText = 'color: #2c3e5a; font-weight: 600; cursor: pointer;';
+labelEl.classList.add('preset-option-label');
 labelEl.textContent = label;
 
 const infoEl = document.createElement('div');
-infoEl.style.cssText = 'margin-left: 28px; font-size: 0.85em; color: #5b9bd5;';
+infoEl.classList.add('preset-option-info');
 infoEl.textContent = detectedInfo;
 
 div.appendChild(checkbox);
@@ -1427,10 +1420,9 @@ if (showWarning) {
         // Create warning element if it doesn't exist
         warningDiv = document.createElement('div');
         warningDiv.id = 'securityLevelWarning';
-        warningDiv.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;padding:12px 15px;margin-top:15px;border-radius:4px;color:#856404;font-size:0.9em;';
+        warningDiv.classList.add('preset-category-warning');
         
         const warningTitle = document.createElement('strong');
-        warningTitle.style.cssText = 'display:block;margin-bottom:6px;';
         warningDiv.appendChild(warningTitle);
         
         const warningText = document.createElement('div');
@@ -1466,7 +1458,7 @@ container.innerHTML = '';
 
 // Info box
 const infoBox = document.createElement('div');
-infoBox.style.cssText = 'background:#e8f2fa;border-left:4px solid #5b9bd5;padding:12px 15px;margin-bottom:20px;border-radius:4px;color:#2c3e5a;font-size:0.9em;';
+infoBox.classList.add('preset-info-box');
 infoBox.innerHTML = `<strong>ℹ️ ${t('allBooleanOptions')}</strong><br>${t('booleanOptionsInfo')}`;
 container.appendChild(infoBox);
 console.log('ℹ️ Info box added');
@@ -1486,57 +1478,56 @@ groupOrder.forEach(groupKey => {
     
     // Group container (collapsible)
     const groupDiv = document.createElement('div');
-    groupDiv.style.cssText = 'margin-bottom:20px;border:1px solid #dfe6f0;border-radius:8px;overflow:hidden;background:#f5f7fb;';
+    groupDiv.classList.add('bool-group-container');
     
     // Group header (clickable)
     const groupHeader = document.createElement('div');
-    groupHeader.style.cssText = 'background:linear-gradient(135deg, #e8edf5 0%, #f5f7fb 100%);padding:12px 15px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;border-bottom:1px solid #dfe6f0;';
+    groupHeader.classList.add('bool-group-header');
     groupHeader.innerHTML = `
-        <strong style="color:#2c3e5a;font-size:1em;">${t(group.title)}</strong>
-        <span style="color:#6c7a89;font-size:0.9em;">(${group.options.length} ${currentLang === 'de' ? 'Optionen' : 'options'})</span>
+        <strong>${t(group.title)}</strong>
+        <span>(${group.options.length} ${currentLang === 'de' ? 'Optionen' : 'options'})</span>
     `;
     
     // Options content (initially hidden)
     const groupContent = document.createElement('div');
-    groupContent.style.cssText = 'padding:15px;display:none;';
+    groupContent.classList.add('bool-group-content');
     
     // Toggle functionality
     groupHeader.addEventListener('click', () => {
-        const isHidden = groupContent.style.display === 'none';
-        groupContent.style.display = isHidden ? 'block' : 'none';
+        groupContent.classList.toggle('show');
     });
     
     // Render options in grid
     const optionsGrid = document.createElement('div');
-    optionsGrid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;';
+    optionsGrid.classList.add('bool-options-grid');
     
     group.options.forEach(opt => {
         const optionDiv = document.createElement('div');
-        optionDiv.style.cssText = 'display:flex;align-items:flex-start;padding:8px;background:#ffffff;border-radius:4px;border:1px solid #dfe6f0;';
+        optionDiv.classList.add('bool-option-item');
         
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.id = `bool_${opt.key}`;
         checkbox.checked = parsedBooleanOptions.userSelections[opt.key];
-        checkbox.style.cssText = 'margin-right:8px;margin-top:2px;cursor:pointer;';
+        checkbox.classList.add('bool-option-checkbox');
         checkbox.addEventListener('change', (e) => {
             parsedBooleanOptions.userSelections[opt.key] = e.target.checked;
         });
         
         const label = document.createElement('label');
         label.htmlFor = `bool_${opt.key}`;
-        label.style.cssText = 'cursor:pointer;font-size:0.9em;line-height:1.4;';
+        label.classList.add('bool-option-label');
         
         const labelText = document.createElement('div');
-        labelText.style.cssText = 'color:#2c3e5a;font-weight:500;';
+        labelText.classList.add('bool-option-label-text');
         labelText.textContent = generateOptionLabel(opt.key);
         
         const keyName = document.createElement('div');
-        keyName.style.cssText = 'color:#6c7a89;font-size:0.85em;margin-top:2px;font-family:monospace;';
+        keyName.classList.add('bool-option-key');
         keyName.textContent = opt.key;
         
         const tooltip = document.createElement('div');
-        tooltip.style.cssText = 'color:#8898aa;font-size:0.8em;margin-top:4px;font-style:italic;';
+        tooltip.classList.add('bool-option-tooltip');
         
         // Get location from JSON (English labels as in original tool)
         const location = getOptionLocation(opt.key);
@@ -1549,7 +1540,7 @@ groupOrder.forEach(groupKey => {
             const notDocHint = getTranslatedText('notDocumentedHint');
             tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${notDocText}`;
             tooltip.title = notDocHint;
-            tooltip.style.opacity = '0.5';
+            tooltip.classList.add('undocumented');
         }
         
         label.appendChild(labelText);
@@ -1905,7 +1896,7 @@ container.innerHTML = '';
 // Show warning if duplicates were removed (add first)
 if (duplicatesRemoved > 0) {
     const warningDiv = document.createElement('div');
-    warningDiv.style.cssText = 'background:#fff3cd;border-left:4px solid #ffc107;padding:10px;margin-bottom:10px;border-radius:4px;color:#856404;font-size:0.9em;';
+    warningDiv.classList.add('preview-warning');
     const warningText = currentLang === 'de' 
         ? `⚠️ ${duplicatesRemoved} doppelte Domain(s) wurden entfernt`
         : `⚠️ ${duplicatesRemoved} duplicate domain(s) removed`;
@@ -1966,7 +1957,7 @@ let restrictionLabels = [];
 
 if (sharepointRestrictionLevel > 0 && restrictionLabels.length > 0) {
     const spInfoDiv = document.createElement('div');
-    spInfoDiv.style.cssText = 'background:#d1ecf1;border-left:4px solid #17a2b8;padding:10px;margin-bottom:10px;border-radius:4px;color:#0c5460;font-size:0.9em;';
+    spInfoDiv.classList.add('preview-sp-info');
     
     let spInfoText = '';
     if (sharepointRestrictionLevel === 1) {
@@ -1990,7 +1981,7 @@ if (selectedPresets.length > 0) {
         t('preset' + key.charAt(0).toUpperCase() + key.slice(1))
     ).join(', ');
     const infoDiv = document.createElement('div');
-    infoDiv.style.cssText = 'background:#d4edda;border-left:4px solid #28a745;padding:10px;margin-bottom:10px;border-radius:4px;color:#155724;font-size:0.9em;';
+    infoDiv.classList.add('preview-info-success');
     const infoText = currentLang === 'de'
         ? `✓ Ausgewählt: ${serviceNames}`
         : `✓ Selected: ${serviceNames}`;
@@ -1999,7 +1990,7 @@ if (selectedPresets.length > 0) {
 } else if (customDomains.length > 0) {
     // Show info when only custom domains are used
     const infoDiv = document.createElement('div');
-    infoDiv.style.cssText = 'background:#d1ecf1;border-left:4px solid #17a2b8;padding:10px;margin-bottom:10px;border-radius:4px;color:#0c5460;font-size:0.9em;';
+    infoDiv.classList.add('preview-info');
     const infoText = currentLang === 'de'
         ? `ℹ️ Nur benutzerdefinierte Domains`
         : `ℹ️ Custom domains only`;
@@ -2020,10 +2011,10 @@ const restrictionInfo = getSharePointRestrictionInfo();
 
 if (restrictionInfo.length > 0) {
     const restrictionSectionDiv = document.createElement('div');
-    restrictionSectionDiv.style.cssText = 'margin-top:20px;padding:15px;background:#e7f3ff;border-left:4px solid #17a2b8;border-radius:4px;';
+    restrictionSectionDiv.classList.add('preview-restriction-section');
     
     const restrictionTitleStrong = document.createElement('strong');
-    restrictionTitleStrong.style.cssText = 'color:#2c3e5a;display:block;margin-bottom:10px;font-size:1em;';
+    restrictionTitleStrong.classList.add('preview-restriction-title');
     const restrictionTitle = currentLang === 'de' 
         ? '🔗 SharePoint-Einschränkungen (Spezifisch ersetzt Generisch)'
         : '🔗 SharePoint Restrictions (Specific Replaces Generic)';
@@ -2031,7 +2022,7 @@ if (restrictionInfo.length > 0) {
     restrictionSectionDiv.appendChild(restrictionTitleStrong);
     
     const restrictionExplain = document.createElement('div');
-    restrictionExplain.style.cssText = 'font-size:0.85em;color:#0c5460;margin-bottom:15px;font-style:italic;';
+    restrictionExplain.classList.add('preview-restriction-explain');
     const explainText = currentLang === 'de'
         ? 'Generische Wildcards werden durch spezifische URLs ersetzt. Andere Domains (Login, 2FA etc.) bleiben unberührt:'
         : 'Generic wildcards are replaced by specific URLs. Other domains (login, 2FA etc.) remain unaffected:';
@@ -2041,29 +2032,29 @@ if (restrictionInfo.length > 0) {
     // Display each restriction replacement
     restrictionInfo.forEach(info => {
         const replacementDiv = document.createElement('div');
-        replacementDiv.style.cssText = 'padding:12px;margin:10px 0;background:#fff;border-radius:4px;border:1px solid #bee5eb;';
+        replacementDiv.classList.add('preview-replacement-item');
         
         // Show restriction level and name
         const levelDiv = document.createElement('div');
-        levelDiv.style.cssText = 'font-weight:600;color:#17a2b8;margin-bottom:8px;font-size:0.95em;';
+        levelDiv.classList.add('preview-replacement-level');
         levelDiv.textContent = `${info.restrictionLevel}: ${info.restrictionName}`;
         replacementDiv.appendChild(levelDiv);
         
         // Show generic URL (crossed out)
         const genericDiv = document.createElement('div');
-        genericDiv.style.cssText = 'font-family:monospace;font-size:0.85em;color:#999;text-decoration:line-through;margin-bottom:4px;';
+        genericDiv.classList.add('preview-replacement-generic');
         genericDiv.textContent = `❌ ${info.genericUrl}`;
         replacementDiv.appendChild(genericDiv);
         
         // Show arrow
         const arrowDiv = document.createElement('div');
-        arrowDiv.style.cssText = 'color:#17a2b8;margin:4px 0;font-size:1.2em;';
+        arrowDiv.classList.add('preview-replacement-arrow');
         arrowDiv.textContent = '⬇️';
         replacementDiv.appendChild(arrowDiv);
         
         // Show specific URL (highlighted)
         const specificDiv = document.createElement('div');
-        specificDiv.style.cssText = 'font-family:monospace;font-size:0.85em;color:#0c5460;font-weight:600;margin-top:4px;word-break:break-all;';
+        specificDiv.classList.add('preview-replacement-specific');
         specificDiv.textContent = `✅ ${info.specificUrl}`;
         replacementDiv.appendChild(specificDiv);
         
@@ -2096,9 +2087,8 @@ if (customBlockedInput.trim()) {
 
 if (blockedDomains.length > 0) {
     const blockedTitleDiv = document.createElement('div');
-    blockedTitleDiv.style.cssText = 'margin-top:20px;padding-top:15px;border-top:2px solid #dfe6f0;';
+    blockedTitleDiv.classList.add('preview-blocked-title');
     const blockedTitleStrong = document.createElement('strong');
-    blockedTitleStrong.style.color = '#2c3e5a';
     const blockedTitle = currentLang === 'de' 
         ? '🚫 Blockierte Domains (explizit gesperrt)'
         : '🚫 Blocked Domains (explicitly denied)';
@@ -2109,8 +2099,7 @@ if (blockedDomains.length > 0) {
     // Add blocked domains (XSS-safe with textContent)
     blockedDomains.forEach(domain => {
         const div = document.createElement('div');
-        div.className = 'domain-item';
-        div.style.color = '#dc3545';
+        div.className = 'domain-item blocked';
         div.textContent = `✗ ${domain}`;
         container.appendChild(div);
     });
@@ -2508,39 +2497,39 @@ const instructions = currentLang === 'de'
     };
 
 const modal = document.createElement('div');
-modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+modal.classList.add('browser-helper-modal');
 
 const content = document.createElement('div');
-content.style.cssText = 'background:white;border-radius:12px;padding:30px;max-width:800px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+content.classList.add('browser-helper-content');
 
 content.innerHTML = `
-    <h2 style="color:#5e72e4;margin-bottom:20px;">${instructions.title}</h2>
+    <h2 class="browser-helper-title">${instructions.title}</h2>
     
-    <div style="background:#f0f3ff;padding:20px;border-radius:8px;margin-bottom:20px;">
-        <h3 style="color:#5e72e4;margin-bottom:15px;">${instructions.method1}</h3>
-        ${instructions.method1Steps.map(step => `<div style="margin:8px 0;">${step}</div>`).join('')}
+    <div class="browser-helper-method">
+        <h3>${instructions.method1}</h3>
+        ${instructions.method1Steps.map(step => `<div class="browser-helper-step">${step}</div>`).join('')}
         
-        <div style="margin-top:15px;">
-            <label style="font-weight:600;color:#32325d;display:block;margin-bottom:8px;">${instructions.consoleLabel}</label>
-            <textarea readonly style="width:100%;height:120px;font-family:monospace;font-size:12px;padding:10px;border:2px solid #e9ecef;border-radius:6px;resize:vertical;">${script}</textarea>
-            <button id="copyScriptBtn" style="margin-top:10px;padding:10px 20px;background:#5e72e4;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">${instructions.copyScript}</button>
+        <div class="browser-helper-input-group">
+            <label class="browser-helper-label">${instructions.consoleLabel}</label>
+            <textarea readonly class="browser-helper-textarea">${script}</textarea>
+            <button id="copyScriptBtn" class="browser-helper-copy-btn">${instructions.copyScript}</button>
         </div>
     </div>
     
-    <div style="background:#f7f8fc;padding:20px;border-radius:8px;margin-bottom:20px;">
-        <h3 style="color:#5e72e4;margin-bottom:15px;">${instructions.method2}</h3>
-        ${instructions.method2Steps.map(step => `<div style="margin:8px 0;">${step}</div>`).join('')}
+    <div class="browser-helper-method secondary">
+        <h3>${instructions.method2}</h3>
+        ${instructions.method2Steps.map(step => `<div class="browser-helper-step">${step}</div>`).join('')}
         
-        <div style="margin-top:15px;">
-            <label style="font-weight:600;color:#32325d;display:block;margin-bottom:8px;">${instructions.bookmarkletLabel}</label>
-            <textarea readonly style="width:100%;height:100px;font-family:monospace;font-size:11px;padding:10px;border:2px solid #e9ecef;border-radius:6px;resize:vertical;">${bookmarklet}</textarea>
-            <button id="copyBookmarkletBtn" style="margin-top:10px;padding:10px 20px;background:#5e72e4;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">${instructions.copyBookmarklet}</button>
+        <div class="browser-helper-input-group">
+            <label class="browser-helper-label">${instructions.bookmarkletLabel}</label>
+            <textarea readonly class="browser-helper-textarea bookmarklet">${bookmarklet}</textarea>
+            <button id="copyBookmarkletBtn" class="browser-helper-copy-btn">${instructions.copyBookmarklet}</button>
         </div>
     </div>
     
-    <div style="display:flex;gap:10px;justify-content:space-between;margin-top:20px;">
-        <a href="https://github.com/markuskiller/SEBConfigGenerator/blob/main/docs/${currentLang}/BROWSER_CAPTURE_${currentLang === 'de' ? 'ANLEITUNG' : 'GUIDE'}.md" target="_blank" rel="noopener noreferrer" style="padding:12px 24px;background:#f7f8fc;color:#5e72e4;border:2px solid #e9ecef;border-radius:6px;text-decoration:none;font-weight:600;">${instructions.fullGuide}</a>
-        <button id="closeBrowserHelperBtn" style="padding:12px 24px;background:#e9ecef;color:#32325d;border:none;border-radius:6px;cursor:pointer;font-weight:600;">${instructions.close}</button>
+    <div class="browser-helper-actions">
+        <a href="https://github.com/markuskiller/SEBConfigGenerator/blob/main/docs/${currentLang}/BROWSER_CAPTURE_${currentLang === 'de' ? 'ANLEITUNG' : 'GUIDE'}.md" target="_blank" rel="noopener noreferrer" class="browser-helper-guide-link">${instructions.fullGuide}</a>
+        <button id="closeBrowserHelperBtn" class="browser-helper-close-btn">${instructions.close}</button>
     </div>
 `;
 
@@ -2638,7 +2627,7 @@ if (content.classList.contains('expanded')) {
         const container = document.getElementById('booleanOptionsContainer');
         if (container && container.children.length === 0) {
             // Show loading indicator
-            container.innerHTML = '<div style="text-align:center;padding:40px;color:#6c7a89;">⏳ ' + 
+            container.innerHTML = '<div class="loading-indicator">⏳ ' + 
                 (currentLang === 'de' ? 'Lade Optionen...' : 'Loading options...') + '</div>';
             
             // Load boolean options locations from JSON and parse options from XML template
