@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.18.0
-// Build: 2025-11-12 11:59
+// Version: v0.18.1
+// Build: 2025-11-12 12:28
 // ============================================================================
 
 // ============================================================================
@@ -86,6 +86,8 @@ de: {
     allowedDomains: "Erlaubte Domains",
     downloadBtn: "📥 SEB Konfiguration herunterladen (.seb)",
     copyBtn: "📋 Domain-Liste kopieren",
+    criticalWarningTitle: "Wichtiger Hinweis:",
+    criticalWarningText: "Die heruntergeladene .seb-Datei ist nur eine Vorlage! Die unten beschriebenen 'Nächsten Schritte' müssen zwingend ausgeführt werden, bevor die Konfiguration produktiv im Unterricht eingesetzt und an die Schülerinnen und Schüler verteilt werden kann.",
     nextStepsTitle: "Nächste Schritte",
     nextStepsText: "1. SEB-Konfigurationsdatei herunterladen (.seb)<br>2. Im SEB Config Tool öffnen<br>3. Einstellungen verfeinern und verschlüsseln<br>4. Als finale .seb-Datei speichern<br>5. Verschlüsselte Datei an Schüler*innen verteilen",
     helperScriptTitle: "Network Capture Helper",
@@ -237,6 +239,8 @@ en: {
     allowedDomains: "Allowed Domains",
     downloadBtn: "📥 Download SEB Config (.seb)",
     copyBtn: "📋 Copy Domain List",
+    criticalWarningTitle: "Important Notice:",
+    criticalWarningText: "The downloaded .seb file is only a template! The 'Next Steps' described below must be completed before the configuration can be used in production and distributed to students.",
     nextStepsTitle: "Next Steps",
     nextStepsText: "1. Download the SEB configuration file (.seb)<br>2. Open in SEB Config Tool<br>3. Refine settings and encrypt<br>4. Save as final .seb file<br>5. Distribute encrypted file to students",
     helperScriptTitle: "Network Capture Helper",
@@ -823,8 +827,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.18.0';
-const BUILD_DATE = new Date('2025-11-12T11:59:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.18.1';
+const BUILD_DATE = new Date('2025-11-12T12:28:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
