@@ -2655,22 +2655,43 @@ if (content.classList.contains('expanded')) {
 // DEV BANNER
 // ============================================================================
 function updateDevBanner() {
-// Update version from APP_VERSION constant
-const devVersionEl = document.getElementById('devVersion');
-if (devVersionEl) {
-    devVersionEl.textContent = APP_VERSION;
-}
-
-// Update build date/time from BUILD_DATE constant
-const devBuildEl = document.getElementById('devBuild');
-if (devBuildEl) {
-    const day = String(BUILD_DATE.getDate()).padStart(2, '0');
-    const month = String(BUILD_DATE.getMonth() + 1).padStart(2, '0');
-    const year = BUILD_DATE.getFullYear();
-    const hours = String(BUILD_DATE.getHours()).padStart(2, '0');
-    const minutes = String(BUILD_DATE.getMinutes()).padStart(2, '0');
-    devBuildEl.textContent = `${day}.${month}.${year} ${hours}:${minutes}`;
-}
+    // Check if this is a development version (alpha, beta, rc, dev)
+    // Remove 'v' prefix and check if remaining string contains letters
+    const versionWithoutV = APP_VERSION.replace(/^v/, '');
+    const isDevelopmentVersion = /[a-z]/i.test(versionWithoutV);
+    
+    // Get banner element
+    const devBanner = document.querySelector('.dev-banner');
+    
+    if (!devBanner) {
+        return;
+    }
+    
+    // Hide banner for production releases
+    if (!isDevelopmentVersion) {
+        devBanner.style.setProperty('display', 'none', 'important');
+        return;
+    }
+    
+    // Show banner for development versions
+    devBanner.style.setProperty('display', 'flex', 'important');
+    
+    // Update version from APP_VERSION constant
+    const devVersionEl = document.getElementById('devVersion');
+    if (devVersionEl) {
+        devVersionEl.textContent = APP_VERSION;
+    }
+    
+    // Update build date/time from BUILD_DATE constant
+    const devBuildEl = document.getElementById('devBuild');
+    if (devBuildEl) {
+        const day = String(BUILD_DATE.getDate()).padStart(2, '0');
+        const month = String(BUILD_DATE.getMonth() + 1).padStart(2, '0');
+        const year = BUILD_DATE.getFullYear();
+        const hours = String(BUILD_DATE.getHours()).padStart(2, '0');
+        const minutes = String(BUILD_DATE.getMinutes()).padStart(2, '0');
+        devBuildEl.textContent = `${day}.${month}.${year} ${hours}:${minutes}`;
+    }
 
 // Try to fetch git commit ID from a separate file (if available)
 // This will be generated during deployment
