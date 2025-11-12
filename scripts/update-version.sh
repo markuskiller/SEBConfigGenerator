@@ -32,7 +32,7 @@ BUILD_ISO=$(date +"%Y-%m-%dT%H:%M:00")
 # Files to update
 APP_FILE="js/app.js"
 APACHE_FILE="configs/apache/.htaccess"
-NGINX_FILE="configs/nginx/sebconfig.conf"
+NGINX_FILE="configs/nginx/sebconfiggenerator.conf"
 README_FILE="configs/README.md"
 
 # Check if files exist
