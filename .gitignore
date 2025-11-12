@@ -28,12 +28,6 @@ Gemfile.lock
 internal-docs/
 
 # ============================================================================
-# Auto-generated JavaScript data files (generated during deployment)
-# ============================================================================
-templates/xml-data.js
-templates/boolean-options-locations-*.js
-
-# ============================================================================
 # Development & Testing
 # ============================================================================
 # Local test files
