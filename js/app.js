@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.18.1
-// Build: 2025-11-12 12:28
+// Version: v0.18.2
+// Build: 2025-11-12 13:34
 // ============================================================================
 
 // ============================================================================
@@ -827,8 +827,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.18.1';
-const BUILD_DATE = new Date('2025-11-12T12:28:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.18.2';
+const BUILD_DATE = new Date('2025-11-12T13:34:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -2610,6 +2610,14 @@ document.getElementById('browserHelperBtn').addEventListener('click', showBrowse
 
 // Advanced section toggle
 document.getElementById('advancedHeader').addEventListener('click', toggleAdvancedSection);
+
+// Platform selection buttons (Boolean Options)
+document.querySelectorAll('.platform-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const platform = btn.getAttribute('data-platform');
+        selectPlatform(platform);
+    });
+});
 }
 
 // ============================================================================
@@ -2630,6 +2638,18 @@ if (content.classList.contains('expanded')) {
     if (!parsedBooleanOptions.loaded) {
         const container = document.getElementById('booleanOptionsContainer');
         if (container && container.children.length === 0) {
+            // Detect and set user's platform
+            const detectedPlatform = detectUserPlatform();
+            currentPlatform = detectedPlatform;
+            console.log(`🔍 Detected platform: ${detectedPlatform}`);
+            
+            // Update platform button to show detected platform as active
+            document.querySelectorAll('.platform-btn').forEach(btn => {
+                if (btn.getAttribute('data-platform') === detectedPlatform) {
+                    btn.classList.add('active');
+                }
+            });
+            
             // Show loading indicator
             container.innerHTML = '<div class="loading-indicator">⏳ ' + 
                 (currentLang === 'de' ? 'Lade Optionen...' : 'Loading options...') + '</div>';
@@ -2637,9 +2657,9 @@ if (content.classList.contains('expanded')) {
             // Load boolean options locations from JSON and parse options from XML template
             console.log('🔄 Starting to load boolean options...');
             
-            // Load locations for current platform (in parallel with XML parsing)
+            // Load locations for detected platform (in parallel with XML parsing)
             const [locationsResult, optionsResult] = await Promise.all([
-                loadBooleanOptionsLocations(currentPlatform),
+                loadBooleanOptionsLocations(detectedPlatform),
                 loadAndParseBooleanOptions()
             ]);
             
@@ -2738,6 +2758,32 @@ if (langParam && (langParam === 'de' || langParam === 'en')) {
     return langParam;
 }
 return null;
+}
+
+// ============================================================================
+// PLATFORM DETECTION
+// ============================================================================
+function detectUserPlatform() {
+const userAgent = navigator.userAgent.toLowerCase();
+const platform = navigator.platform.toLowerCase();
+
+// Detect iOS/iPadOS/iPhone/visionOS
+// Note: Modern iPads may identify as Mac, so check for touch points
+// Vision Pro also runs visionOS (based on iOS)
+if (/ipad/.test(userAgent) || 
+    /iphone/.test(userAgent) || 
+    /vision/.test(userAgent) ||
+    (platform === 'macintel' && navigator.maxTouchPoints > 1)) {
+    return 'ipados';
+}
+
+// Detect macOS
+if (/mac/.test(platform)) {
+    return 'macos';
+}
+
+// Default to Windows (most common for desktop usage)
+return 'windows';
 }
 
 // ============================================================================
