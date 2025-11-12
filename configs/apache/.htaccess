@@ -1,0 +1,144 @@
+# ============================================================================
+# Apache .htaccess Configuration for SEB Config Generator
+# ============================================================================
+# This file configures HTTP security headers for Apache web servers.
+# Place this file in the root directory of your web application.
+#
+# Requirements:
+# - Apache 2.4+ with mod_headers enabled
+# - Enable with: a2enmod headers && systemctl restart apache2
+#
+# Version: v0.18.0a6
+# Updated: 2025-11-12
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Content Security Policy (CSP)
+# ----------------------------------------------------------------------------
+# Prevents XSS attacks by controlling which resources can be loaded.
+# This strict policy allows only same-origin resources.
+#
+# Directives explained:
+# - default-src 'self'        : Default fallback for all resource types
+# - script-src 'self'          : Only load JavaScript from same origin
+# - style-src 'self'           : Only load CSS from same origin
+# - img-src 'self' data:       : Images from same origin + data URIs (base64)
+# - connect-src 'self'         : AJAX/fetch only to same origin
+# - object-src 'none'          : Block plugins (Flash, Java, etc.)
+# - base-uri 'self'            : Restrict <base> tag to same origin
+# - form-action 'self'         : Forms can only submit to same origin
+#
+# Note: No 'unsafe-inline' or 'unsafe-eval' - all code externalized!
+# ----------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';"
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# X-Frame-Options
+# ----------------------------------------------------------------------------
+# Prevents clickjacking attacks by controlling iframe embedding.
+# DENY = Cannot be embedded in any iframe (most secure)
+# SAMEORIGIN = Can only be embedded in iframes from same origin
+#
+# Use DENY unless you need iframe embedding from same origin.
+# ----------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "DENY"
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# X-Content-Type-Options
+# ----------------------------------------------------------------------------
+# Prevents MIME-type sniffing attacks.
+# Forces browsers to respect declared Content-Type headers.
+# Prevents browsers from interpreting files as different types.
+# ----------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# Referrer-Policy
+# ----------------------------------------------------------------------------
+# Controls how much referrer information is sent with requests.
+# strict-origin-when-cross-origin:
+# - Same-origin requests: Full URL sent as referrer
+# - Cross-origin HTTPS→HTTPS: Only origin sent (no path)
+# - Cross-origin HTTPS→HTTP: No referrer sent (downgrade protection)
+#
+# Protects against URL parameter leakage to external sites.
+# ----------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# Permissions-Policy (formerly Feature-Policy)
+# ----------------------------------------------------------------------------
+# Controls which browser features and APIs can be used.
+# Disabled features: geolocation, microphone, camera, payment APIs
+# This prevents malicious code from accessing sensitive device features.
+#
+# Additional options you can restrict:
+# - accelerometer, gyroscope, magnetometer (motion sensors)
+# - fullscreen, picture-in-picture (display modes)
+# - usb, serial, bluetooth (hardware access)
+# ----------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# Strict-Transport-Security (HSTS)
+# ----------------------------------------------------------------------------
+# Forces browsers to only connect via HTTPS for specified duration.
+# ONLY enable this if you serve the application over HTTPS!
+#
+# Parameters:
+# - max-age=31536000       : Enforce HTTPS for 1 year (in seconds)
+# - includeSubDomains      : Apply to all subdomains
+# - preload                : Allow submission to HSTS preload list
+#
+# WARNING: Do NOT enable if you serve over HTTP or if HTTPS is not
+#          properly configured - this will break your application!
+#
+# Uncomment the following lines after HTTPS is configured:
+# ----------------------------------------------------------------------------
+# <IfModule mod_headers.c>
+#     Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+# </IfModule>
+
+# ----------------------------------------------------------------------------
+# Additional Security: Disable Directory Listing
+# ----------------------------------------------------------------------------
+# Prevents browsing directory contents if no index file exists.
+# ----------------------------------------------------------------------------
+Options -Indexes
+
+# ----------------------------------------------------------------------------
+# Additional Security: Disable Server Signature
+# ----------------------------------------------------------------------------
+# Hides Apache version information in error pages and headers.
+# Requires ServerTokens configuration in main Apache config.
+# ----------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    Header always unset X-Powered-By
+    Header always unset Server
+</IfModule>
+ServerSignature Off
+
+# ============================================================================
+# End of Security Headers Configuration
+# ============================================================================
+# Testing Instructions:
+# 1. Place this file in your web root directory
+# 2. Access your application via browser
+# 3. Open Developer Tools > Network tab
+# 4. Reload page and check Response Headers
+# 5. Verify all security headers are present
+#
+# Online Testing Tools:
+# - https://securityheaders.com/
+# - https://observatory.mozilla.org/
+# ============================================================================
