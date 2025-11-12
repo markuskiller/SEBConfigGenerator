@@ -3360,15 +3360,32 @@ function updateDevBanner() {
 }
 
 // ============================================================================
+// URL PARAMETER HANDLING
+// ============================================================================
+function getLanguageFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const langParam = urlParams.get('lang');
+    
+    // Validate language parameter
+    if (langParam && (langParam === 'de' || langParam === 'en')) {
+        return langParam;
+    }
+    return null;
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 async function init() {
     // Update dev banner with version info
     updateDevBanner();
     
-    // Load saved language preference or default to German
-    const savedLang = localStorage.getItem('sebConfigLang') || 'de';
-    setLanguage(savedLang);
+    // Determine language: URL parameter > localStorage > default (German)
+    const urlLang = getLanguageFromURL();
+    const savedLang = localStorage.getItem('sebConfigLang');
+    const initialLang = urlLang || savedLang || 'de';
+    
+    setLanguage(initialLang);
     
     attachEventListeners();
     updatePreview();
