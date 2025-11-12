@@ -4,6 +4,8 @@ Web-basierter Generator für Safe Exam Browser Konfigurationen - erstellen Sie f
 
 **🌐 Live-Demo:** [SEBConfigGenerator](https://markuskiller.github.io/SEBConfigGenerator)
 
+**🌐 Latest Development Version (Experimentell!):** [SEBConfigGenerator](https://markuskiller.github.io/SEBConfigGenerator/dev)
+
 ## 🎯 Empfohlener Ansatz: Google Sites Hub
 
 Der beste Weg, SEB im Bildungsumfeld zu nutzen:
