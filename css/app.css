@@ -608,12 +608,6 @@ textarea {
     color: #2c3e5a;
 }
 
-.platform-btn:first-child {
-    border-color: #5b9bd5;
-    color: #2c3e5a;
-    background: #e8f2fa;
-}
-
 /* Helper script buttons container */
 .helper-buttons {
     margin-top: 15px;
