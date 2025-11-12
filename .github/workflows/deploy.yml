@@ -27,6 +27,10 @@ jobs:
             echo "version=development" >> $GITHUB_OUTPUT
           fi
       
+      - name: Create git commit file for dev banner
+        run: |
+          echo "${{ github.sha }}" > GIT_COMMIT.txt
+      
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
