@@ -31,6 +31,33 @@ jobs:
         run: |
           echo "${{ github.sha }}" > GIT_COMMIT.txt
       
+      - name: Generate JavaScript data files from templates
+        run: |
+          echo "// Auto-generated from example_config.xml - DO NOT EDIT MANUALLY" > templates/xml-data.js
+          echo -n "const EXAMPLE_CONFIG_XML = \`" >> templates/xml-data.js
+          cat templates/example_config.xml >> templates/xml-data.js
+          echo "\`;" >> templates/xml-data.js
+          
+          # Convert JSON location files to JavaScript
+          for file in templates/boolean-options-locations-*.json; do
+            if [ -f "$file" ]; then
+              basename=$(basename "$file" .json)
+              # Extract platform name (e.g., "windows" from "boolean-options-locations-windows.json")
+              platform=$(echo "$basename" | sed 's/boolean-options-locations-//')
+              varname="LOCATIONS_$(echo $platform | tr '[:lower:]' '[:upper:]')"
+              
+              echo "// Auto-generated from $basename.json - DO NOT EDIT MANUALLY" > "${file%.json}.js"
+              echo "const $varname = " >> "${file%.json}.js"
+              cat "$file" >> "${file%.json}.js"
+              echo ";" >> "${file%.json}.js"
+              
+              echo "Generated ${file%.json}.js with variable $varname"
+            fi
+          done
+          
+          echo "✅ Generated JavaScript data files"
+          ls -lh templates/*.js
+      
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:

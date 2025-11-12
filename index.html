@@ -458,6 +458,12 @@
             } 
         }
     </style>
+    
+    <!-- Load template data as JavaScript (works offline!) -->
+    <script src="templates/xml-data.js"></script>
+    <script src="templates/boolean-options-locations-windows.js"></script>
+    <script src="templates/boolean-options-locations-macos.js"></script>
+    <script src="templates/boolean-options-locations-ipados.js"></script>
 </head>
 <body>
     <!-- Dev Version Banner -->
@@ -1282,15 +1288,31 @@ function parseSharePointLink(url, serviceType) {
 // ============================================================================
 async function loadAndParseBooleanOptions() {
     try {
-        console.log('📥 Fetching XML template...');
-        const response = await fetch('templates/example_config.xml');
-        console.log('📄 Response status:', response.status);
-        const xmlText = await response.text();
+        console.log('📥 Loading XML template from embedded data...');
+        
+        // Check if EXAMPLE_CONFIG_XML is available (loaded from xml-data.js)
+        if (typeof EXAMPLE_CONFIG_XML === 'undefined') {
+            console.error('❌ EXAMPLE_CONFIG_XML not found! Make sure xml-data.js is loaded.');
+            return false;
+        }
+        
+        const xmlText = EXAMPLE_CONFIG_XML;
         console.log('📝 XML text length:', xmlText.length);
+        console.log('📝 First 200 chars:', xmlText.substring(0, 200));
         
         // Parse XML
         const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
+        
+        // Check for parsing errors
+        const parseError = xmlDoc.getElementsByTagName('parsererror');
+        if (parseError.length > 0) {
+            console.error('❌ XML parsing error:', parseError[0].textContent);
+            return false;
+        }
+        
+        console.log('✅ XML parsed successfully');
+        console.log('📊 Root element:', xmlDoc.documentElement.tagName);
         
         // Extract all boolean options
         const allKeys = xmlDoc.getElementsByTagName('key');
@@ -1391,8 +1413,29 @@ async function loadBooleanOptionsLocations(platform = 'windows') {
     
     try {
         console.log(`📍 Loading boolean options locations for ${platform}...`);
-        const response = await fetch(`templates/boolean-options-locations-${platform}.json`);
-        const data = await response.json();
+        
+        // Get data from embedded JavaScript constants
+        // Try to access the global variable directly (const variables are not on window object)
+        let data = null;
+        
+        try {
+            if (platform === 'windows' && typeof LOCATIONS_WINDOWS !== 'undefined') {
+                data = LOCATIONS_WINDOWS;
+            } else if (platform === 'macos' && typeof LOCATIONS_MACOS !== 'undefined') {
+                data = LOCATIONS_MACOS;
+            } else if (platform === 'ipados' && typeof LOCATIONS_IPADOS !== 'undefined') {
+                data = LOCATIONS_IPADOS;
+            }
+        } catch (e) {
+            console.warn(`⚠️ LOCATIONS_${platform.toUpperCase()} not found! Make sure boolean-options-locations-${platform}.js is loaded.`);
+            return null;
+        }
+        
+        if (!data) {
+            console.warn(`⚠️ No location data for ${platform}`);
+            return null;
+        }
+        
         booleanOptionsLocations[platform] = data;
         
         const optionCount = Object.keys(data.options).length;
@@ -3340,23 +3383,31 @@ function updateDevBanner() {
     
     // Try to fetch git commit ID from a separate file (if available)
     // This will be generated during deployment
-    fetch('GIT_COMMIT.txt')
-        .then(response => response.ok ? response.text() : null)
-        .then(commitId => {
-            const devCommitEl = document.getElementById('devCommit');
-            if (devCommitEl && commitId) {
-                // Show first 7 characters of commit hash
-                devCommitEl.textContent = commitId.trim().substring(0, 7);
-            } else if (devCommitEl) {
-                devCommitEl.textContent = 'local';
-            }
-        })
-        .catch(() => {
-            const devCommitEl = document.getElementById('devCommit');
-            if (devCommitEl) {
-                devCommitEl.textContent = 'local';
-            }
-        });
+    // Only attempt fetch if running on http/https (not file://)
+    const devCommitEl = document.getElementById('devCommit');
+    if (window.location.protocol === 'file:') {
+        // Running locally without server
+        if (devCommitEl) {
+            devCommitEl.textContent = 'local';
+        }
+    } else {
+        // Running on server, try to fetch commit ID
+        fetch('GIT_COMMIT.txt')
+            .then(response => response.ok ? response.text() : null)
+            .then(commitId => {
+                if (devCommitEl && commitId) {
+                    // Show first 7 characters of commit hash
+                    devCommitEl.textContent = commitId.trim().substring(0, 7);
+                } else if (devCommitEl) {
+                    devCommitEl.textContent = 'local';
+                }
+            })
+            .catch(() => {
+                if (devCommitEl) {
+                    devCommitEl.textContent = 'local';
+                }
+            });
+    }
 }
 
 // ============================================================================
