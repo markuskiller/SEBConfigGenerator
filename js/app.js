@@ -2717,33 +2717,36 @@ function updateDevBanner() {
         devBuildEl.textContent = `${day}.${month}.${year} ${hours}:${minutes}`;
     }
 
-// Try to fetch git commit ID from a separate file (if available)
-// This will be generated during deployment
-// Only attempt fetch if running on http/https (not file://)
-const devCommitEl = document.getElementById('devCommit');
-if (window.location.protocol === 'file:') {
-    // Running locally without server
-    if (devCommitEl) {
-        devCommitEl.textContent = 'local';
+    // Try to fetch git commit ID from a separate file (if available)
+    // This will be generated during deployment
+    // Only attempt fetch if running on http/https (not file://)
+    const devCommitEl = document.getElementById('devCommit');
+    if (window.location.protocol === 'file:') {
+        // Running locally without server
+        if (devCommitEl) {
+            devCommitEl.textContent = 'local';
+        }
+    } else {
+        // Running on server, try to fetch commit ID
+        fetch('GIT_COMMIT.txt')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('GIT_COMMIT.txt not found');
+                }
+                return response.text();
+            })
+            .then(commitId => {
+                if (devCommitEl && commitId) {
+                    // Show first 7 characters of commit hash
+                    devCommitEl.textContent = commitId.trim().substring(0, 7);
+                }
+            })
+            .catch(() => {
+                if (devCommitEl) {
+                    devCommitEl.textContent = 'N/A';
+                }
+            });
     }
-} else {
-    // Running on server, try to fetch commit ID
-    fetch('GIT_COMMIT.txt')
-        .then(response => response.ok ? response.text() : null)
-        .then(commitId => {
-            if (devCommitEl && commitId) {
-                // Show first 7 characters of commit hash
-                devCommitEl.textContent = commitId.trim().substring(0, 7);
-            } else if (devCommitEl) {
-                devCommitEl.textContent = 'local';
-            }
-        })
-        .catch(() => {
-            if (devCommitEl) {
-                devCommitEl.textContent = 'local';
-            }
-        });
-}
 }
 
 // ============================================================================
