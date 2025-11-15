@@ -34,6 +34,7 @@ APP_FILE="js/app.js"
 APACHE_FILE="configs/apache/.htaccess"
 NGINX_FILE="configs/nginx/sebconfiggenerator.conf"
 README_FILE="configs/README.md"
+HEADERS_FILE="_headers"
 
 # Check if files exist
 if [ ! -f "$APP_FILE" ]; then
@@ -51,6 +52,10 @@ fi
 
 if [ ! -f "$README_FILE" ]; then
     echo "⚠️  Warning: $README_FILE not found (skipping)"
+fi
+
+if [ ! -f "$HEADERS_FILE" ]; then
+    echo "⚠️  Warning: $HEADERS_FILE not found (skipping)"
 fi
 
 echo "🔄 Updating version information..."
@@ -76,6 +81,11 @@ fi
 if [ -f "$README_FILE" ]; then
     cp "$README_FILE" "${README_FILE}.bak"
     echo "   ${README_FILE}.bak"
+fi
+
+if [ -f "$HEADERS_FILE" ]; then
+    cp "$HEADERS_FILE" "${HEADERS_FILE}.bak"
+    echo "   ${HEADERS_FILE}.bak"
 fi
 
 echo ""
@@ -108,6 +118,12 @@ if [ -f "$README_FILE" ]; then
     sed -i '' "s|^\*\*Last Updated:\*\* .*|**Last Updated:** $(date +"%Y-%m-%d")  |" "$README_FILE"
 fi
 
+# Update _headers
+if [ -f "$HEADERS_FILE" ]; then
+    echo "📝 Updating _headers..."
+    sed -i '' "s|^# Version: v.*|# Version: $NEW_VERSION|" "$HEADERS_FILE"
+fi
+
 echo ""
 echo "✅ Version updated successfully in all files!"
 echo ""
@@ -131,6 +147,11 @@ if [ -f "$README_FILE" ]; then
     grep -n "Version:" "$README_FILE" | tail -1
 fi
 
+if [ -f "$HEADERS_FILE" ]; then
+    echo "   _headers:"
+    grep -n "# Version:" "$HEADERS_FILE" | head -1
+fi
+
 echo ""
 echo "🔍 Verify changes:"
 echo "   git diff js/app.js"
@@ -146,4 +167,7 @@ if [ -f "${NGINX_FILE}.bak" ]; then
 fi
 if [ -f "${README_FILE}.bak" ]; then
     echo "   rm ${README_FILE}.bak"
+fi
+if [ -f "${HEADERS_FILE}.bak" ]; then
+    echo "   rm ${HEADERS_FILE}.bak"
 fi
