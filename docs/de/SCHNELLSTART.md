@@ -31,7 +31,7 @@ sites.google.com → Neue Seite
 └─ Veröffentlichen: 
      - ✅ "Jeder mit Link" aber
      - ❌ Seite nicht indexieren lassen
-     - ⚠️ Vorschlag URL: `Fach_Klasse_Datum_Thema` + **geheime Zeichenfolge** 
+     - ⚠️ Vorschlag URL: `Fach_Klasse_Datum` + **geheime Zeichenfolge** 
 ```
 
 **Beispiel-Inhalt:**

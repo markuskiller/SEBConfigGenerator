@@ -31,7 +31,7 @@ sites.google.com → New site
 └─ Publish: 
      - ✅ "Anyone with link" but
      - ❌ Don't allow search indexing
-     - ⚠️ Suggested URL: `Subject_Class_Date_Topic` + **secret string** 
+     - ⚠️ Suggested URL: `Subject_Class_Date` + **secret string** 
 ```
 
 **Example content:**
