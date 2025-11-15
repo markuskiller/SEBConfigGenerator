@@ -6,7 +6,7 @@
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/markuskiller/SEBConfigGenerator/actions)
 [![GitHub issues](https://img.shields.io/github/issues/markuskiller/SEBConfigGenerator)](https://github.com/markuskiller/SEBConfigGenerator/issues)
 [![Language](https://img.shields.io/badge/languages-DE%20%7C%20EN-blue)](https://focusmode.ch?lang=en)
-[![Privacy](https://img.shields.io/badge/privacy-100%25%20local%ZIP-orange)](https://github.com/markuskiller/SEBConfigGenerator)
+[![Privacy](https://img.shields.io/badge/privacy-100%25%20local%20ZIP-orange)](https://github.com/markuskiller/SEBConfigGenerator)
 [![Safe Exam Browser](https://img.shields.io/badge/SEB-Download-blueviolet)](https://safeexambrowser.org/download_en.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
