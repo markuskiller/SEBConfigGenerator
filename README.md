@@ -6,7 +6,7 @@
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/markuskiller/SEBConfigGenerator/actions)
 [![GitHub issues](https://img.shields.io/github/issues/markuskiller/SEBConfigGenerator)](https://github.com/markuskiller/SEBConfigGenerator/issues)
 [![Language](https://img.shields.io/badge/languages-DE%20%7C%20EN-blue)](https://focusmode.ch?lang=en)
-[![Privacy](https://img.shields.io/badge/privacy-100%25%20local%20ZIP-orange)](https://github.com/markuskiller/SEBConfigGenerator)
+[![Privacy](https://img.shields.io/badge/privacy-100%25%20local%20ZIP-orange)](https://github.com/markuskiller/SEBConfigGenerator/archive/refs/heads/main.zip)
 [![Safe Exam Browser](https://img.shields.io/badge/SEB-Download-blueviolet)](https://safeexambrowser.org/download_en.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -64,9 +64,10 @@
 
 - **Client-side only** - Pure HTML/CSS/JavaScript
 - **No dependencies** - No npm, no build process
-- **Data processing** - 100% in-browser, output plaintext SEB Config Template (XML)
-- **Deployment** - Static files via Cloudflare Pages (Production) and GitHub Pages (Mirror)
-- **Build automation** - Bash scripts for template JavaScript modules generation
+- **Data processing** - 100% in-browser JSON to XML conversion
+- **Output format** - Plain-text `.seb.plist` (import into SEB Config Tool for encryption)
+- **Deployment** - Static files via Cloudflare Pages and GitHub Pages
+- **Build automation** - Bash scripts for template generation
 
 ---
 
@@ -152,8 +153,26 @@ Our templating system particularly encourages contributions of the following tem
 - **translations** (e.g. French or Spanish)
 
 ```
-├── templates/              # Service presets and configuration templates
-│   ├── source/             # Human-editable JSON source files
+├── templates/                # Service presets and configuration templates
+│   ├── source/               # Human-editable JSON source files
+│   │   ├── services/         # Individual service configurations
+│   │   │   ├── kahoot.json
+│   │   │   ├── mentimeter.json
+│   │   │   └── ...
+│   │   ├── reference-tools/  # Subject-specific reference tools
+│   │   │   ├── duden.json
+│   │   │   ├── oxford.json
+│   │   │   └── ...
+│   │   ├── subjects/         # Pre-configured subject bundles
+│   │       ├── german.json
+│   │       ├── french.json
+│   │       └── ...
+│   └── generated/            # Auto-generated JavaScript modules
+│
+└── translations/             # UI language files
+       ├── de.json
+       ├── en.json
+       └── ...
 ```
 
 Please:
