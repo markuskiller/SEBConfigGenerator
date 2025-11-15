@@ -31,18 +31,6 @@ jobs:
         run: |
           echo "${{ github.sha }}" > GIT_COMMIT.txt
       
-      - name: Generate JavaScript data files from templates
-        run: |
-          # Install jq for JSON processing (required by build scripts)
-          sudo apt-get update && sudo apt-get install -y jq
-          
-          # Run the build scripts to generate all template files
-          bash scripts/build-service-presets.sh
-          bash scripts/build-translations.sh
-          
-          echo "✅ Generated JavaScript data files"
-          ls -lh templates/generated/*.js
-      
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
