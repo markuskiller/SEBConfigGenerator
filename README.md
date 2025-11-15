@@ -1,9 +1,8 @@
 # SEB Configuration Generator
 
-[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages-brightgreen?logo=cloudflare)](https://focusmode.ch)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-stable-brightgreen?logo=cloudflare)](https://focusmode.ch)
 [![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-dev-orange?logo=cloudflare)](https://dev.focusmode.ch)
-[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Mirror-yellow)](https://markuskiller.github.io/SEBConfigGenerator)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/markuskiller/SEBConfigGenerator/actions)
+[![GitHub Pages](https://img.shields.io/badge/GitHub-Mirror-yellow)](https://markuskiller.github.io/SEBConfigGenerator)
 [![GitHub issues](https://img.shields.io/github/issues/markuskiller/SEBConfigGenerator)](https://github.com/markuskiller/SEBConfigGenerator/issues)
 [![Language](https://img.shields.io/badge/languages-DE%20%7C%20EN-blue)](https://focusmode.ch?lang=en)
 [![Privacy](https://img.shields.io/badge/privacy-100%25%20local%20ZIP-orange)](https://github.com/markuskiller/SEBConfigGenerator/archive/refs/heads/main.zip)
@@ -33,12 +32,12 @@
 
 ## Features
 
-- ✅ **Pre-configured Services** - OneNote, Word, Kahoot, Mentimeter, Miro, Padlet, Whiteboard.fi, Slido, Etherpad *(easily extendable via PR)*
+- ✅ **Pre-configured Services** - OneNote, Word, Kahoot, Mentimeter, Miro, Padlet, Whiteboard.fi, Slido, Etherpad *(PRs welcome)*
 - ✅ **Multi-Tool Support** - Combine multiple services in one configuration
-- ✅ **Bilingual Interface** - German and English *(easily extendable via PR)*
+- ✅ **Bilingual Interface** - German and English *(PRs welcome)*
 - ✅ **Privacy-First** - 100% browser-local processing, no data transmission
 - ✅ **Flexible Domain Control** - Wildcards, custom domains, blocked domains
-- ✅ **Subject-Specific Tools** - Pre-configured dictionaries and reference tools *(easily extendable via PR)*
+- ✅ **Subject-Specific Tools** - Pre-configured dictionaries and reference tools *(PRs welcome)*
 - ✅ **Domain Capture Tools** - PowerShell script and browser console helpers
 - ✅ **Open Source** - MIT License, auditable code
 
@@ -65,6 +64,7 @@
 - **Client-side only** - Pure HTML/CSS/JavaScript
 - **No dependencies** - No npm, no build process
 - **Data processing** - 100% in-browser JSON to XML conversion
+- **Extensible templating & translations architecture** - PRs welcome!
 - **Output format** - Plain-text `.seb.plist` (import into SEB Config Tool for encryption)
 - **Deployment** - Static files via Cloudflare Pages and GitHub Pages
 - **Build automation** - Bash scripts for template generation
@@ -146,7 +146,7 @@ Deployment targets:
 
 Contributions welcome! 
 
-Our templating system particularly encourages contributions of the following template sources in JSON format:
+We particularly welcome contributions of the following JSON template sources:
 - **service templates** (e.g. socrative.com)
 - **reference tool templates** (e.g. dictionary.cambridge.org)
 - **subject templates** (e.g. Maths or History)
