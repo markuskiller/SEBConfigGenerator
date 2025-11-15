@@ -57,13 +57,12 @@ Example: `templates/source/services/mynewservice.json`
 
 For `allowedTools`, add `"language": "german"` (or english, french, etc.)
 
-### 3. Run the build script
+### 3. Deploy your changes
 
 ```bash
-bash scripts/build-service-presets.sh
+# Use the deploy script to rebuild, commit, and push
+./scripts/deploy.sh
 ```
-
-### 4. Test your changes
 
 The generated files are automatically imported by `js/app.js`.
 
@@ -85,29 +84,62 @@ Example: `templates/source/subjects/spanish.json`
 
 Create `source/services/rae.json` and `source/services/wordreference.json`
 
-### 3. Run the build script
+### 3. Deploy your changes
 
 ```bash
-bash scripts/build-service-presets.sh
+# Use the deploy script to rebuild, commit, and push
+./scripts/deploy.sh
 ```
 
-## 🔄 When to Rebuild
+## 🔄 Build & Deployment Workflow
 
-Run `bash scripts/build-service-presets.sh` whenever you:
-- Add a new service JSON file
-- Modify an existing service JSON file
-- Add a new subject JSON file
-- Change subject tool associations
+### Quick Deploy (Recommended)
+
+Use the automated deployment script:
+
+```bash
+# Without version bump (just rebuild and commit)
+./scripts/deploy.sh
+
+# With version bump
+./scripts/deploy.sh v0.19.0a7
+
+# With version bump and custom commit message
+./scripts/deploy.sh v0.19.0a7 "feat: add Spanish language support"
+```
+
+The deploy script automatically:
+1. Rebuilds all generated files
+2. Updates version (if specified)
+3. Commits all changes
+4. Pushes to current branch
+
+### Manual Build (if needed)
+
+Run build scripts manually:
+
+```bash
+# Rebuild all presets and templates
+bash scripts/build-service-presets.sh
+
+# Rebuild translations only
+bash scripts/build-translations.sh
+```
+
+**Important:** Generated files are committed to git! This ensures:
+- ✅ Consistency between Cloudflare Pages and GitHub Pages
+- ✅ No build step needed during deployment
+- ✅ Traceable versions in git history
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Add your service/subject JSON files
-3. Run the build script
-4. Test the changes locally
+2. Add/modify JSON files in `source/` directory
+3. Use `./scripts/deploy.sh` to rebuild and deploy
+4. Test on dev.focusmode.ch
 5. Submit a pull request
 
-**Note:** Only modify files in `source/` directory. Never edit files in `generated/` directly!
+**Note:** Only modify files in `source/` directory. Files in `generated/` are auto-generated!
 
 ## 📝 JSON Schema Reference
 
@@ -138,4 +170,15 @@ Run `bash scripts/build-service-presets.sh` whenever you:
 
 ---
 
-**Script:** `scripts/build-service-presets.sh`
+## 📚 Additional Documentation
+
+- [Build Scripts Documentation](../scripts/README.md) - Detailed script usage
+- [Project Description](../docs/en/PROJECT_DESCRIPTION_EN.md)
+- [Deployment Checklist](../docs/en/DEPLOYMENT_CHECKLIST.md)
+
+**Main Scripts:**
+- `scripts/deploy.sh` - Automated deployment (recommended)
+- `scripts/build-service-presets.sh` - Build presets/templates
+- `scripts/build-translations.sh` - Build translations
+
+````
