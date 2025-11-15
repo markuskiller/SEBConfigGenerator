@@ -1,0 +1,20 @@
+{
+  "id": "etherpad-yopad",
+  "name": "Etherpad (YoPad)",
+  "description": "Kollaborativer Texteditor",
+  "category": "noLogin",
+  "startUrl": "https://yopad.eu",
+  "domains": [
+    "yopad.eu",
+    "*.yopad.eu"
+  ],
+  "_comment": "Alternative öffentliche Etherpad-Instanzen (können manuell in Custom Domains hinzugefügt werden):",
+  "_alternatives": [
+    "framapad.org (französische NGO Framasoft)",
+    "zumpad.zum.de (deutsche Bildungsplattform ZUM)",
+    "pad.riseup.net (Privacy-fokussiert, Pads nach 30 Tagen Inaktivität gelöscht)",
+    "pad.systemli.org (Pads nach 30 Tagen Inaktivität gelöscht)",
+    "pad.disroot.org (Privacy-orientiert)",
+    "etherpad.p2pu.org (Peer 2 Peer University)"
+  ]
+}
