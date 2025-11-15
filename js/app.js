@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.19.0rc2
-// Build: 2025-11-16 00:26
+// Version: v0.19.0rc3
+// Build: 2025-11-16 00:33
 // ============================================================================
 
 // ============================================================================
@@ -442,8 +442,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.19.0rc2';
-const BUILD_DATE = new Date('2025-11-16T00:26:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.19.0rc3';
+const BUILD_DATE = new Date('2025-11-16T00:33:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -592,8 +592,6 @@ if (quickstartLinkBasic) {
     } else {
         quickstartLinkBasic.href = baseGitHubUrl + 'docs/en/GUIDE.md';
     }
-}
-
 }
 }
 
