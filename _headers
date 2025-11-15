@@ -1,5 +1,5 @@
 # Cloudflare Pages Security Headers
-# Version: 0.18.4
+# Version: v0.18.5
 # 
 # This file configures HTTP security headers for Cloudflare Pages deployment.
 # Replaces Apache .htaccess functionality for static hosting environments.

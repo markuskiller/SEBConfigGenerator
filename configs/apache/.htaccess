@@ -8,8 +8,8 @@
 # - Apache 2.4+ with mod_headers enabled
 # - Enable with: a2enmod headers && systemctl restart apache2
 #
-# Version: v0.18.4
-# Updated: 2025-11-12
+# Version: v0.18.5
+# Updated: 2025-11-15
 # ============================================================================
 
 # ----------------------------------------------------------------------------
