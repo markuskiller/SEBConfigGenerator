@@ -1,0 +1,11 @@
+{
+  "id": "etherpad",
+  "name": "Etherpad",
+  "description": "Kollaborativer Texteditor",
+  "category": "noLogin",
+  "startUrl": "https://etherpad.org",
+  "domains": [
+    "etherpad.org",
+    "*.etherpad.org"
+  ]
+}

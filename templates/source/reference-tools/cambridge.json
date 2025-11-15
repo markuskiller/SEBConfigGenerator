@@ -1,0 +1,12 @@
+{
+  "id": "cambridge",
+  "name": "Cambridge Dictionary",
+  "description": "Cambridge English Dictionary",
+  "category": "tool",
+  "language": "english",
+  "startUrl": "https://dictionary.cambridge.org",
+  "domains": [
+    "dictionary.cambridge.org",
+    "*.cambridge.org"
+  ]
+}

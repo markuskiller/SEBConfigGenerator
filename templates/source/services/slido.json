@@ -1,0 +1,12 @@
+{
+  "id": "slido",
+  "name": "Slido",
+  "description": "Interaktive Q&A und Umfragen",
+  "category": "noLogin",
+  "startUrl": "https://www.slido.com",
+  "domains": [
+    "slido.com",
+    "*.slido.com",
+    "*.sli.do"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "reverso",
+  "name": "Reverso",
+  "description": "Dictionnaire et traduction français",
+  "category": "tool",
+  "language": "french",
+  "startUrl": "https://www.reverso.net/",
+  "domains": [
+    "reverso.net",
+    "*.reverso.net",
+    "context.reverso.net"
+  ]
+}

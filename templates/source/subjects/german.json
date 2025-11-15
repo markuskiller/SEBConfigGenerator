@@ -1,0 +1,5 @@
+{
+  "id": "german",
+  "name": "Deutsch",
+  "toolPresets": ["duden", "dwds"]
+}

@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.19.0a3
-// Build: 2025-11-15 14:18
+// Version: v0.19.0a4
+// Build: 2025-11-15 17:18
 // ============================================================================
 
 // ============================================================================
@@ -319,103 +319,16 @@ en: {
 // ============================================================================
 // PRESET CONFIGURATIONS
 // ============================================================================
-const PRESETS = {
-onenote: {
-    startUrl: "https://www.onenote.com/notebooks",
-    // Note: *.sharepoint.com covers school-specific SharePoint sites (e.g., school1.sharepoint.com)
-    domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office.net","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.onenote.com","onenote.officeapps.live.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","*.static.microsoft","browser.events.data.microsoft.com","chc-onenote.officeapps.live.com","common.online.office.com","euc-common.online.office.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
-    blockedDomains: ["outlook.office.com","outlook.office365.com","teams.microsoft.com","teams.live.com"]
-},
-word: {
-    startUrl: "https://www.office.com/launch/word",
-    // Note: *.sharepoint.com covers school-specific SharePoint sites (e.g., school1.sharepoint.com)
-    domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office.net","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","*.static.microsoft","browser.events.data.microsoft.com","common.online.office.com","euc-common.online.office.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
-    blockedDomains: ["outlook.office.com","outlook.office365.com","teams.microsoft.com","teams.live.com"]
-},
-whiteboard: {
-    startUrl: "https://whiteboard.fi",
-    domains: ["whiteboard.fi","whiteboard-storage-*.s3.*.amazonaws.com","cdn.jsdelivr.net","fonts.googleapis.com","fonts.gstatic.com"]
-},
-padlet: {
-    startUrl: "https://padlet.com",
-    domains: ["padlet.com","*.padlet.com","padlet.net","*.padlet.pics"]
-},
-kahoot: {
-    startUrl: "https://kahoot.it",
-    domains: ["kahoot.it","*.kahoot.it","kahoot.com","*.kahoot.com"]
-},
-mentimeter: {
-    startUrl: "https://www.menti.com",
-    domains: ["menti.com","*.menti.com","mentimeter.com","*.mentimeter.com"]
-},
-miro: {
-    startUrl: "https://miro.com",
-    domains: ["miro.com","*.miro.com","*.mirocdn.com"]
-},
-slido: {
-    startUrl: "https://www.slido.com",
-    domains: ["slido.com","*.slido.com","*.sli.do"]
-},
-etherpad: {
-    startUrl: "https://etherpad.org",
-    domains: ["etherpad.org","*.etherpad.org"]
-},
-forms: {
-    startUrl: "https://forms.office.com",
-    domains: ["forms.office.com","*.forms.office.com","*.microsoft.com","*.microsoftonline.com","*.office.com","*.office365.com","*.msocdn.com","*.msecnd.net","*.azureedge.net"]
-},
-duden: {
-    startUrl: "https://www.duden.de",
-    domains: ["duden.de","*.duden.de","*.doubleclick.net","*.googletagmanager.com","*.stroeerdigitalgroup.de","*.taboola.com","*.yieldlove.com","mitself.net"]
-},
-dwds: {
-    startUrl: "https://www.dwds.de",
-    domains: ["dwds.de","*.dwds.de"]
-},
-oxford: {
-    startUrl: "https://www.oxfordlearnersdictionaries.com",
-    domains: ["oxfordlearnersdictionaries.com","*.oxfordlearnersdictionaries.com","*.oup.com","*.cookielaw.org","*.doubleclick.net","*.google-analytics.com","*.google.com","*.googletagmanager.com","*.onetrust.com","*.polarbyte.com","html-load.com"]
-},
-cambridge: {
-    startUrl: "https://dictionary.cambridge.org",
-    domains: ["dictionary.cambridge.org","*.cambridge.org"]
-},
-larousse: {
-    startUrl: "https://www.larousse.fr/dictionnaires",
-    domains: ["larousse.fr","*.larousse.fr"]
-},
-reverso: {
-    startUrl: "https://www.reverso.net/",
-    domains: ["reverso.net","*.reverso.net","context.reverso.net"]
-}
-};
-
-// ============================================================================
-// SUBJECTS CONFIGURATION - Easily extensible for additional languages
-// ============================================================================
-const SUBJECTS = {
-german: {
-    toolPresets: ['duden', 'dwds']
-},
-english: {
-    toolPresets: ['oxford', 'cambridge']
-},
-french: {
-    toolPresets: ['larousse', 'reverso']
-}
-// Add more subjects here as needed:
-// spanish: { toolPresets: ['rae', 'wordreference'] },
-// italian: { toolPresets: ['treccani', 'dizionario'] }
-};
-
-const PRESET_GROUPS = {
-noLogin: ['whiteboard', 'kahoot', 'mentimeter', 'slido', 'forms', 'padlet', 'miro', 'etherpad'],
-withLogin: ['onenote', 'word'],
-// Generate allowedTools from SUBJECTS configuration
-allowedTools: Object.fromEntries(
-    Object.entries(SUBJECTS).map(([key, config]) => [key, config.toolPresets])
-)
-};
+// PRESETS, SUBJECTS, and PRESET_GROUPS are loaded from external template files:
+// - templates/generated/presets.js
+// - templates/generated/subjects.js
+// - templates/generated/preset-groups.js
+//
+// These files are auto-generated from JSON sources in templates/source/
+// To add new services or subjects, edit the JSON files and run:
+//   bash scripts/build-templates.sh
+//
+// DO NOT define PRESETS, SUBJECTS, or PRESET_GROUPS here - they come from templates!
 
 const SECURITY_LEVELS = {
 relaxed: {
@@ -827,8 +740,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.19.0a3';
-const BUILD_DATE = new Date('2025-11-15T14:18:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.19.0a4';
+const BUILD_DATE = new Date('2025-11-15T17:18:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
