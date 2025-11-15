@@ -1,11 +1,13 @@
 # SEB Konfigurations-Generator
 
-[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live-brightgreen)](https://markuskiller.github.io/SEBConfigGenerator)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare%20Pages-Live-orange?logo=cloudflare)](https://focusmode.ch)
+[![Latest DEV version](https://img.shields.io/badge/Cloudflare%20Pages-Live-orange?logo=cloudflare)](https://dev.focusmode.ch)
+[![GitHub Pages (Legacy)](https://img.shields.io/badge/GitHub%20Pages-Live-brightgreen)](https://markuskiller.github.io/SEBConfigGenerator)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/markuskiller/SEBConfigGenerator/actions)
 [![GitHub issues](https://img.shields.io/github/issues/markuskiller/SEBConfigGenerator)](https://github.com/markuskiller/SEBConfigGenerator/issues)
-[![Language](https://img.shields.io/badge/languages-DE%20%7C%20EN-blue)](https://markuskiller.github.io/SEBConfigGenerator)
-[![Privacy](https://img.shields.io/badge/privacy-100%25%20local-orange)](https://markuskiller.github.io/SEBConfigGenerator)
-[![Safe Exam Browser](https://img.shields.io/badge/SEB-compatible-blueviolet)](https://safeexambrowser.org/)
+[![Language](https://img.shields.io/badge/languages-DE%20%7C%20EN-blue)](https://focusmode.ch?lang=en)
+[![Privacy](https://img.shields.io/badge/privacy-100%25%20local-orange)](https://github.com/markuskiller/SEBConfigGenerator/archive/refs/heads/main.zip)
+[![Safe Exam Browser](https://img.shields.io/badge/SEB-compatible-blueviolet)](https://safeexambrowser.org/download_en.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Web-basierter Generator für Safe Exam Browser (SEB) Konfigurationen - erstellen Sie fokussierte Lernumgebungen für Schüler*innen.
