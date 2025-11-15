@@ -7,25 +7,32 @@ This directory contains the template system for SEB Config Generator presets.
 ```
 templates/
 ├── source/                   # Source JSON/XML files (edit these!)
-│   ├── services/             # Service/tool presets
-│   │   ├── onenote.json      # OneNote preset
-│   │   ├── whiteboard.json   # Whiteboard.fi preset
-│   │   ├── duden.json        # Duden dictionary
-│   │   └── ...               # More services
+│   ├── services/             # Service presets (Kahoot, Miro, etc.)
+│   │   ├── etherpad.json
+│   │   ├── onenote.json
+│   │   ├── whiteboard.json
+│   │   └── ...
+│   ├── reference-tools/      # Reference tools (dictionaries, etc.)
+│   │   ├── duden.json
+│   │   ├── oxford.json
+│   │   ├── larousse.json
+│   │   └── ...
 │   ├── subjects/             # Subject configurations
 │   │   ├── german.json       # German language tools
 │   │   ├── english.json      # English language tools
-│   │   └── french.json       # French language tools
-│   ├── platforms/            # Platform-specific boolean options
-│   │   ├── boolean-options-locations-macos.json
-│   │   ├── boolean-options-locations-windows.json
-│   │   └── boolean-options-locations-ipados.json
+│   │   ├── french.json       # French language tools
+│   │   └── all-tools.json    # All reference tools
+│   ├── seb-options/          # Platform-specific SEB options
+│   │   ├── seb-options-macos.json
+│   │   ├── seb-options-windows.json
+│   │   └── seb-options-ipados.json
 │   └── example_config.xml    # SEB config XML template
-└── generated/                # Generated JS files (auto-generated)
-    ├── presets.js            # All service presets
+└── generated/                # Generated JS files (auto-generated!)
+    ├── presets.js            # All service & tool presets
     ├── subjects.js           # All subject configurations
     ├── preset-groups.js      # Categorized preset groups
-    ├── boolean-options-locations-*.js  # Platform option mappings
+    ├── translations.js       # Compiled translations
+    ├── seb-options-*.js      # Platform-specific option mappings
     └── xml-data.js           # XML template as JS constant
 ```
 
