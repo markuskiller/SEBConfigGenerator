@@ -144,6 +144,17 @@ if [ "$SKIP_VERSION" != "true" ]; then
     [ -f "configs/README.md" ] && sed -i '' "s|^\*\*Version:\*\* v.*|**Version:** $NEW_VERSION  |" "configs/README.md"
     [ -f "_headers" ] && sed -i '' "s|^# Version: v.*|# Version: $NEW_VERSION|" "_headers"
     
+    # Update README.md badges based on branch
+    if [ -f "README.md" ]; then
+        if [ "$CURRENT_BRANCH" = "dev" ]; then
+            # Update dev badge (line 4) - replace any version or "dev" with new version
+            sed -i '' "4s|badge/Cloudflare-[^-]*-orange|badge/Cloudflare-${NEW_VERSION}-orange|" "README.md"
+        elif [ "$CURRENT_BRANCH" = "main" ]; then
+            # Update stable/main badge (line 3) - replace any version or "stable" with new version
+            sed -i '' "3s|badge/Cloudflare-[^-]*-brightgreen|badge/Cloudflare-${NEW_VERSION}-brightgreen|" "README.md"
+        fi
+    fi
+    
     print_success "Version updated to $NEW_VERSION"
     echo ""
 fi
