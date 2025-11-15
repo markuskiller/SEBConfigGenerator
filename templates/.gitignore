@@ -1,0 +1,11 @@
+# Template System Structure
+#
+# Source files (JSON/XML) should be committed - these are the "source of truth"
+# Generated files (.js) should also be committed for production deployment
+# 
+# This .gitignore is here for documentation purposes only.
+# Currently, both source and generated files are committed.
+
+# If you want to generate files during CI/CD instead:
+# Uncomment the following line to ignore generated files:
+# generated/*.js
