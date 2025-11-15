@@ -1,8 +1,8 @@
 # SEB Konfigurations-Generator
 
-[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare%20Pages-Live-orange?logo=cloudflare)](https://focusmode.ch)
-[![Latest DEV version](https://img.shields.io/badge/Cloudflare%20Pages-Live-orange?logo=cloudflare)](https://dev.focusmode.ch)
-[![GitHub Pages (Legacy)](https://img.shields.io/badge/GitHub%20Pages-Live-brightgreen)](https://markuskiller.github.io/SEBConfigGenerator)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare%20Pages-stable-brightgreen?logo=cloudflare)](https://focusmode.ch)
+[![Latest DEV version](https://img.shields.io/badge/Cloudflare%20Pages-dev-orange?logo=cloudflare)](https://dev.focusmode.ch)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-BackUp-yellow)](https://markuskiller.github.io/SEBConfigGenerator)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/markuskiller/SEBConfigGenerator/actions)
 [![GitHub issues](https://img.shields.io/github/issues/markuskiller/SEBConfigGenerator)](https://github.com/markuskiller/SEBConfigGenerator/issues)
 [![Language](https://img.shields.io/badge/languages-DE%20%7C%20EN-blue)](https://focusmode.ch?lang=en)
@@ -15,11 +15,11 @@ Web-basierter Generator für Safe Exam Browser (SEB) Konfigurationen - erstellen
 
 
 
-**🌐 Live-Demo:** [SEBConfigGenerator](https://markuskiller.github.io/SEBConfigGenerator)
+**🌐 Online: focusmode.ch:** [SEBConfigGenerator](https://focusmode.ch)
 
-- 🌐❌ **Lokal browser-basiert** - Keine Installation nötig / kann auch lokal ohne Internetverbindung genutzt werden ([Download ZIP](https://github.com/markuskiller/SEBConfigGenerator/archive/refs/heads/main.zip)) -> ZIP-Datei entpacken und auf index.html doppelklicken
+- 🌐❌ **Lokal: browser-basiert** - Keine Installation nötig / kann auch lokal ohne Internetverbindung genutzt werden ([Download ZIP](https://github.com/markuskiller/SEBConfigGenerator/archive/refs/heads/main.zip)) -> ZIP-Datei entpacken und auf index.html doppelklicken
 
-**🌐 Latest Development Version (Experimentell!):** [SEBConfigGenerator (latest dev)](https://markuskiller.github.io/SEBConfigGenerator/dev)
+**🌐 Latest Development Version (Experimentell!):** [dev.focusmode.ch](https://dev.focusmode.ch)
 
 - 🌐❌ **Lokal browser-basiert (latest dev version)** ([Download ZIP (latest dev)](https://github.com/markuskiller/SEBConfigGenerator/archive/refs/heads/dev.zip)) -> ZIP-Datei entpacken und auf index.html doppelklicken
 
