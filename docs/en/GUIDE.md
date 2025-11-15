@@ -1,434 +1,467 @@
-# User Guide: SEB Configuration Generator
+# Quick Start Guide for Teachers
+## SEB Configuration Generator with Google Sites
 
-**Comprehensive guide for creating Safe Exam Browser configurations for classroom teaching**
+### What is this tool?
+
+Creates Safe Exam Browser (SEB) configurations that help students focus on lessons by blocking distractions.
+
+**Important:** This is NOT for final exams! It's for:
+- ✅ Digital worksheets during supervised lessons
+- ✅ Collaborative writing assignments
+- ✅ Focus mode for classroom activities
+- ✅ Interactive tool usage (Kahoot, Mentimeter, Padlet)
 
 ---
 
 ## Table of Contents
 
-1. [Introduction](#introduction)
-2. [Recommended Approach: Google Sites Hub](#recommended-approach-google-sites-hub)
-3. [Step-by-Step Tutorial](#step-by-step-tutorial)
-4. [Common Scenarios](#common-scenarios)
-5. [Advanced Features](#advanced-features)
-6. [Troubleshooting](#troubleshooting)
-7. [Best Practices](#best-practices)
+1. [Recommended Approach: Google Sites as Start Page](#-recommended-approach-use-google-sites-page-as-start-page)
+2. [Step-by-Step: Your First Configuration](#step-by-step-your-first-configuration)
+3. [Troubleshooting](#troubleshooting)
+4. [Advanced: Add Custom Service](#advanced-add-custom-service)
+5. [FAQ](#faq)
+6. [Practical Scenarios with Sites Hub](#-practical-scenarios-with-sites-hub)
+7. [Best Practices with Google Sites Landing Pages](#-best-practices-with-google-sites-landing-pages)
+8. [Getting Help](#getting-help)
+9. [Checklist: Before Class](#checklist-before-class)
 
 ---
 
-## Introduction
-
-### What is this tool?
-
-The SEB Configuration Generator creates Safe Exam Browser (SEB) configuration files that help students focus on learning by blocking distractions while allowing access to selected educational tools.
-
-### Important: Focus Mode, Not Exam Security
-
-**This tool is designed for:**
-- ✅ Digital worksheets during supervised lessons
-- ✅ Collaborative writing assignments
-- ✅ Interactive tool usage (Kahoot, Mentimeter, Padlet)
-- ✅ Focused work periods with controlled internet access
-
-**NOT designed for:**
-- ❌ High-stakes exams (insufficient security)
-- ❌ Unsupervised assessments
-- ❌ Preventing determined circumvention
-
-### How It Works
-
-```
-Student double-clicks .seb file
-          ↓
-SEB launches in kiosk mode
-          ↓
-Opens your specified start URL (e.g., Google Sites)
-          ↓
-Only allowed domains accessible
-          ↓
-Student works in focused environment
-```
-
----
-
-## Recommended Approach: Google Sites Hub
+## 🌟 Recommended Approach: Use 'Google Sites' Page as Start Page
 
 ### Why Google Sites?
 
-**The technically simplest way to create a focus mode in teaching without fully relying on an LMS:**
+**Technically simplest way to achieve focus mode in teaching when you don't want to/can't fully rely on an LMS:**
 
 1. **One central landing page** - All lesson activities in one place
 2. **Easy control** - Immediately see who's in SEB mode
-3. **Flexible lesson planning** - Different tools accessible via links
-4. **Simple verification** - Students seeing the Sites page confirms they're in SEB
+3. **Flexible lesson planning** - Use different tools via links sequentially
+4. **Control** - "Secret" URL prevents access outside SEB environment
 
-### Benefits
+### How does it work?
 
-✅ **Central control** - One page for all activities  
-✅ **No tool-hopping** - All links in one location  
-✅ **Safe navigation** - Only approved domains reachable  
-✅ **Transparency** - Students know exactly what's allowed  
-✅ **Visual verification** - Colors/images help quickly check if everyone's in the right place
+```
+Student starts .seb file
+    ↓
+Automatically opens your Google Sites page
+    ↓
+Student clicks links to activities (Kahoot, Mentimeter, etc.)
+    ↓
+Everything works - only allowed domains accessible
+    ↓
+No distractions (YouTube, social media blocked)
+```
 
 ---
 
-## Step-by-Step Tutorial
+## Step-by-Step: Your First Configuration
 
 ### Step 1: Create Google Sites Landing Page
 
-**1. Open Google Sites:** [sites.google.com](https://sites.google.com)
+1. **Open Google Sites:** [sites.google.com](https://sites.google.com)
 
-**2. Create new page:**
+2. **Create new page:**
    - Click "+" (New site)
-   - Name: `[Subject]_[Class]_[Date]` (e.g., "English_G22e_2025-11-10")
+   - Name: `[Subject]_[Class]_[Date]_[Topic]` (e.g., "English_G22e_2025-11-10_Conditionals")
 
-**3. Add content - Example structure:**
+3. **Add content - Example:**
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  English - Conditionals Revision 10/11/2025     │
-│  ════════════════════════════════════════════   │
+│  English - Revision Conditionals 15/11/2025     │
+│  ═══════════════════════════════════════════    │
 │                                                 │
-│    ✓ Visual indicator for teacher              │
-│      (distinctive color/image makes it easy    │
-│       to see if students are in SEB mode)      │
+│    CHECK: Visual indicator for teacher          │
+│           Color / image -> on                   │
+│           screen makes it easy                  │
+│           to see if students are                │
+│           in SEB mode                           │
 │                                                 │                        
-│    Today's Schedule (45 minutes):              │
-│  ─────────────────────────────────             │
-│  1 [10 min] Kahoot Quiz - Review               │
-│        Link: https://kahoot.it                 │
-│                                                │
-│  2 [15 min] Mentimeter Survey                  │
-│        Link: https://menti.com                 │
-│                                                │
-│  3 [20 min] Padlet - Solution Strategies       │
-│        Link: https://padlet.com/class/english  │
-│                                                │
-│  Need help? → Raise your hand!                 │
+│    Today's schedule (45 minutes):               │
+│  ────────────────────────────────               │
+│  1 [10 Min] Kahoot Quiz - Review                │
+│        Link: https://kahoot.it                  │
+│                                                 │
+│                                                 │
+│  2 [15 Min] Mentimeter Survey                   │
+│        Link: https://menti.com                  │
+│                                                 │
+│                                                 │
+│  3 [20 Min] Padlet - Solution Strategies        │
+│        Link: https://padlet.com/class/math      │
+│                                                 │
+│  Need help? → Raise your hand!                  │
 └─────────────────────────────────────────────────┘
 ```
 
-**4. Configure visibility and publish:**
-   - **Click "Publish"**
-   - ❌ **Do not allow search indexing**
-   - ✅ Choose complex/secret URL (e.g., `sites.google.com/view/English_G22e_2025-11-10xy7z3abc`)
-   - **Copy the URL** - you'll need it for the generator
+4. **Configure visibility, publish and copy URL:**
+   - Select **"Publish"**
+   - ❌ **Don't allow search indexing**
+   - ⚠️ **Suggested URL:** `Subject_Class_Date` + **secret string** (e.g., `sites.google.com/view/English_G22e_2025-11-10xy7z3abc`)
+   - **Copy URL** - you'll need it for the generator
 
 ---
 
 ### Step 2: Open Generator
+Go to: `https://focusmode.ch`
 
-Go to: `https://markuskiller.github.io/SEBConfigGenerator/`
-
-**Alternative (offline use):**
-- Download `index.html` from the repository
-- Open locally in your browser
-- ⚠️ Both methods: 100% local processing, no data transmission
+Alternative (offline): Download the [ZIP file](https://github.com/markuskiller/SEBConfigGenerator/archive/refs/heads/main.zip), extract it, and open `index.html` locally in your browser.
 
 ---
 
-### Step 3: Select Services
+⚠️ **Privacy:** With both methods, **no data is transmitted**, all processing happens **locally in your browser**. This can be verified through code review, e.g., by common generative AI models (e.g., ChatGPT, Claude.ai, Gemini, ...). The entire code is open source and available at [github.com/markuskiller/SEBConfigGenerator](https://github.com/markuskiller/SEBConfigGenerator).
 
-**No Login Required:**
+---
+
+### Step 3: Select Services (multiple possible!)
+
+**Without Login:**
 - **Whiteboard.fi** - Collaborative whiteboard
 - **Kahoot!** - Quizzes and surveys
 - **Mentimeter** - Live polls
 - **Slido** - Q&A and polls
-- **Miro** - Digital whiteboard
+- **Microsoft Forms** - Public surveys
 - **Padlet** - Digital pinboard
+- **Miro** - Digital whiteboard
+- **Etherpad** - Text collaboration
 
 **With Login:**
-- **OneNote Online** - Microsoft OneNote
-- **Word Online** - Microsoft Word
+- **OneNote Online** - For digital notebooks
+- **Word Online** - For document editing
 
-**💡 Tip:** You can select multiple services - students can navigate between them!
+For the above English lesson example, the following services are selected:
+- Kahoot
+- Mentimeter
+- Padlet
 
----
+### Step 4: Start URL and Custom Domains
 
-### Step 4: Choose Allowed Reference Tools
+1. **Enter start URL:**
+   ```
+   https://sites.google.com/view/your-secret-page-xyz123
+   ```
 
-Select by subject:
-- **German** → Duden, DWDS
-- **English** → Oxford Learners, Cambridge
-- **French** → Larousse, Reverso
-- **All Tools** → All dictionaries
+For the above example: `sites.google.com/view/English_G22e_2025-11-10xy7z3abc`
 
----
+### Step 5: Continue with Default Values
 
-### Step 5: Configure Start URL
+For a working SEB configuration template, the default values can usually be used unchanged. Fine-tuning can be done in the SEB Config Tool.
 
-**Paste your Google Sites URL** into the "Start-URL" field
+### Step 6: Download Configuration
+Click: **"📥 Download SEB Configuration (.seb)"**
 
-Example: `https://sites.google.com/view/English_G22e_2025-11-10xy7z3abc`
-
----
-
-### Step 6: Additional Settings (Optional)
-
-**Security Level:**
-- **Relaxed** (Recommended for classroom) - Allows reload, some navigation
-- **Balanced** - Default settings
-- **Strict** - Maximum restrictions (can cause issues with some tools)
-
-**Additional Options:**
-- ✅ Allow file downloads (if needed for worksheets)
-- ✅ Show reload button (recommended)
-- ✅ Allow back/forward navigation (helpful for sites)
+Saved as `Multi_Service_Config.seb` (multiple services), `[Service]_Config.seb` (selected service), or under the manually entered filename.
 
 ---
 
-### Step 7: Download & Distribute
-
-1. **Click "Download SEB Config (.seb)"**
-2. **Name the file descriptively:**
-   - Good: `English_2025-11-15_Conditionals.seb`
-   - Bad: `config.seb`
-
-3. **Distribute to students via:**
-   - Google Classroom
-   - Microsoft Teams
-   - Email
-   - School network folder
+⚠️ **Important:** The downloaded .seb file is only a template! The following steps must be completed before the configuration can be used productively in class and distributed to students.
 
 ---
 
-## Common Scenarios
+### Step 7: Import and Finalize in SEB Config Tool
 
-### Scenario 1: Kahoot Quiz + Dictionary
+1. Download [SEB Config Tool](https://safeexambrowser.org/download_en.html) (one-time setup)
+2. Open **SEB Config Tool**
+3. **File → Open** → Select your downloaded `.seb` file
+4. **Tab 'General' → Review and refine settings:**
+   - Add administrator password (needed to modify configuration file later)
+   - Add quit password (='Quit/unlock password') (if desired)
+   - Configure additional restrictions
+5. **Tab 'Config' → Encrypt configuration & set START password:**
+   - Configure → Encrypt with password and/or certificate
+   - **⚠️ The 'SETTINGS' password is also the START password for students**
+6. **Save as final .seb file:**
+   - File → Save as → `[Subject]_[Class]_[Date]_[Topic].seb` (e.g., `English_G22e_2025-11-15_Conditionals.seb`)
 
-**Use case:** Grammar quiz with allowed dictionary
+**Important:** Only distribute the encrypted, finalized `.seb` file to students!
 
-**Configuration:**
-1. Select: Kahoot!
-2. Allowed tools: German (or your subject)
-3. Start URL: Kahoot game URL or Google Sites with link
-4. Security: Relaxed
+### Step 8: Test & Distribute
 
----
+**Testing - ⚠️ Before distributing to students:**
 
-### Scenario 2: Collaborative Writing in OneNote
+1. Install SEB on your computer
+2. Double-click your final `.seb` configuration file
+3. Try to:
+   - Log in with a STUDENT (TEST) ACCOUNT (not with teacher account)
+   - Access shared resources
+   - Type and save something, if applicable
+   - If creating/visiting links via a shared page is possible, try to access a page that should be blocked (e.g., MS Teams)
 
-**Use case:** Group work in shared notebook
+**If something doesn't work:** See troubleshooting below
 
-**Configuration:**
-1. Select: OneNote Online
-2. Optionally: Word Online (for different format)
-3. Allowed tools: German + English (bilingual writing)
-4. Start URL: Your Google Sites with instructions
-5. Security: Relaxed
-6. ⚠️ **Important:** Test SharePoint restrictions carefully!
+**Distribute to students:**
 
----
+It's often useful to install [Safe Exam Browser](https://safeexambrowser.org/download_en.html) together in class (once per semester or when a new version is available).
 
-### Scenario 3: Multi-Tool Lesson
+The encrypted configuration file can be distributed via the usual communication channel with file exchange capability (e.g., MS Teams, Google Classroom, or email).
 
-**Use case:** Varied lesson with different activities
-
-**Configuration:**
-1. Select multiple services: Kahoot, Mentimeter, Padlet
-2. Allowed tools: Subject-specific dictionaries
-3. Start URL: Google Sites with lesson schedule
-4. Security: Relaxed
-
-**Students navigate:** Sites page → Click links to different tools
-
----
-
-### Scenario 4: Research Task
-
-**Use case:** Controlled internet research
-
-**Configuration:**
-1. Select: Whiteboard.fi (for notes)
-2. Allowed tools: All reference tools
-3. Custom domains: Add specific research sites
-4. Start URL: Google Sites with task description
-
----
-
-## Advanced Features
-
-### Custom Domains
-
-Add specific websites beyond presets:
-
-**Format:**
-```
-example.com
-*.example.org
-subdomain.site.ch
-```
-
-**Wildcards:**
-- `*.microsoft.com` → Allows all Microsoft subdomains
-- `login.microsoft.com` → Only this specific subdomain
-
-**Blocked Domains (Optional):**
-Use when you've added a wildcard but want to exclude specific subdomains:
-```
-# If you allow *.example.com
-# but want to block mail.example.com:
-mail.example.com
-```
-
----
-
-### SharePoint/OneDrive Restrictions
-
-**For OneNote/Word Online:**
-
-You can restrict access to specific:
-- School's SharePoint
-- Specific Team/Group
-- Specific Notebook/Folder
-- Specific File
-
-**⚠️ Experimental Feature:**
-- Test thoroughly before using with students
-- Network Capture Helper can assist (see tool documentation)
+**Important:** Filename should clearly indicate what the configuration is for: `English_G22e_2025-11-15_Conditionals.seb`
 
 ---
 
 ## Troubleshooting
 
-### Students Can't Open SEB File
+### Problem: "Can't log in" or "Page won't load"
 
-**Cause:** SEB not installed
+**Probable cause:** Missing authentication domains
 
 **Solution:**
-1. Install Safe Exam Browser from [safeexambrowser.org](https://safeexambrowser.org)
-2. Ensure students have version 3.0 or newer
+1. Go to **"Network Capture"** tab in the tool
+2. Follow the Fiddler instructions
+3. Upload the capture file
+4. Add discovered domains to configuration
+
+**Or:** Ask IT to check school firewall settings and assist with analyzing necessary domain connections.
 
 ---
 
-### Site Not Loading
+### Problem: "MFA/Two-Factor Authentication doesn't work"
 
-**Possible causes:**
+**Solution:** Add all necessary domains in the "Custom Domains" section. Follow the instructions in the 'Network Capture' section:
 
-1. **Domain not in allowed list**
-   - Check URL carefully
-   - Ensure wildcards cover all needed subdomains
-
-2. **Network issues**
-   - Test configuration yourself first
-   - Check school firewall settings
-
-3. **Start URL incorrect**
-   - Verify Google Sites URL is published
-   - Check URL is set to "Anyone with link"
-
----
-
-### Tool Not Working Properly
-
-**If a service doesn't work as expected:**
-
-1. **Test outside SEB first** - Is the service itself working?
-2. **Check browser console** (if allowed in config)
-3. **Review domain list** - Are all necessary domains included?
-4. **Try "Relaxed" security level** - Some tools need more permissions
-
----
-
-### Students Exit SEB Accidentally
-
-**Prevention:**
-- Set quit password in config
-- Explain exit procedure to students
-
-**If it happens:**
-- Have student restart .seb file
-- Progress in web-based tools usually saved
-
----
-
-### Visual Verification Not Working
-
-**If you can't tell who's in SEB:**
-
-1. **Add more distinctive visual element** to Google Sites
-2. **Use different color scheme** than normal browser
-3. **Add "You are in SEB mode" banner** at top of page
-
----
-
-## Best Practices
-
-### Preparation
-
-✅ **Test everything yourself** before the lesson
-✅ **Have plan B ready** (traditional worksheets, backup activity)
-✅ **Explain process to students once** at start of year
-✅ **Keep config files organized** with clear naming
-
-### During Class
-
-✅ **Visual check** - Quick scan if all see Sites page
-✅ **Have quit password ready** for emergencies
-✅ **Be ready to troubleshoot** basic issues quickly
-✅ **Save progress frequently** if using online tools
-
-### After Class
-
-✅ **Archive successful configs** for reuse
-✅ **Note any issues** for next time
-✅ **Update configs** as tools change
-
-### File Management
-
-**Naming convention:**
+**For Microsoft (e.g.):**
 ```
-[Subject]_[Class]_[Date]_[Topic].seb
-
-Examples:
-English_G22e_2025-11-15_Conditionals.seb
-Math_10a_2025-11-20_Geometry.seb
+*.msftauth.net
+*.msauth.net
+login.microsoftonline.com
+...
 ```
 
-**Organization:**
+**For Google (e.g.):**
 ```
-📁 SEB Configs/
-├── 📁 English/
-│   ├── 📁 2025-Q4/
-│   │   ├── English_G22e_2025-11-15_Conditionals.seb
-│   │   └── English_G22e_2025-11-22_Reading.seb
-└── 📁 Templates/
-    └── Standard_English_Lesson.seb
+accounts.google.com
+*.googleusercontent.com
+...
 ```
 
 ---
 
-## Privacy & Security
+### Problem: "Too restrictive / Students are frustrated"
 
-**Data Privacy:**
-- ✅ 100% browser-local processing
-- ✅ No data sent to servers
-- ✅ Works completely offline
-- ✅ Open source - code is auditable
+**Solution:**
+1. Switch from "Strict" → "Balanced" or "Relaxed"
+2. Enable more options (downloads, reload, etc.)
 
-**Security Limitations:**
-- ⚠️ Focus mode, not high-security exam mode
-- ⚠️ Determined students may find workarounds
-- ⚠️ Always supervise during use
-- ⚠️ Not suitable for unsupervised assessments
+**Remember:** On personal devices, determined students can always circumvent restrictions if they have enough knowledge, time & motivation. That's okay - it's about **focus**, not primarily **surveillance**. Such problems must be solved on a pedagogical level.
 
 ---
 
-## Support
+### Problem: "Students still access social media"
 
-**Documentation:**
-- Quick start: [QUICKSTART.md](QUICKSTART.md)
-- Technical docs: [../../README.md](../../README.md)
+**Solution:**
+1. Switch to "Balanced" or "Strict"
+2. Ensure URL filtering is enabled
 
-**Generator:**
-- Live version: https://markuskiller.github.io/SEBConfigGenerator/
-- Development version: https://dev.focusmode.ch
-
-**Safe Exam Browser:**
-- Official site: [safeexambrowser.org](https://safeexambrowser.org)
-- Documentation: [SEB Manual](https://safeexambrowser.org/documentation/)
+**Remember:** On personal devices, determined students can always circumvent restrictions if they have enough knowledge, time & motivation. That's okay - it's about **focus**, not primarily **surveillance**. Such problems must be solved on a pedagogical level.
 
 ---
 
-**Last updated:** November 2025  
-**Version:** v0.19.0b2
+### Problem: "File downloads don't work"
+
+**Solution:**
+1. Edit configuration
+2. ✅ Enable "Allow downloads"
+3. Regenerate and test
+
+---
+
+## Advanced: Add Custom Service
+
+**Example:** You want to allow Wikipedia for quizzes
+
+1. Go to the tool
+2. In **"Custom Domains"** section, add:
+```
+en.wikipedia.org
+```
+
+3. Set Wikipedia as start URL or link to `https://en.wikipedia.org` within already shared resources (e.g., on the Google Sites landing page)
+4. Generate configuration
+
+---
+
+## FAQ
+
+**Q: Do students need to install something?**
+A: Yes, Safe Exam Browser (free download)
+
+**Q: Does this work on phones/tablets?**
+A: Not on all tablets, SEB is available for Windows/macOS and iPadOS.
+
+**Q: Can students uninstall it afterwards?**
+A: Yes! It's just an app. Encourage students to keep it for future use.
+
+**Q: Is this secure enough for final exams?**
+A: **No.** Use this on students' BYOD devices only for classwork, not for important summative assessments.
+
+**Q: What if students don't have their own device or forgot it?**
+A: Use school computers if possible.
+
+**Q: Can I edit an existing configuration?**
+A: Yes! Open the `.seb` file in SEB Config Tool to make changes (but be sure to encrypt before distributing to students!)
+
+**Q: Do I need the SEB Config Tool?**
+A: **Yes!** The generator creates a template that must be refined, encrypted, and finalized in the Config Tool before distribution.
+
+**Q: Why do I need to encrypt the configuration?**
+A: Encryption prevents students from changing settings and ensures the configuration cannot be easily circumvented. Additionally, the 'Settings' password serves as the **START password** for focus mode.
+
+---
+
+## 💡 Practical Scenarios with Sites Hub
+
+### Scenario 1: Interactive History Lesson
+
+**Setup:**
+```
+Services: Kahoot + Mentimeter + Padlet + 3 Wikipedia articles
+Start URL: sites.google.com/view/history-2025-xsX9rgeT5G4
+Duration: 45 minutes
+```
+
+**Sites Content:**
+```
+1. Kahoot Quiz (10 min) - Review previous lesson
+2. Mentimeter Survey (15 min) - Opinions on historical events
+3. Padlet Collection (20 min) - Gather sources and quotes
+```
+
+**Result:** Students focused, all tools work seamlessly, clear structure
+**💡 Tip:** The 3 direct links to Wikipedia articles can be pasted into the SEBConfigGenerator in the `3. Custom Domains (Optional)` section.
+
+---
+
+### Scenario 2: Math Practice Session
+
+**Setup:**
+```
+Services: Whiteboard.fi + GeoGebra
+Start URL: sites.google.com/view/math-practice-jeHg6fT7q
+Duration: 60 minutes
+```
+
+**Sites Content:**
+```
+1. Whiteboard.fi (30 min) - Collaborative problem solving
+2. GeoGebra (30 min) - Individual exercise solving
+```
+
+**Result:** Varied lesson, visual collaboration + individual work
+
+---
+
+### Scenario 3: Group Project Work
+
+**Setup:**
+```
+Services: Padlet + Miro + Etherpad
+Start URL: sites.google.com/view/project-groups-xHbnN5r8y3X
+Duration: 90 minutes
+```
+
+**Sites Content:**
+```
+Phase 1: Brainstorming with Padlet (30 min)
+Phase 2: Mind map with Miro (30 min)
+Phase 3: Documentation in Etherpad (30 min)
+```
+
+**Result:** Flexible group work without distractions, clear workflow
+
+---
+
+## ✅ Best Practices with Google Sites Landing Pages
+
+### DO:
+
+✅ **Update Sites page before each lesson**
+   - New links for Kahoot/Mentimeter
+   - Current links to Padlet/Miro
+   - Adjust schedule
+
+✅ **Clear visual structure on Sites**
+   - Use numbering (1️⃣ 2️⃣ 3️⃣)
+   - Add time indicators
+   - Use distinctive image or color (for easy visual check if students are in focus mode)
+
+✅ **Test with student account**
+   - Not with teacher account!
+   - On different devices
+   - On school network
+
+✅ **Have backup plan**
+   - Plan B without restrictions / without digital tools
+
+✅ **Communicate clearly**
+   - Why SEB is being used
+   - What is allowed and what isn't
+   - How students get help
+
+---
+
+### DON'T:
+
+❌ **DON'T distribute unencrypted .seb files**
+   - Students could change settings
+   - Security vulnerability
+
+❌ **DON'T use for important summative assessments**
+   - Not tamper-proof on BYOD
+   - Only suitable for classwork
+
+❌ **DON'T be too restrictive**
+   - Students become frustrated
+   - Resistance to tool
+   - Start with "Balanced", not "Strict"
+
+❌ **DON'T skip testing phase**
+   - Especially in the initial phase, always test before distribution
+   - Murphy's Law: "Anything that can go wrong..."
+
+---
+
+## Getting Help
+
+1. **IT Department:** For network/firewall issues
+2. **SEB Documentation:** https://safeexambrowser.org/
+3. **GitHub Issues for this tool:** [Report problems or request features](https://github.com/markuskiller/SEBConfigGenerator/issues)
+4. **Colleague network:** Share working configurations!
+
+---
+
+## Checklist: Before Class
+
+- [ ] Downloaded `.seb` template from generator
+- [ ] Imported configuration into SEB Config Tool
+- [ ] Refined settings (passwords, restrictions)
+- [ ] Encrypted configuration
+- [ ] Saved final `.seb` file
+- [ ] Tested configuration with student account
+- [ ] Informed students about SEB requirement / or planned joint installation in class
+- [ ] Shared SEB download link
+- [ ] Distributed encrypted `.seb` file (email/LMS)
+- [ ] Prepared backup plan
+- [ ] Tested on school network
+- [ ] Prepared instructions for class
+
+---
+
+## Time Investment
+
+**First time:** 30-45 minutes (incl. Config Tool setup and testing)
+**Subsequent use:** 5-10 minutes (adapt existing configurations)
+**Benefit:** Massive reduction in distraction behavior
+
+**Breakdown:**
+- Generator: 5 minutes (create template)
+- Config Tool: 15-20 minutes (refine, encrypt, test)
+- Testing: 10-20 minutes (verify with student account)
+
+---
+
+## Next Steps
+
+1. **Today:** Create and test first configuration
+2. **This week:** Use as pilot project with one class
+3. **Next month:** Expand to all classes if successful
+4. **Share:** Help colleagues by sharing your configurations!
