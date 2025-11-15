@@ -1,7 +1,7 @@
 # SEB Configuration Generator
 
 [![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-stable-brightgreen?logo=cloudflare)](https://focusmode.ch)
-[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-dev-orange?logo=cloudflare)](https://dev.focusmode.ch)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-v0.19.0b4-orange?logo=cloudflare)](https://dev.focusmode.ch)
 [![GitHub Pages](https://img.shields.io/badge/GitHub-Mirror-yellow)](https://markuskiller.github.io/SEBConfigGenerator)
 [![GitHub issues](https://img.shields.io/github/issues/markuskiller/SEBConfigGenerator)](https://github.com/markuskiller/SEBConfigGenerator/issues)
 [![Language](https://img.shields.io/badge/languages-DE%20%7C%20EN-blue)](https://focusmode.ch?lang=en)
@@ -204,5 +204,4 @@ Safe Exam Browser (SEB) is a secure browser environment for taking online exams.
 
 ---
 
-**Version:** v0.19.0b2  
 **`(c) 2025 Markus Killer (focusmode.ch)`** 🎓
