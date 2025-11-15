@@ -1,0 +1,40 @@
+# Cloudflare Pages Security Headers
+# Version: v0.18.5
+# 
+# This file configures HTTP security headers for Cloudflare Pages deployment.
+# Replaces Apache .htaccess functionality for static hosting environments.
+#
+# Documentation: https://developers.cloudflare.com/pages/platform/headers/
+
+# Apply headers to all pages
+/*
+  # Content Security Policy - Prevents XSS attacks
+  # No unsafe-inline or unsafe-eval - all code is externalized
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';
+  
+  # Prevent clickjacking attacks
+  X-Frame-Options: DENY
+  
+  # Prevent MIME-type sniffing
+  X-Content-Type-Options: nosniff
+  
+  # Control referrer information
+  Referrer-Policy: strict-origin-when-cross-origin
+  
+  # Restrict browser features
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
+  
+  # Cache control for HTML files (no caching, always check server)
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Static assets - long cache duration
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Note: HSTS header should be configured in Cloudflare Dashboard:
+# SSL/TLS → Edge Certificates → Always Use HTTPS: ON
+# SSL/TLS → Edge Certificates → Automatic HTTPS Rewrites: ON
+# This ensures HTTPS is enforced at the edge before these headers are applied

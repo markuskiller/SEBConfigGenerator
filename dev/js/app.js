@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.18.0a6
-// Build: 2025-11-12 11:43
+// Version: v0.18.5
+// Build: 2025-11-15 13:55
 // ============================================================================
 
 // ============================================================================
@@ -86,6 +86,8 @@ de: {
     allowedDomains: "Erlaubte Domains",
     downloadBtn: "📥 SEB Konfiguration herunterladen (.seb)",
     copyBtn: "📋 Domain-Liste kopieren",
+    criticalWarningTitle: "Wichtiger Hinweis:",
+    criticalWarningText: "Die heruntergeladene .seb-Datei ist nur eine Vorlage! Die unten beschriebenen 'Nächsten Schritte' müssen zwingend ausgeführt werden, bevor die Konfiguration produktiv im Unterricht eingesetzt und an die Schülerinnen und Schüler verteilt werden kann.",
     nextStepsTitle: "Nächste Schritte",
     nextStepsText: "1. SEB-Konfigurationsdatei herunterladen (.seb)<br>2. Im SEB Config Tool öffnen<br>3. Einstellungen verfeinern und verschlüsseln<br>4. Als finale .seb-Datei speichern<br>5. Verschlüsselte Datei an Schüler*innen verteilen",
     helperScriptTitle: "Network Capture Helper",
@@ -237,6 +239,8 @@ en: {
     allowedDomains: "Allowed Domains",
     downloadBtn: "📥 Download SEB Config (.seb)",
     copyBtn: "📋 Copy Domain List",
+    criticalWarningTitle: "Important Notice:",
+    criticalWarningText: "The downloaded .seb file is only a template! The 'Next Steps' described below must be completed before the configuration can be used in production and distributed to students.",
     nextStepsTitle: "Next Steps",
     nextStepsText: "1. Download the SEB configuration file (.seb)<br>2. Open in SEB Config Tool<br>3. Refine settings and encrypt<br>4. Save as final .seb file<br>5. Distribute encrypted file to students",
     helperScriptTitle: "Network Capture Helper",
@@ -823,8 +827,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.18.0a6';
-const BUILD_DATE = new Date('2025-11-12T11:43:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.18.5';
+const BUILD_DATE = new Date('2025-11-15T13:55:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -2606,6 +2610,14 @@ document.getElementById('browserHelperBtn').addEventListener('click', showBrowse
 
 // Advanced section toggle
 document.getElementById('advancedHeader').addEventListener('click', toggleAdvancedSection);
+
+// Platform selection buttons (Boolean Options)
+document.querySelectorAll('.platform-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const platform = btn.getAttribute('data-platform');
+        selectPlatform(platform);
+    });
+});
 }
 
 // ============================================================================
@@ -2626,6 +2638,18 @@ if (content.classList.contains('expanded')) {
     if (!parsedBooleanOptions.loaded) {
         const container = document.getElementById('booleanOptionsContainer');
         if (container && container.children.length === 0) {
+            // Detect and set user's platform
+            const detectedPlatform = detectUserPlatform();
+            currentPlatform = detectedPlatform;
+            console.log(`🔍 Detected platform: ${detectedPlatform}`);
+            
+            // Update platform button to show detected platform as active
+            document.querySelectorAll('.platform-btn').forEach(btn => {
+                if (btn.getAttribute('data-platform') === detectedPlatform) {
+                    btn.classList.add('active');
+                }
+            });
+            
             // Show loading indicator
             container.innerHTML = '<div class="loading-indicator">⏳ ' + 
                 (currentLang === 'de' ? 'Lade Optionen...' : 'Loading options...') + '</div>';
@@ -2633,9 +2657,9 @@ if (content.classList.contains('expanded')) {
             // Load boolean options locations from JSON and parse options from XML template
             console.log('🔄 Starting to load boolean options...');
             
-            // Load locations for current platform (in parallel with XML parsing)
+            // Load locations for detected platform (in parallel with XML parsing)
             const [locationsResult, optionsResult] = await Promise.all([
-                loadBooleanOptionsLocations(currentPlatform),
+                loadBooleanOptionsLocations(detectedPlatform),
                 loadAndParseBooleanOptions()
             ]);
             
@@ -2655,22 +2679,43 @@ if (content.classList.contains('expanded')) {
 // DEV BANNER
 // ============================================================================
 function updateDevBanner() {
-// Update version from APP_VERSION constant
-const devVersionEl = document.getElementById('devVersion');
-if (devVersionEl) {
-    devVersionEl.textContent = APP_VERSION;
-}
-
-// Update build date/time from BUILD_DATE constant
-const devBuildEl = document.getElementById('devBuild');
-if (devBuildEl) {
-    const day = String(BUILD_DATE.getDate()).padStart(2, '0');
-    const month = String(BUILD_DATE.getMonth() + 1).padStart(2, '0');
-    const year = BUILD_DATE.getFullYear();
-    const hours = String(BUILD_DATE.getHours()).padStart(2, '0');
-    const minutes = String(BUILD_DATE.getMinutes()).padStart(2, '0');
-    devBuildEl.textContent = `${day}.${month}.${year} ${hours}:${minutes}`;
-}
+    // Check if this is a development version (alpha, beta, rc, dev)
+    // Remove 'v' prefix and check if remaining string contains letters
+    const versionWithoutV = APP_VERSION.replace(/^v/, '');
+    const isDevelopmentVersion = /[a-z]/i.test(versionWithoutV);
+    
+    // Get banner element
+    const devBanner = document.querySelector('.dev-banner');
+    
+    if (!devBanner) {
+        return;
+    }
+    
+    // Hide banner for production releases
+    if (!isDevelopmentVersion) {
+        devBanner.style.setProperty('display', 'none', 'important');
+        return;
+    }
+    
+    // Show banner for development versions
+    devBanner.style.setProperty('display', 'flex', 'important');
+    
+    // Update version from APP_VERSION constant
+    const devVersionEl = document.getElementById('devVersion');
+    if (devVersionEl) {
+        devVersionEl.textContent = APP_VERSION;
+    }
+    
+    // Update build date/time from BUILD_DATE constant
+    const devBuildEl = document.getElementById('devBuild');
+    if (devBuildEl) {
+        const day = String(BUILD_DATE.getDate()).padStart(2, '0');
+        const month = String(BUILD_DATE.getMonth() + 1).padStart(2, '0');
+        const year = BUILD_DATE.getFullYear();
+        const hours = String(BUILD_DATE.getHours()).padStart(2, '0');
+        const minutes = String(BUILD_DATE.getMinutes()).padStart(2, '0');
+        devBuildEl.textContent = `${day}.${month}.${year} ${hours}:${minutes}`;
+    }
 
 // Try to fetch git commit ID from a separate file (if available)
 // This will be generated during deployment
@@ -2713,6 +2758,32 @@ if (langParam && (langParam === 'de' || langParam === 'en')) {
     return langParam;
 }
 return null;
+}
+
+// ============================================================================
+// PLATFORM DETECTION
+// ============================================================================
+function detectUserPlatform() {
+const userAgent = navigator.userAgent.toLowerCase();
+const platform = navigator.platform.toLowerCase();
+
+// Detect iOS/iPadOS/iPhone/visionOS
+// Note: Modern iPads may identify as Mac, so check for touch points
+// Vision Pro also runs visionOS (based on iOS)
+if (/ipad/.test(userAgent) || 
+    /iphone/.test(userAgent) || 
+    /vision/.test(userAgent) ||
+    (platform === 'macintel' && navigator.maxTouchPoints > 1)) {
+    return 'ipados';
+}
+
+// Detect macOS
+if (/mac/.test(platform)) {
+    return 'macos';
+}
+
+// Default to Windows (most common for desktop usage)
+return 'windows';
 }
 
 // ============================================================================

@@ -311,6 +311,40 @@ textarea {
     flex-wrap: wrap; 
 }
 
+/* Critical Warning Box - Red */
+.warning-box-critical {
+    background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+    border: 2px solid #dc3545;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.15);
+}
+
+.warning-box-critical-icon {
+    font-size: 24px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.warning-box-critical-content {
+    flex: 1;
+    color: #721c24;
+    font-size: 0.95em;
+    line-height: 1.6;
+}
+
+.warning-box-critical-content strong {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 6px;
+    font-size: 1.05em;
+    color: #5a1319;
+}
+
 .info-box { 
     background: linear-gradient(135deg, #d4e6f7 0%, #e8f2fa 100%); 
     border-left: 4px solid #5b9bd5; 
@@ -572,12 +606,6 @@ textarea {
 .platform-btn:hover {
     border-color: #5b9bd5;
     color: #2c3e5a;
-}
-
-.platform-btn:first-child {
-    border-color: #5b9bd5;
-    color: #2c3e5a;
-    background: #e8f2fa;
 }
 
 /* Helper script buttons container */

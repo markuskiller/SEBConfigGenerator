@@ -10,7 +10,7 @@ This directory contains production-ready server configuration templates for depl
 - **Setup:** Copy to your web root directory
 
 ### Nginx
-- **Location:** `nginx/sebconfig.conf`
+- **Location:** `nginx/sebconfiggenerator.conf`
 - **Requirements:** Nginx 1.18+
 - **Setup:** Copy to `/etc/nginx/sites-available/` and create symlink
 
@@ -98,13 +98,13 @@ sudo systemctl reload apache2
 ### Installation
 ```bash
 # Copy configuration file
-sudo cp configs/nginx/sebconfig.conf /etc/nginx/sites-available/
+sudo cp configs/nginx/sebconfiggenerator.conf /etc/nginx/sites-available/
 
 # Edit configuration (adjust server_name and root path)
-sudo nano /etc/nginx/sites-available/sebconfig
+sudo nano /etc/nginx/sites-available/sebconfiggenerator
 
 # Create symlink to enable site
-sudo ln -s /etc/nginx/sites-available/sebconfig /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/sebconfiggenerator /etc/nginx/sites-enabled/
 
 # Test Nginx configuration
 sudo nginx -t
@@ -114,7 +114,7 @@ sudo systemctl reload nginx
 ```
 
 ### Configuration Adjustments
-Edit the following in `sebconfig.conf`:
+Edit the following in `sebconfiggenerator.conf`:
 
 ```nginx
 server_name sebconfig.example.com;  # Your domain
@@ -169,7 +169,7 @@ Uncomment HSTS in `.htaccess`:
 ```
 
 #### Nginx
-1. Uncomment the HTTPS server block in `sebconfig.conf`
+1. Uncomment the HTTPS server block in `sebconfiggenerator.conf`
 2. Update certificate paths
 3. Uncomment HSTS header
 4. Test and reload: `sudo nginx -t && sudo systemctl reload nginx`
@@ -314,6 +314,6 @@ For issues specific to the SEB Config Generator:
 
 ---
 
-**Version:** v0.18.0a6  
-**Last Updated:** 2025-11-12  
+**Version:** v0.18.5  
+**Last Updated:** 2025-11-15  
 **Security Audit Completed:** Phase 6
