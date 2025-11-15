@@ -7,32 +7,25 @@ This directory contains the template system for SEB Config Generator presets.
 ```
 templates/
 ├── source/                   # Source JSON/XML files (edit these!)
-│   ├── services/             # Service presets (Kahoot, Miro, etc.)
-│   │   ├── etherpad.json
-│   │   ├── onenote.json
-│   │   ├── whiteboard.json
-│   │   └── ...
-│   ├── reference-tools/      # Reference tools (dictionaries, etc.)
-│   │   ├── duden.json
-│   │   ├── oxford.json
-│   │   ├── larousse.json
-│   │   └── ...
+│   ├── services/             # Service/tool presets
+│   │   ├── onenote.json      # OneNote preset
+│   │   ├── whiteboard.json   # Whiteboard.fi preset
+│   │   ├── duden.json        # Duden dictionary
+│   │   └── ...               # More services
 │   ├── subjects/             # Subject configurations
 │   │   ├── german.json       # German language tools
 │   │   ├── english.json      # English language tools
-│   │   ├── french.json       # French language tools
-│   │   └── all-tools.json    # All reference tools
-│   ├── seb-options/          # Platform-specific SEB options
-│   │   ├── seb-options-macos.json
-│   │   ├── seb-options-windows.json
-│   │   └── seb-options-ipados.json
+│   │   └── french.json       # French language tools
+│   ├── platforms/            # Platform-specific boolean options
+│   │   ├── boolean-options-locations-macos.json
+│   │   ├── boolean-options-locations-windows.json
+│   │   └── boolean-options-locations-ipados.json
 │   └── example_config.xml    # SEB config XML template
-└── generated/                # Generated JS files (auto-generated!)
-    ├── presets.js            # All service & tool presets
+└── generated/                # Generated JS files (auto-generated)
+    ├── presets.js            # All service presets
     ├── subjects.js           # All subject configurations
     ├── preset-groups.js      # Categorized preset groups
-    ├── translations.js       # Compiled translations
-    ├── seb-options-*.js      # Platform-specific option mappings
+    ├── boolean-options-locations-*.js  # Platform option mappings
     └── xml-data.js           # XML template as JS constant
 ```
 
@@ -64,12 +57,13 @@ Example: `templates/source/services/mynewservice.json`
 
 For `allowedTools`, add `"language": "german"` (or english, french, etc.)
 
-### 3. Deploy your changes
+### 3. Run the build script
 
 ```bash
-# Use the deploy script to rebuild, commit, and push
-./scripts/deploy.sh
+bash scripts/build-service-presets.sh
 ```
+
+### 4. Test your changes
 
 The generated files are automatically imported by `js/app.js`.
 
@@ -91,62 +85,29 @@ Example: `templates/source/subjects/spanish.json`
 
 Create `source/services/rae.json` and `source/services/wordreference.json`
 
-### 3. Deploy your changes
+### 3. Run the build script
 
 ```bash
-# Use the deploy script to rebuild, commit, and push
-./scripts/deploy.sh
-```
-
-## 🔄 Build & Deployment Workflow
-
-### Quick Deploy (Recommended)
-
-Use the automated deployment script:
-
-```bash
-# Without version bump (just rebuild and commit)
-./scripts/deploy.sh
-
-# With version bump
-./scripts/deploy.sh v0.19.0a7
-
-# With version bump and custom commit message
-./scripts/deploy.sh v0.19.0a7 "feat: add Spanish language support"
-```
-
-The deploy script automatically:
-1. Rebuilds all generated files
-2. Updates version (if specified)
-3. Commits all changes
-4. Pushes to current branch
-
-### Manual Build (if needed)
-
-Run build scripts manually:
-
-```bash
-# Rebuild all presets and templates
 bash scripts/build-service-presets.sh
-
-# Rebuild translations only
-bash scripts/build-translations.sh
 ```
 
-**Important:** Generated files are committed to git! This ensures:
-- ✅ Consistency between Cloudflare Pages and GitHub Pages
-- ✅ No build step needed during deployment
-- ✅ Traceable versions in git history
+## 🔄 When to Rebuild
+
+Run `bash scripts/build-service-presets.sh` whenever you:
+- Add a new service JSON file
+- Modify an existing service JSON file
+- Add a new subject JSON file
+- Change subject tool associations
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Add/modify JSON files in `source/` directory
-3. Use `./scripts/deploy.sh` to rebuild and deploy
-4. Test on dev.focusmode.ch
+2. Add your service/subject JSON files
+3. Run the build script
+4. Test the changes locally
 5. Submit a pull request
 
-**Note:** Only modify files in `source/` directory. Files in `generated/` are auto-generated!
+**Note:** Only modify files in `source/` directory. Never edit files in `generated/` directly!
 
 ## 📝 JSON Schema Reference
 
@@ -177,15 +138,4 @@ bash scripts/build-translations.sh
 
 ---
 
-## 📚 Additional Documentation
-
-- [Build Scripts Documentation](../scripts/README.md) - Detailed script usage
-- [Project Description](../docs/en/PROJECT_DESCRIPTION_EN.md)
-- [Deployment Checklist](../docs/en/DEPLOYMENT_CHECKLIST.md)
-
-**Main Scripts:**
-- `scripts/deploy.sh` - Automated deployment (recommended)
-- `scripts/build-service-presets.sh` - Build presets/templates
-- `scripts/build-translations.sh` - Build translations
-
-````
+**Script:** `scripts/build-service-presets.sh`
