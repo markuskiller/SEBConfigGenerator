@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.19.0rc1
-// Build: 2025-11-16 00:11
+// Version: v0.19.0rc2
+// Build: 2025-11-16 00:26
 // ============================================================================
 
 // ============================================================================
@@ -442,8 +442,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.19.0rc1';
-const BUILD_DATE = new Date('2025-11-16T00:11:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.19.0rc2';
+const BUILD_DATE = new Date('2025-11-16T00:26:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -568,9 +568,9 @@ const baseGitHubUrl = 'https://github.com/markuskiller/SEBConfigGenerator/blob/m
 const mainDocLink = document.getElementById('mainDocLink');
 if (mainDocLink) {
     if (lang === 'de') {
-        mainDocLink.href = baseGitHubUrl + 'docs/de/SCHNELLSTART_ANLEITUNG.md';
+        mainDocLink.href = baseGitHubUrl + 'docs/de/SCHNELLSTART.md';
     } else {
-        mainDocLink.href = baseGitHubUrl + 'docs/en/TEACHER_GUIDE.md';
+        mainDocLink.href = baseGitHubUrl + 'docs/en/QUICKSTART.md';
     }
 }
 
@@ -588,20 +588,12 @@ if (browserCaptureLink) {
 const quickstartLinkBasic = document.getElementById('quickstartLinkBasic');
 if (quickstartLinkBasic) {
     if (lang === 'de') {
-        quickstartLinkBasic.href = baseGitHubUrl + 'docs/de/SCHNELLSTART_ANLEITUNG.md';
+        quickstartLinkBasic.href = baseGitHubUrl + 'docs/de/ANLEITUNG.md';
     } else {
-        quickstartLinkBasic.href = baseGitHubUrl + 'docs/en/TEACHER_GUIDE.md';
+        quickstartLinkBasic.href = baseGitHubUrl + 'docs/en/GUIDE.md';
     }
 }
 
-// Quick reference (in Basic section)
-const quickRefLinkBasic = document.getElementById('quickRefLinkBasic');
-if (quickRefLinkBasic) {
-    if (lang === 'de') {
-        quickRefLinkBasic.href = baseGitHubUrl + 'docs/de/SCHNELLREFERENZ.txt';
-    } else {
-        quickRefLinkBasic.href = baseGitHubUrl + 'docs/en/QUICK_REFERENCE.txt';
-    }
 }
 }
 
