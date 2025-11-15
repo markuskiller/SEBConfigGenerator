@@ -6,20 +6,27 @@ This directory contains the template system for SEB Config Generator presets.
 
 ```
 templates/
-├── source/                   # Source JSON files (edit these!)
+├── source/                   # Source JSON/XML files (edit these!)
 │   ├── services/             # Service/tool presets
 │   │   ├── onenote.json      # OneNote preset
 │   │   ├── whiteboard.json   # Whiteboard.fi preset
 │   │   ├── duden.json        # Duden dictionary
 │   │   └── ...               # More services
-│   └── subjects/             # Subject configurations
-│       ├── german.json       # German language tools
-│       ├── english.json      # English language tools
-│       └── french.json       # French language tools
+│   ├── subjects/             # Subject configurations
+│   │   ├── german.json       # German language tools
+│   │   ├── english.json      # English language tools
+│   │   └── french.json       # French language tools
+│   ├── platforms/            # Platform-specific boolean options
+│   │   ├── boolean-options-locations-macos.json
+│   │   ├── boolean-options-locations-windows.json
+│   │   └── boolean-options-locations-ipados.json
+│   └── example_config.xml    # SEB config XML template
 └── generated/                # Generated JS files (auto-generated)
     ├── presets.js            # All service presets
     ├── subjects.js           # All subject configurations
-    └── preset-groups.js      # Categorized preset groups
+    ├── preset-groups.js      # Categorized preset groups
+    ├── boolean-options-locations-*.js  # Platform option mappings
+    └── xml-data.js           # XML template as JS constant
 ```
 
 ## 🎯 How to Add a New Service
@@ -53,7 +60,7 @@ For `allowedTools`, add `"language": "german"` (or english, french, etc.)
 ### 3. Run the build script
 
 ```bash
-bash scripts/build-templates.sh
+bash scripts/build-service-presets.sh
 ```
 
 ### 4. Test your changes
@@ -81,12 +88,12 @@ Create `source/services/rae.json` and `source/services/wordreference.json`
 ### 3. Run the build script
 
 ```bash
-bash scripts/build-templates.sh
+bash scripts/build-service-presets.sh
 ```
 
 ## 🔄 When to Rebuild
 
-Run `bash scripts/build-templates.sh` whenever you:
+Run `bash scripts/build-service-presets.sh` whenever you:
 - Add a new service JSON file
 - Modify an existing service JSON file
 - Add a new subject JSON file
@@ -131,4 +138,4 @@ Run `bash scripts/build-templates.sh` whenever you:
 
 ---
 
-**Script:** `scripts/build-templates.sh`
+**Script:** `scripts/build-service-presets.sh`
