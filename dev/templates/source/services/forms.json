@@ -1,0 +1,18 @@
+{
+  "id": "forms",
+  "name": "Microsoft Forms",
+  "description": "Microsoft Forms für Umfragen und Quizze",
+  "category": "noLogin",
+  "startUrl": "https://forms.office.com",
+  "domains": [
+    "forms.office.com",
+    "*.forms.office.com",
+    "*.microsoft.com",
+    "*.microsoftonline.com",
+    "*.office.com",
+    "*.office365.com",
+    "*.msocdn.com",
+    "*.msecnd.net",
+    "*.azureedge.net"
+  ]
+}

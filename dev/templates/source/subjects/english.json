@@ -1,0 +1,5 @@
+{
+  "id": "english",
+  "name": "English",
+  "toolPresets": ["oxford", "cambridge"]
+}

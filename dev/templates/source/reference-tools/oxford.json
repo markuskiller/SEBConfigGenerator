@@ -1,0 +1,21 @@
+{
+  "id": "oxford",
+  "name": "Oxford Learner's Dictionaries",
+  "description": "Oxford English Dictionary for Learners",
+  "category": "tool",
+  "language": "english",
+  "startUrl": "https://www.oxfordlearnersdictionaries.com",
+  "domains": [
+    "oxfordlearnersdictionaries.com",
+    "*.oxfordlearnersdictionaries.com",
+    "*.oup.com",
+    "*.cookielaw.org",
+    "*.doubleclick.net",
+    "*.google-analytics.com",
+    "*.google.com",
+    "*.googletagmanager.com",
+    "*.onetrust.com",
+    "*.polarbyte.com",
+    "html-load.com"
+  ]
+}

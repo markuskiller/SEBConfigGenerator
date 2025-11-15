@@ -1,0 +1,18 @@
+{
+  "id": "duden",
+  "name": "Duden",
+  "description": "Deutsches Wörterbuch und Rechtschreibung",
+  "category": "tool",
+  "language": "german",
+  "startUrl": "https://www.duden.de",
+  "domains": [
+    "duden.de",
+    "*.duden.de",
+    "*.doubleclick.net",
+    "*.googletagmanager.com",
+    "*.stroeerdigitalgroup.de",
+    "*.taboola.com",
+    "*.yieldlove.com",
+    "mitself.net"
+  ]
+}

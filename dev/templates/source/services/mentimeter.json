@@ -1,0 +1,13 @@
+{
+  "id": "mentimeter",
+  "name": "Mentimeter",
+  "description": "Live-Umfragen und interaktive Präsentationen",
+  "category": "noLogin",
+  "startUrl": "https://www.menti.com",
+  "domains": [
+    "menti.com",
+    "*.menti.com",
+    "mentimeter.com",
+    "*.mentimeter.com"
+  ]
+}

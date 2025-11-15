@@ -1,0 +1,13 @@
+{
+  "id": "padlet",
+  "name": "Padlet",
+  "description": "Digitale Pinnwand für Zusammenarbeit",
+  "category": "noLogin",
+  "startUrl": "https://padlet.com",
+  "domains": [
+    "padlet.com",
+    "*.padlet.com",
+    "padlet.net",
+    "*.padlet.pics"
+  ]
+}

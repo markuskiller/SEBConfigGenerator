@@ -1,0 +1,41 @@
+{
+  "id": "word",
+  "name": "Word Online",
+  "description": "Microsoft Word Web-Client",
+  "category": "withLogin",
+  "startUrl": "https://www.office.com/launch/word",
+  "domains": [
+    "*.microsoft.com",
+    "*.microsoftonline.com",
+    "*.msauth.net",
+    "*.msftauth.net",
+    "login.live.com",
+    "account.live.com",
+    "*.live.com",
+    "*.office.com",
+    "*.office.net",
+    "*.office365.com",
+    "*.officeapps.live.com",
+    "*.sharepoint.com",
+    "*.sharepointonline.com",
+    "*.msocdn.com",
+    "*.msecnd.net",
+    "*.azureedge.net",
+    "*.windows.net",
+    "*.static.microsoft",
+    "browser.events.data.microsoft.com",
+    "common.online.office.com",
+    "euc-common.online.office.com",
+    "login.microsoftonline.com",
+    "res-1.cdn.office.net",
+    "res-1.public.onecdn.static.microsoft",
+    "wise-m.public.cdn.office.net",
+    "wise.public.cdn.office.net"
+  ],
+  "blockedDomains": [
+    "outlook.office.com",
+    "outlook.office365.com",
+    "teams.microsoft.com",
+    "teams.live.com"
+  ]
+}

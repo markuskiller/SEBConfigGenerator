@@ -1,0 +1,12 @@
+{
+  "id": "larousse",
+  "name": "Larousse",
+  "description": "Dictionnaire français Larousse",
+  "category": "tool",
+  "language": "french",
+  "startUrl": "https://www.larousse.fr/dictionnaires",
+  "domains": [
+    "larousse.fr",
+    "*.larousse.fr"
+  ]
+}
