@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.19.0rc5
-// Build: 2025-11-16 00:50
+// Version: v0.19.0rc6
+// Build: 2025-11-16 00:56
 // ============================================================================
 
 // ============================================================================
@@ -442,8 +442,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.19.0rc5';
-const BUILD_DATE = new Date('2025-11-16T00:50:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.19.0rc6';
+const BUILD_DATE = new Date('2025-11-16T00:56:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -599,6 +599,18 @@ function t(key) {
 return TRANSLATIONS[currentLang][key] || key;
 }
 
+// Helper function to convert kebab-case service IDs to camelCase for translation keys
+function toCamelCase(str) {
+return str.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
+}
+
+// Helper function to get translation key for preset
+function getPresetTranslationKey(presetId, suffix = '') {
+const camelCaseId = toCamelCase(presetId);
+const capitalized = camelCaseId.charAt(0).toUpperCase() + camelCaseId.slice(1);
+return 'preset' + capitalized + suffix;
+}
+
 // ============================================================================
 // UI RENDERING
 // ============================================================================
@@ -616,8 +628,8 @@ PRESET_GROUPS.noLogin.forEach(key => {
     const btn = document.createElement('button');
     btn.className = `preset-btn ${selectedPresets.includes(key) ? 'active' : ''}`;
     btn.innerHTML = `
-        <h3>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1))}</h3>
-        <p>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1) + 'Desc')}</p>
+        <h3>${t(getPresetTranslationKey(key))}</h3>
+        <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
     btn.onclick = () => togglePreset(key);
     container.appendChild(btn);
@@ -633,8 +645,8 @@ PRESET_GROUPS.withLogin.forEach(key => {
     const btn = document.createElement('button');
     btn.className = `preset-btn ${selectedPresets.includes(key) ? 'active' : ''}`;
     btn.innerHTML = `
-        <h3>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1))}</h3>
-        <p>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1) + 'Desc')}</p>
+        <h3>${t(getPresetTranslationKey(key))}</h3>
+        <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
     btn.onclick = () => togglePreset(key);
     container.appendChild(btn);
@@ -756,8 +768,8 @@ PRESET_GROUPS.allowedTools[subject].forEach(key => {
     const btn = document.createElement('button');
     btn.className = `preset-btn ${selectedPresets.includes(key) ? 'active' : ''}`;
     btn.innerHTML = `
-        <h3>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1))}</h3>
-        <p>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1) + 'Desc')}</p>
+        <h3>${t(getPresetTranslationKey(key))}</h3>
+        <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
     btn.onclick = () => togglePreset(key);
     container.appendChild(btn);
