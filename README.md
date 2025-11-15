@@ -6,20 +6,19 @@
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/markuskiller/SEBConfigGenerator/actions)
 [![GitHub issues](https://img.shields.io/github/issues/markuskiller/SEBConfigGenerator)](https://github.com/markuskiller/SEBConfigGenerator/issues)
 [![Language](https://img.shields.io/badge/languages-DE%20%7C%20EN-blue)](https://focusmode.ch?lang=en)
-[![Privacy](https://img.shields.io/badge/privacy-100%25%20local-orange)](https://github.com/markuskiller/SEBConfigGenerator/archive/refs/heads/main.zip)
-[![Safe Exam Browser](https://img.shields.io/badge/SEB-compatible-blueviolet)](https://safeexambrowser.org/download_en.html)
+[![Privacy](https://img.shields.io/badge/privacy-100%25%20local%20ZIP-orange)](https://github.com/markuskiller/SEBConfigGenerator/archive/refs/heads/main.zip)
+[![Safe Exam Browser](https://img.shields.io/badge/SEB-Download-blueviolet)](https://safeexambrowser.org/download_en.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Web-basierter Generator für Safe Exam Browser (SEB) Konfigurationen - erstellen Sie fokussierte Lernumgebungen für Schüler*innen.
 
 
 
-
-**🌐 Online: focusmode.ch:** [SEBConfigGenerator](https://focusmode.ch)
+**🌐 Online: [focusmode.ch](https://focusmode.ch)**
 
 - 🌐❌ **Lokal: browser-basiert** - Keine Installation nötig / kann auch lokal ohne Internetverbindung genutzt werden ([Download ZIP](https://github.com/markuskiller/SEBConfigGenerator/archive/refs/heads/main.zip)) -> ZIP-Datei entpacken und auf index.html doppelklicken
 
-**🌐 Latest Development Version (Experimentell!):** [dev.focusmode.ch](https://dev.focusmode.ch)
+**🌐 Latest Development Version (Experimentell!): [dev.focusmode.ch](https://dev.focusmode.ch)**
 
 - 🌐❌ **Lokal browser-basiert (latest dev version)** ([Download ZIP (latest dev)](https://github.com/markuskiller/SEBConfigGenerator/archive/refs/heads/dev.zip)) -> ZIP-Datei entpacken und auf index.html doppelklicken
 
