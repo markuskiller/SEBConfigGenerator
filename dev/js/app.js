@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.19.0a1
-// Build: 2025-11-15 14:01
+// Version: v0.19.0a2
+// Build: 2025-11-15 14:11
 // ============================================================================
 
 // ============================================================================
@@ -827,8 +827,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.19.0a1';
-const BUILD_DATE = new Date('2025-11-15T14:01:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.19.0a2';
+const BUILD_DATE = new Date('2025-11-15T14:11:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -2717,33 +2717,36 @@ function updateDevBanner() {
         devBuildEl.textContent = `${day}.${month}.${year} ${hours}:${minutes}`;
     }
 
-// Try to fetch git commit ID from a separate file (if available)
-// This will be generated during deployment
-// Only attempt fetch if running on http/https (not file://)
-const devCommitEl = document.getElementById('devCommit');
-if (window.location.protocol === 'file:') {
-    // Running locally without server
-    if (devCommitEl) {
-        devCommitEl.textContent = 'local';
+    // Try to fetch git commit ID from a separate file (if available)
+    // This will be generated during deployment
+    // Only attempt fetch if running on http/https (not file://)
+    const devCommitEl = document.getElementById('devCommit');
+    if (window.location.protocol === 'file:') {
+        // Running locally without server
+        if (devCommitEl) {
+            devCommitEl.textContent = 'local';
+        }
+    } else {
+        // Running on server, try to fetch commit ID
+        fetch('GIT_COMMIT.txt')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('GIT_COMMIT.txt not found');
+                }
+                return response.text();
+            })
+            .then(commitId => {
+                if (devCommitEl && commitId) {
+                    // Show first 7 characters of commit hash
+                    devCommitEl.textContent = commitId.trim().substring(0, 7);
+                }
+            })
+            .catch(() => {
+                if (devCommitEl) {
+                    devCommitEl.textContent = 'N/A';
+                }
+            });
     }
-} else {
-    // Running on server, try to fetch commit ID
-    fetch('GIT_COMMIT.txt')
-        .then(response => response.ok ? response.text() : null)
-        .then(commitId => {
-            if (devCommitEl && commitId) {
-                // Show first 7 characters of commit hash
-                devCommitEl.textContent = commitId.trim().substring(0, 7);
-            } else if (devCommitEl) {
-                devCommitEl.textContent = 'local';
-            }
-        })
-        .catch(() => {
-            if (devCommitEl) {
-                devCommitEl.textContent = 'local';
-            }
-        });
-}
 }
 
 // ============================================================================
