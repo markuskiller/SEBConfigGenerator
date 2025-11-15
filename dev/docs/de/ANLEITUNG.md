@@ -13,6 +13,20 @@ Erstellt Safe Exam Browser (SEB) Konfigurationen, die Schüler*innen helfen, sic
 
 ---
 
+## Inhaltsverzeichnis
+
+1. [Empfohlener Ansatz: Google Sites als Start-Seite](#-empfohlener-ansatz-google-sites-seite-als-start-seite-wählen)
+2. [Schritt-für-Schritt: Ihre erste Konfiguration](#schritt-für-schritt-ihre-erste-konfiguration)
+3. [Troubleshooting](#troubleshooting)
+4. [Erweitert: Eigenen Service hinzufügen](#erweitert-eigenen-service-hinzufügen)
+5. [FAQ](#faq)
+6. [Praktische Szenarien mit Sites Hub](#-praktische-szenarien-mit-sites-hub)
+7. [Best Practices mit Google Sites Einstiegsseiten](#-best-practices-mit-google-sites-einstiegsseiten)
+8. [Hilfe erhalten](#hilfe-erhalten)
+9. [Checkliste: Vor dem Unterricht](#checkliste-vor-dem-unterricht)
+
+---
+
 ## 🌟 Empfohlener Ansatz: 'Google Sites'-Seite als Start-Seite wählen
 
 ### Warum Google Sites?
@@ -48,13 +62,13 @@ Keine Ablenkungen (YouTube, Social Media blockiert)
 
 2. **Neue Seite erstellen:**
    - Klicken Sie auf "+" (Neue Website)
-   - Name: `[Fach]_[Klasse]_[Datum]` (z.B. "Englisch_G22e_2025-11-10")
+   - Name: `[Fach]_[Klasse]_[Datum]_[Thema]` (z.B. "Englisch_G22e_2025-11-10_Conditionals")
 
 3. **Inhalt hinzufügen - Beispiel:**
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  Englisch - Revision Conditionals 10/11/2025    │
+│  Englisch - Revision Conditionals 15/11/2025    │
 │  ═══════════════════════════════════════════    │
 │                                                 │
 │    CHECK: Visueller Hinweis für LP              │
@@ -80,17 +94,24 @@ Keine Ablenkungen (YouTube, Social Media blockiert)
 └─────────────────────────────────────────────────┘
 ```
 
-3. **Sichtbarkeit einstellen, Veröffentlichen und URL kopieren**:**
+4. **Sichtbarkeit einstellen, Veröffentlichen und URL kopieren:**
    - **"Publizieren"** auswählen
    - ❌ **Seite nicht indexieren lassen**
-   - ✅ URL bewusst komplex/geheim wählen (z.B. `sites.google.com/view/Englisch_G22e_2025-11-10xy7z3abc`)
+   - ⚠️ **Vorschlag URL:** `Fach_Klasse_Datum` + **geheime Zeichenfolge** (z.B. `sites.google.com/view/Englisch_G22e_2025-11-10xy7z3abc`)
+   - **URL kopieren** - Sie benötigen sie für den Generator
 
 ---
 
 ### Schritt 2: Generator öffnen
-Gehen Sie zu: `https://markuskiller.github.io/SEBConfigGenerator/` (oder <a href="https://raw.githubusercontent.com/markuskiller/SEBConfigGenerator/main/index.html" download="SEBConfigGenerator.html"></a>laden Sie `index.html` herunter und rufen Sie den Generator lokal im Browser auf).
+Gehen Sie zu: `https://focusmode.ch`
 
-⚠️ Wichtig: Bei beiden Methoden werden keinerlei Daten übermittelt, die gesamte Verarbeitung passiert lokal in Ihrem Browser.
+Alternativ (offline): Laden Sie die [ZIP-Datei](https://github.com/markuskiller/SEBConfigGenerator/archive/refs/heads/main.zip) herunter, entpacken Sie sie und öffnen Sie `index.html` lokal im Browser.
+
+---
+
+⚠️ **Datenschutz:** Bei beiden Methoden werden **keinerlei Daten übermittelt**, die gesamte Verarbeitung passiert **lokal in Ihrem Browser**. Dies kann gerne auch durch ein Code-Review z.B. durch gängige generative KI-Modelle (z.B. ChatGPT, Claude.ai, Gemeni, ...) verifiziert werden. Der gesamte Code ist OpenSource und steht unter [github.com/markuskiller/SEBConfigGenerator](https://github.com/markuskiller/SEBConfigGenerator) zur Verfügung.
+
+---
 
 ### Schritt 3: Dienste auswählen (mehrere möglich!)
 
@@ -131,31 +152,35 @@ Klicken Sie auf: **"📥 SEB Konfiguration herunterladen (.seb)"**
 
 Wird unter `Multi_Service_Config.seb` (mehrere Dienste), `[Dienst]_Config.seb` (ausgewählter Dienst) oder unter dem manuell eingegebenen Dateinamen gespeichert.
 
-### Schritt 8: Im SEB Config Tool importieren und finalisieren
+---
 
-**⚠️ Die heruntergeladene `.seb`-Datei ist nur eine Vorlage!**
+⚠️ **Wichtig:** Die heruntergeladene .seb-Datei ist nur eine Vorlage! Die folgenden Schritte müssen zwingend ausgeführt werden, bevor die Konfiguration produktiv im Unterricht eingesetzt und an die Schülerinnen und Schüler verteilt werden kann.
+
+---
+
+### Schritt 7: Im SEB Config Tool importieren und finalisieren
 
 1. [SEB Config Tool](https://safeexambrowser.org/download_de.html) herunterladen (einmalige Einrichtung)
 2. **SEB Config Tool** öffnen
 3. **Datei → Öffnen** → Ihre heruntergeladene `.seb`-Datei wählen
 4. **Reiter 'General' → Einstellungen überprüfen und verfeinern:**
    - Administrator-Passwort hinzufügen (wird benötigt, um Konfigurationsdatei später anzupassen)
-   - Beenden-Passwort hinzufügen (falls gewünscht)
+   - Beenden-Passwort (='Quit/unlock password') hinzufügen (falls gewünscht)
    - Zusätzliche Einschränkungen konfigurieren
 5. **Reiter 'Config' → Konfiguration verschlüsseln & START-Passwort setzen:**
    - Konfigurieren → Mit Passwort und/oder Zertifikat verschlüsseln
    - **⚠️ Das 'SETTINGS'-Passwort ist gleichzeitig das START-Passwort für die SuS**
 6. **Als finale .seb-Datei speichern:**
-   - Datei → Speichern unter → `Lektion_[Datum]_[Klasse].seb`
+   - Datei → Speichern unter → `[Fach]_[Klasse]_[Datum]_[Thema].seb` (z.B. `Englisch_G22e_2025-11-15_Conditionals.seb`)
 
 **Wichtig:** Nur die verschlüsselte, finalisierte `.seb`-Datei an Schüler*innen verteilen!
 
-### Schritt 9: Testen & Verteilen
+### Schritt 8: Testen & Verteilen
 
-## Testen - ⚠️ Vor der Weitergabe an Schüler*innen:**
+**Testen - ⚠️ Vor der Weitergabe an Schüler*innen:**
 
 1. SEB auf Ihrem Computer installieren
-2. Doppelklick auf Ihre `.seb`-Config-Datei
+2. Doppelklick auf Ihre finale `.seb`-Konfigurationsdatei
 3. Versuchen Sie:
    - Mit einem SCHÜLER-(TEST-)ACCOUNT anmelden (nicht mit LP-Account)
    - Auf freigegebene Ressourcen zugreifen
@@ -164,11 +189,13 @@ Wird unter `Multi_Service_Config.seb` (mehrere Dienste), `[Dienst]_Config.seb` (
 
 **Wenn etwas nicht funktioniert:** Siehe Fehlerbehebung unten
 
-## In geeigneter Form an Schüler*innen verteilen
+**An Schüler*innen verteilen:**
 
-Oft ist es sinnvoll, den [SafeExamBrowser](https://safeexambrowser.org/download_de.html) gemeinsam im Unterricht zu installieren (einmal pro Semester bzw. bei Verfügbarkeit einer neuen Version).
+Oft ist es sinnvoll, den [Safe Exam Browser](https://safeexambrowser.org/download_de.html) gemeinsam im Unterricht zu installieren (einmal pro Semester bzw. bei Verfügbarkeit einer neuen Version).
 
-Die Konfiguration kann jeweils über den üblichen Kommunikationskanal mit der Möglichkeit zum Datenaustausch (z.B. MS Teams oder E-Mail) an die SuS verteilt werden.
+Die verschlüsselte Konfigurationsdatei kann über den üblichen Kommunikationskanal mit Dateiaustauschmöglichkeit (z.B. MS Teams, Google Classroom oder E-Mail) an die SuS verteilt werden.
+
+**Wichtig:** Dateiname sollte klar machen, wofür die Konfiguration ist: `Englisch_G22e_2025-11-15_Conditionals.seb`
 
 ---
 
@@ -265,10 +292,10 @@ A: Nicht auf allen Tablets, SEB ist für Windows/macOS und iPadOS verfügbar.
 A: Ja! Es ist nur eine App. Ermutigen Sie Schüler*innen, es für zukünftige Nutzung zu behalten.
 
 **F: Ist das sicher genug für Abschlussprüfungen?**
-A: **Nein.** Verwenden Sie dies für Unterrichtsarbeit, nicht für summative Prüfungen.
+A: **Nein.** Verwenden Sie dies auf BYOD-Geräten der Schülerinnen und Schüler nur für Unterrichtsarbeit, nicht für wichtige summative Prüfungen.
 
 **F: Was ist, wenn Schüler*innen kein eigenes Gerät haben bzw. ihr Gerät vergessen haben?**
-A: Nutzen Sie - falls möglich - Schulcomputer
+A: Nutzen Sie - falls möglich - Schulcomputer.
 
 **F: Kann ich eine bestehende Konfiguration bearbeiten?**
 A: Ja! Öffnen Sie die `.seb`-Datei im SEB Config Tool, um Änderungen vorzunehmen (aber vor Weitergabe an SuS unbedingt verschlüsseln!)
@@ -287,8 +314,8 @@ A: Verschlüsselung verhindert, dass Schüler*innen die Einstellungen ändern un
 
 **Setup:**
 ```
-Dienste: Kahoot + Mentimeter + Padlet
-Start-URL: sites.google.com/view/geschichte-2024
+Dienste: Kahoot + Mentimeter + Padlet + 3 Wikipedia-Artikel
+Start-URL: sites.google.com/view/geschichte-2025-xsX9rgeT5G4
 Dauer: 45 Minuten
 ```
 
@@ -300,22 +327,22 @@ Dauer: 45 Minuten
 ```
 
 **Ergebnis:** SuS fokussiert, alle Tools funktionieren nahtlos, klare Struktur
-
+**💡 Tipp:** Die 3 direkten Links zu den Wikipedia-Artikeln können im SEBConfigGenerator im Abschnitt `3. Benutzerdefinierte Domains (Optional)` per Copy-Paste eingefügt werden.
 ---
 
 ### Szenario 2: Mathe-Übungsstunde
 
 **Setup:**
 ```
-Dienste: Whiteboard.fi + OneNote
-Start-URL: sites.google.com/view/mathe-uebung
+Dienste: Whiteboard.fi + GeoGebra
+Start-URL: sites.google.com/view/mathe-uebung-jeHg6fT7q
 Dauer: 60 Minuten
 ```
 
 **Sites-Inhalt:**
 ```
 1. Whiteboard.fi (30 Min) - Gemeinsames Lösen von Aufgaben
-2. OneNote (30 Min) - Individuelle Übungen im Notizbuch
+2. GeoGebra (30 Min) - Individuelle Lösen von Übungen
 ```
 
 **Ergebnis:** Abwechslungsreiche Stunde, visuelle Zusammenarbeit + individuelle Arbeit
@@ -326,8 +353,8 @@ Dauer: 60 Minuten
 
 **Setup:**
 ```
-Dienste: Padlet + Miro + Word Online
-Start-URL: sites.google.com/view/projekt-gruppen
+Dienste: Padlet + Miro + Etherpad
+Start-URL: sites.google.com/view/projekt-gruppen-xHbnN5r8y3X
 Dauer: 90 Minuten
 ```
 
@@ -335,26 +362,26 @@ Dauer: 90 Minuten
 ```
 Phase 1: Brainstorming mit Padlet (30 Min)
 Phase 2: Mind Map mit Miro (30 Min)
-Phase 3: Dokumentation in Word (30 Min)
+Phase 3: Dokumentation in Etherpad (30 Min)
 ```
 
 **Ergebnis:** Flexible Gruppenarbeit ohne Ablenkungen, klarer Workflow
 
 ---
 
-## ✅ Best Practices mit Sites-Hub
+## ✅ Best Practices mit Google-Sites-Einstiegsseiten
 
 ### TUN:
 
 ✅ **Sites-Seite vor jeder Lektion aktualisieren**
-   - Neue PINs/Codes für Kahoot/Mentimeter
+   - Neue Links für Kahoot/Mentimeter
    - Aktuelle Links zu Padlet/Miro
    - Zeitplan anpassen
 
 ✅ **Klare visuelle Struktur auf Sites**
    - Nummerierung verwenden (1️⃣ 2️⃣ 3️⃣)
    - Zeitangaben hinzufügen
-   - Emojis für bessere Orientierung
+   - auffälliges Bild oder eine auffällige Farbe verwenden (für einfache visuelle Kontrolle, ob SuS im Fokus-Modus sind)
 
 ✅ **Mit Schüler-Account testen**
    - Nicht mit Lehrer-Account!
@@ -362,8 +389,7 @@ Phase 3: Dokumentation in Word (30 Min)
    - Im Schulnetzwerk
 
 ✅ **Backup-Plan haben**
-   - Papier-Alternative vorbereiten
-   - Plan B ohne digitale Tools
+   - Plan B ohne Einschränkungen / ohne digitale Tools
 
 ✅ **Klar kommunizieren**
    - Warum SEB verwendet wird
@@ -378,7 +404,7 @@ Phase 3: Dokumentation in Word (30 Min)
    - SuS könnten Einstellungen ändern
    - Sicherheitslücke
 
-❌ **NICHT für summative Prüfungen verwenden**
+❌ **NICHT für wichtige summative Prüfungen verwenden**
    - Auf BYOD nicht manipulationssicher
    - Nur für Unterrichtsarbeit geeignet
 
@@ -388,7 +414,7 @@ Phase 3: Dokumentation in Word (30 Min)
    - Start mit "Ausgewogen", nicht "Streng"
 
 ❌ **NICHT Testphase überspringen**
-   - Immer vor Verteilung testen
+   - V.a. in der Anfangsphase immer vor Verteilung testen
    - Murphy's Law: "Was schiefgehen kann..."
 
 ---
@@ -397,7 +423,7 @@ Phase 3: Dokumentation in Word (30 Min)
 
 1. **IT-Abteilung:** Für Netzwerk-/Firewall-Probleme
 2. **SEB Dokumentation:** https://safeexambrowser.org/
-3. **GitHub dieses Tools:** [Probleme melden oder Funktionen anfragen]
+3. **GitHub-Issues dieses Tools:** [Probleme melden oder Funktionen anfragen](https://github.com/markuskiller/SEBConfigGenerator/issues)
 4. **Kollegennetzwerk:** Funktionierende Konfigurationen teilen!
 
 ---
@@ -410,10 +436,10 @@ Phase 3: Dokumentation in Word (30 Min)
 - [ ] Konfiguration verschlüsselt
 - [ ] Finale `.seb`-Datei gespeichert
 - [ ] Konfiguration mit Schüler-Account getestet
-- [ ] Schüler*innen über SEB-Anforderung informiert
+- [ ] Schüler*innen über SEB-Anforderung informiert / bzw. gemeinsame Installation im Unterricht
 - [ ] SEB-Download-Link geteilt
 - [ ] Verschlüsselte `.seb`-Datei verteilt (E-Mail/LMS)
-- [ ] Papier-Backup vorbereitet
+- [ ] Backup-Plan vorbereitet
 - [ ] Auf Schulnetzwerk getestet
 - [ ] Anweisungen für Unterricht bereit
 
@@ -423,7 +449,7 @@ Phase 3: Dokumentation in Word (30 Min)
 
 **Erstes Mal:** 30-45 Minuten (inkl. Config Tool Einrichtung und Testen)
 **Nachfolgende Nutzung:** 5-10 Minuten (bestehende Konfigurationen anpassen)
-**ROI:** Massive Reduktion von Ablenkungsverhalten
+**Mehrwert:** Massive Reduktion von Ablenkungsverhalten
 
 **Aufschlüsselung:**
 - Generator: 5 Minuten (Vorlage erstellen)
