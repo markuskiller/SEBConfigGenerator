@@ -147,7 +147,11 @@ Für obiges Beispiel: `sites.google.com/view/Englisch_G22e_2025-11-10xy7z3abc`
 
 Für eine funktionierende SEB-Konfigurations-Vorlage können die Standardwerte im Normalfall unverändert übernommen werden. Das Finetuning kann im SEB-Config-Tool erfolgen.
 
-### Schritt 6: Konfiguration herunterladen
+### Schritt 6a: Export-Format wählen:
+   - `.seb Datei` → für SEB Config Tool (Desktop/Laptop)
+   - `Moodle Test-Einstellungen (Abschnitt "Safe Exam Browser")` → URL-Listen für Moodle direkt kopieren/herunterladen **-> in Moodle Test-Einstellungen weiterfahren**
+
+### Schritt 6b: Konfiguration herunterladen (.seb)
 Klicken Sie auf: **"📥 SEB Konfiguration herunterladen (.seb)"**
 
 Wird unter `Multi_Service_Config.seb` (mehrere Dienste), `[Dienst]_Config.seb` (ausgewählter Dienst) oder unter dem manuell eingegebenen Dateinamen gespeichert.
