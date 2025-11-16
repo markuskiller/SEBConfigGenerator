@@ -147,7 +147,11 @@ For the above example: `sites.google.com/view/English_G22e_2025-11-10xy7z3abc`
 
 For a working SEB configuration template, the default values can usually be used unchanged. Fine-tuning can be done in the SEB Config Tool.
 
-### Step 6: Download Configuration
+### Step 6a:Choose export format:** 
+   - `.seb File` → for SEB Config Tool (Desktop/Laptop)
+   - `Moodle Quiz Settings ("Safe Exam Browser" section)` → URL lists for direct copy-paste into Moodle **-> continue in Moodle Quiz Settings**
+
+### Step 6b: Download Configuration (.seb)
 Click: **"📥 Download SEB Configuration (.seb)"**
 
 Saved as `Multi_Service_Config.seb` (multiple services), `[Service]_Config.seb` (selected service), or under the manually entered filename.

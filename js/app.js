@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.19.1
-// Build: 2025-11-16 01:19
+// Version: v0.20.0
+// Build: 2025-11-16 20:31
 // ============================================================================
 
 // ============================================================================
@@ -442,8 +442,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.19.1';
-const BUILD_DATE = new Date('2025-11-16T01:19:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.20.0';
+const BUILD_DATE = new Date('2025-11-16T20:31:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -2184,6 +2184,151 @@ modal.addEventListener('click', (e) => {
 }
 
 // ============================================================================
+// MOODLE EXPORT FUNCTIONS
+// ============================================================================
+function generateMoodleUrlConfig() {
+const config = {
+    expressionsAllowed: [],
+    expressionsBlocked: []
+};
+
+// Collect domains from selected services
+selectedPresets.forEach(presetId => {
+    const preset = PRESETS[presetId];
+    if (preset && preset.domains) {
+        config.expressionsAllowed.push(...preset.domains);
+    }
+    if (preset && preset.blockedDomains) {
+        config.expressionsBlocked.push(...preset.blockedDomains);
+    }
+});
+
+// Add custom domains
+const customDomainInput = document.getElementById('customDomains').value.trim();
+if (customDomainInput) {
+    const customDomains = customDomainInput.split('\n')
+        .map(d => d.trim())
+        .filter(d => d.length > 0);
+    config.expressionsAllowed.push(...customDomains);
+}
+
+// Add blocked domains
+const blockedDomainInput = document.getElementById('blockedDomains').value.trim();
+if (blockedDomainInput) {
+    const blockedDomains = blockedDomainInput.split('\n')
+        .map(d => d.trim())
+        .filter(d => d.length > 0);
+    config.expressionsBlocked.push(...blockedDomains);
+}
+
+// Deduplicate and sort
+config.expressionsAllowed = [...new Set(config.expressionsAllowed)].sort();
+config.expressionsBlocked = [...new Set(config.expressionsBlocked)].sort();
+
+return config;
+}
+
+function handleExportFormatChange(e) {
+const format = e.target.value;
+const sebBtn = document.getElementById('generateBtn');
+const moodleBtn = document.getElementById('generateMoodleBtn');
+const sebWarning = document.getElementById('sebWarningBox');
+const nextStepsBox = document.getElementById('nextStepsBox');
+
+if (format === 'moodle') {
+    sebBtn.style.display = 'none';
+    moodleBtn.style.display = 'block';
+    sebWarning.style.display = 'none';
+    nextStepsBox.style.display = 'none';
+} else {
+    sebBtn.style.display = 'block';
+    moodleBtn.style.display = 'none';
+    sebWarning.style.display = 'flex';
+    nextStepsBox.style.display = 'block';
+}
+}
+
+function showMoodleModal() {
+const config = generateMoodleUrlConfig();
+
+// Populate textareas
+document.getElementById('moodleExpressionsAllowed').value = config.expressionsAllowed.join('\n');
+document.getElementById('moodleExpressionsBlocked').value = config.expressionsBlocked.join('\n');
+
+// Open "Expressions Blocked" section if it has content
+const blockedSection = document.getElementById('moodleExpressionsBlockedSection');
+if (config.expressionsBlocked.length > 0 && blockedSection) {
+    blockedSection.setAttribute('open', '');
+}
+
+// Show modal
+document.getElementById('moodleModal').style.display = 'block';
+}
+
+function closeMoodleModal() {
+document.getElementById('moodleModal').style.display = 'none';
+}
+
+function copyMoodleField(fieldId) {
+const textarea = document.getElementById(fieldId);
+navigator.clipboard.writeText(textarea.value);
+
+// Visual feedback
+const summary = textarea.closest('details').querySelector('summary');
+const originalText = summary.innerHTML;
+summary.innerHTML = originalText.replace('</strong>', ' ✓ Kopiert!</strong>');
+setTimeout(() => {
+    summary.innerHTML = originalText;
+}, 2000);
+}
+
+function downloadMoodleTxt() {
+const config = generateMoodleUrlConfig();
+const lang = document.documentElement.lang || 'de';
+const t = TRANSLATIONS[lang];
+
+// Build content using translation keys
+let content = t.moodleTxtTitle + '\n';
+content += '='.repeat(70) + '\n\n';
+content += t.moodleTxtWarning + '\n\n';
+content += '='.repeat(70) + '\n\n';
+
+// Expressions Allowed
+content += t.moodleTxtExpressionsAllowedLabel + '\n';
+content += t.moodleTxtCopyMarkerStart + '-'.repeat(70 - t.moodleTxtCopyMarkerStart.length) + '\n';
+content += config.expressionsAllowed.join('\n');
+content += '\n' + t.moodleTxtCopyMarkerEnd + '-'.repeat(70 - t.moodleTxtCopyMarkerEnd.length) + '\n\n';
+content += '='.repeat(70) + '\n\n';
+
+// Regex Allowed
+content += t.moodleTxtRegexAllowedLabel + '\n';
+content += '-'.repeat(94) + '\n';
+content += t.moodleTxtRegexEmpty + '\n';
+content += t.moodleTxtRegexExample + '\n\n\n';
+
+// Expressions Blocked
+content += t.moodleTxtExpressionsBlockedLabel + '\n';
+content += t.moodleTxtCopyMarkerStart + '-'.repeat(70 - t.moodleTxtCopyMarkerStart.length) + '\n';
+content += config.expressionsBlocked.join('\n');
+content += '\n' + t.moodleTxtCopyMarkerEnd + '-'.repeat(70 - t.moodleTxtCopyMarkerEnd.length) + '\n\n';
+
+// Regex Blocked
+content += t.moodleTxtRegexBlockedLabel + '\n';
+content += '-'.repeat(94) + '\n';
+content += t.moodleTxtRegexEmpty + '\n';
+content += t.moodleTxtRegexBlockedExample + '\n';
+
+// Create and download file
+const blob = new Blob([content], { type: 'text/plain' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'moodle-seb-config.txt';
+a.click();
+URL.revokeObjectURL(url);
+}
+
+// ============================================================================
 // EVENT LISTENERS
 // ============================================================================
 function attachEventListeners() {
@@ -2198,6 +2343,19 @@ document.getElementById('copyBtn').addEventListener('click', copyDomains);
 document.getElementById('customDomains').addEventListener('input', updatePreview);
 document.getElementById('blockedDomains').addEventListener('input', updatePreview);
 document.getElementById('startUrl').addEventListener('input', updatePreview);
+
+// Export format selection
+document.querySelectorAll('input[name="exportFormat"]').forEach(radio => {
+    radio.addEventListener('change', handleExportFormatChange);
+});
+document.getElementById('generateMoodleBtn').addEventListener('click', showMoodleModal);
+document.getElementById('downloadMoodleTxt').addEventListener('click', downloadMoodleTxt);
+
+// Modal close handlers
+document.querySelector('.modal-close').addEventListener('click', closeMoodleModal);
+document.getElementById('moodleModal').addEventListener('click', (e) => {
+    if (e.target.id === 'moodleModal') closeMoodleModal();
+});
 
 // SharePoint link parsing
 document.getElementById('sharepointLink').addEventListener('input', function() {
@@ -2419,6 +2577,12 @@ const savedLang = localStorage.getItem('sebConfigLang');
 const initialLang = urlLang || savedLang || 'de';
 
 setLanguage(initialLang);
+
+// Initialize export format buttons visibility (default: .seb selected)
+document.getElementById('generateBtn').style.display = 'block';
+document.getElementById('generateMoodleBtn').style.display = 'none';
+document.getElementById('sebWarningBox').style.display = 'flex';
+document.getElementById('nextStepsBox').style.display = 'block';
 
 attachEventListeners();
 updatePreview();
