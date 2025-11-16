@@ -183,8 +183,6 @@ Please:
 4. Test thoroughly
 5. Submit a pull request (create **one pull request per service/tool/new language**)
 
-See [internal-docs/](internal-docs/) for development documentation (not in public repository).
-
 ---
 
 ## License
