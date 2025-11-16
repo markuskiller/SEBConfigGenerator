@@ -2601,6 +2601,11 @@ const initialLang = urlLang || savedLang || 'de';
 
 setLanguage(initialLang);
 
+// Initialize export format buttons visibility (default: .seb selected)
+document.getElementById('generateBtn').style.display = 'block';
+document.getElementById('generateMoodleBtn').style.display = 'none';
+document.getElementById('sebWarningBox').style.display = 'flex';
+
 attachEventListeners();
 updatePreview();
 }
