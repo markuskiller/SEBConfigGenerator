@@ -55,7 +55,7 @@ Heute im Unterricht:
 4. **(Optional) Benutzerdefinierte Seiten einfügen:** z.B. Link zu Wikipedia-Artikel
 5. **Export wählen:** 
    - `.seb Datei` → für SEB Config Tool (Desktop/Laptop)
-   - `Moodle Quiz-Einstellungen` → URL-Listen für Moodle direkt kopieren/herunterladen
+   - `Moodle Test-Einstellungen (Abschnitt "Safe Exam Browser")` → URL-Listen für Moodle direkt kopieren/herunterladen
 6. **Download/Anzeigen:** `.seb` Datei herunterladen oder Moodle-Konfiguration anzeigen
 
 ---

@@ -78,7 +78,7 @@
   "exportFormatMoodleDesc": "Copy & paste into Moodle",
   "generateMoodleBtn": "📋 Show Moodle Configuration",
   "moodleModalTitle": "Moodle Quiz Configuration",
-  "moodleModalIntro": "Copy the following values into the corresponding fields in your Moodle Quiz settings (\"Safe Exam Browser\" section, under \"Require Safe Exam Browser\" select \"Yes - Configure manually\"):",
+  "moodleModalIntro": "Copy the following values into the corresponding fields in your Moodle Quiz settings (\"Safe Exam Browser\" section, under \"Require the use of Safe Exam Browser\" select \"Yes - Configure manually\"):",
   "moodleUrlFilterWarning": "⚠️ Important: In the Moodle Quiz configuration, 'Enable URL filtering' must be set to 'Yes' for the URL fields to be visible.",
   "moodleExpressionsAllowed": "Expressions allowed",
   "moodleRegexAllowed": "Regex allowed",
