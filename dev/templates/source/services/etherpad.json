@@ -3,9 +3,17 @@
   "name": "Etherpad",
   "description": "Kollaborativer Texteditor",
   "category": "noLogin",
-  "startUrl": "https://etherpad.org",
+  "startUrl": "https://yopad.eu",
   "domains": [
-    "etherpad.org",
-    "*.etherpad.org"
+    "yopad.eu",
+    "*.yopad.eu"
+  ],
+  "_comment": "Verwendet YoPad.eu (Deutscher Bundesjugendring) - stabil und zuverlässig",
+  "_alternatives": [
+    "framapad.org (französische NGO Framasoft)",
+    "zumpad.zum.de (deutsche Bildungsplattform ZUM)",
+    "pad.riseup.net (Privacy-fokussiert, Pads nach 30 Tagen Inaktivität gelöscht)",
+    "pad.systemli.org (Pads nach 30 Tagen Inaktivität gelöscht)",
+    "pad.disroot.org (Privacy-orientiert)"
   ]
 }
