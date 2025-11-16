@@ -53,7 +53,10 @@ Today's lesson:
 2. **Select allowed reference tools:** e.g., "English" (Dictionary)
 3. **Insert start URL:** Your **secret** Google Sites URL
 4. **(Optional) Add custom pages:** e.g., link to Wikipedia article
-4. **Download:** `.seb` file
+5. **Choose export format:** 
+   - `.seb File` → for SEB Config Tool (Desktop/Laptop)
+   - `Moodle Quiz Settings ("Safe Exam Browser" section)` → URL lists for direct copy-paste into Moodle
+6. **Download/Show:** Download `.seb` file or display Moodle configuration
 
 ---
 

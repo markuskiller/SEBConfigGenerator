@@ -1,7 +1,7 @@
 # SEB Configuration Generator
 
 [![Cloudflare Pages](https://img.shields.io/badge/Cloudflare%20Stable-v0.19.1-brightgreen?logo=cloudflare)](https://focusmode.ch)
-[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare%20Dev-v0.20.0+-orange?logo=cloudflare)](https://dev.focusmode.ch)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare%20Dev-v0.20.0a6-orange?logo=cloudflare)](https://dev.focusmode.ch)
 [![GitHub Pages](https://img.shields.io/badge/GitHub-Mirror-yellow)](https://markuskiller.github.io/SEBConfigGenerator)
 [![GitHub issues](https://img.shields.io/github/issues/markuskiller/SEBConfigGenerator)](https://github.com/markuskiller/SEBConfigGenerator/issues)
 [![Language](https://img.shields.io/badge/languages-DE%20%7C%20EN-blue)](https://focusmode.ch?lang=en)
@@ -37,6 +37,7 @@
 - ✅ **Bilingual Interface** - German and English *(PRs welcome)*
 - ✅ **Privacy-First** - 100% browser-local processing, no data transmission
 - ✅ **Flexible Domain Control** - Wildcards, custom domains, blocked domains
+- ✅ **Moodle Quiz Integration** - Export URL lists for direct copy-paste into Moodle SEB settings
 - ✅ **Subject-Specific Tools** - Pre-configured dictionaries and reference tools *(PRs welcome)*
 - ✅ **Domain Capture Tools** - PowerShell script and browser console helpers
 - ✅ **Open Source** - MIT License, auditable code
@@ -65,7 +66,7 @@
 - **No dependencies** - No npm, no build process
 - **Data processing** - 100% in-browser JSON to XML conversion
 - **Extensible templating & translations architecture** - PRs welcome!
-- **Output format** - Plain-text `.seb.plist` (import into SEB Config Tool for encryption)
+- **Output formats** - `.seb.plist` (import into SEB Config Tool) or Moodle Quiz URL lists (copy-paste)
 - **Deployment** - Static files via Cloudflare Pages and GitHub Pages
 - **Build automation** - Bash scripts for template generation
 

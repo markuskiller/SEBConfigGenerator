@@ -53,7 +53,10 @@ Heute im Unterricht:
 2. **Erlaubte Hilfsmittel wählen:** z.B. "Englisch" (Dictionary)
 3. **Start-URL einfügen:** Ihre **geheime** Google Sites URL
 4. **(Optional) Benutzerdefinierte Seiten einfügen:** z.B. Link zu Wikipedia-Artikel
-4. **Download:** `.seb` Datei herunterladen
+5. **Export wählen:** 
+   - `.seb Datei` → für SEB Config Tool (Desktop/Laptop)
+   - `Moodle Test-Einstellungen (Abschnitt "Safe Exam Browser")` → URL-Listen für Moodle direkt kopieren/herunterladen
+6. **Download/Anzeigen:** `.seb` Datei herunterladen oder Moodle-Konfiguration anzeigen
 
 ---
 
