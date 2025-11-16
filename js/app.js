@@ -568,9 +568,9 @@ const baseGitHubUrl = 'https://github.com/markuskiller/SEBConfigGenerator/blob/m
 const mainDocLink = document.getElementById('mainDocLink');
 if (mainDocLink) {
     if (lang === 'de') {
-        mainDocLink.href = baseGitHubUrl + 'docs/de/SCHNELLSTART.md';
+        mainDocLink.href = baseGitHubUrl + 'docs/de/ANLEITUNG.md';
     } else {
-        mainDocLink.href = baseGitHubUrl + 'docs/en/QUICKSTART.md';
+        mainDocLink.href = baseGitHubUrl + 'docs/en/GUIDE.md';
     }
 }
 
@@ -588,9 +588,9 @@ if (browserCaptureLink) {
 const quickstartLinkBasic = document.getElementById('quickstartLinkBasic');
 if (quickstartLinkBasic) {
     if (lang === 'de') {
-        quickstartLinkBasic.href = baseGitHubUrl + 'docs/de/ANLEITUNG.md';
+        quickstartLinkBasic.href = baseGitHubUrl + 'docs/de/SCHNELLSTART.md';
     } else {
-        quickstartLinkBasic.href = baseGitHubUrl + 'docs/en/GUIDE.md';
+        quickstartLinkBasic.href = baseGitHubUrl + 'docs/en/QUICKSTART.md';
     }
 }
 }
