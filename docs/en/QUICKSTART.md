@@ -55,7 +55,7 @@ Today's lesson:
 4. **(Optional) Add custom pages:** e.g., link to Wikipedia article
 5. **Choose export format:** 
    - `.seb File` → for SEB Config Tool (Desktop/Laptop)
-   - `Moodle Quiz Settings` → URL lists for direct copy-paste into Moodle
+   - `Moodle Quiz Settings ("Safe Exam Browser" section)` → URL lists for direct copy-paste into Moodle
 6. **Download/Show:** Download `.seb` file or display Moodle configuration
 
 ---
