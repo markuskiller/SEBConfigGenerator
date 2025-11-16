@@ -2184,6 +2184,174 @@ modal.addEventListener('click', (e) => {
 }
 
 // ============================================================================
+// MOODLE EXPORT FUNCTIONS
+// ============================================================================
+function generateMoodleUrlConfig() {
+const config = {
+    expressionsAllowed: [],
+    expressionsBlocked: []
+};
+
+// Collect domains from selected services
+selectedPresets.forEach(presetId => {
+    const preset = PRESETS[presetId];
+    if (preset && preset.domains) {
+        config.expressionsAllowed.push(...preset.domains);
+    }
+    if (preset && preset.blockedDomains) {
+        config.expressionsBlocked.push(...preset.blockedDomains);
+    }
+});
+
+// Add custom domains
+const customDomainInput = document.getElementById('customDomains').value.trim();
+if (customDomainInput) {
+    const customDomains = customDomainInput.split('\n')
+        .map(d => d.trim())
+        .filter(d => d.length > 0);
+    config.expressionsAllowed.push(...customDomains);
+}
+
+// Add blocked domains
+const blockedDomainInput = document.getElementById('blockedDomains').value.trim();
+if (blockedDomainInput) {
+    const blockedDomains = blockedDomainInput.split('\n')
+        .map(d => d.trim())
+        .filter(d => d.length > 0);
+    config.expressionsBlocked.push(...blockedDomains);
+}
+
+// Deduplicate and sort
+config.expressionsAllowed = [...new Set(config.expressionsAllowed)].sort();
+config.expressionsBlocked = [...new Set(config.expressionsBlocked)].sort();
+
+return config;
+}
+
+function handleExportFormatChange(e) {
+const format = e.target.value;
+const sebBtn = document.getElementById('generateBtn');
+const moodleBtn = document.getElementById('generateMoodleBtn');
+const sebWarning = document.getElementById('sebWarningBox');
+
+if (format === 'moodle') {
+    sebBtn.style.display = 'none';
+    moodleBtn.style.display = 'block';
+    sebWarning.style.display = 'none';
+} else {
+    sebBtn.style.display = 'block';
+    moodleBtn.style.display = 'none';
+    sebWarning.style.display = 'flex';
+}
+}
+
+function showMoodleModal() {
+const config = generateMoodleUrlConfig();
+
+// Populate textareas
+document.getElementById('moodleExpressionsAllowed').value = config.expressionsAllowed.join('\n');
+document.getElementById('moodleExpressionsBlocked').value = config.expressionsBlocked.join('\n');
+
+// Open "Expressions Blocked" section if it has content
+const blockedSection = document.getElementById('moodleExpressionsBlockedSection');
+if (config.expressionsBlocked.length > 0 && blockedSection) {
+    blockedSection.setAttribute('open', '');
+}
+
+// Show modal
+document.getElementById('moodleModal').style.display = 'block';
+}
+
+function closeMoodleModal() {
+document.getElementById('moodleModal').style.display = 'none';
+}
+
+function copyMoodleField(fieldId) {
+const textarea = document.getElementById(fieldId);
+navigator.clipboard.writeText(textarea.value);
+
+// Visual feedback
+const summary = textarea.closest('details').querySelector('summary');
+const originalText = summary.innerHTML;
+summary.innerHTML = originalText.replace('</strong>', ' ✓ Kopiert!</strong>');
+setTimeout(() => {
+    summary.innerHTML = originalText;
+}, 2000);
+}
+
+function downloadMoodleTxt() {
+const config = generateMoodleUrlConfig();
+const lang = document.documentElement.lang || 'de';
+
+let content = '';
+
+if (lang === 'de') {
+    content = 'MOODLE-Test-KONFIGURATION - Safe Exam Browser URL-Filter\n';
+    content += '='.repeat(70) + '\n\n';
+    content += '⚠️ WICHTIG: In der Moodle Quiz-Konfiguration muss \'URL-Filter erlauben\'\n';
+    content += 'auf \'Ja\' gesetzt sein, damit die URL-Felder sichtbar werden.\n\n';
+    content += '='.repeat(70) + '\n\n';
+    
+    content += 'ERLAUBTE AUSDRÜCKE:\n';
+    content += '---hier-ab-erstem-Eintrag-auf-nächster-Zeile-kopieren' + '-'.repeat(39) + '\n';
+    content += config.expressionsAllowed.join('\n');
+    content += '\n---bis-Ende-Zeile-oberhalb-kopieren-' + '-'.repeat(49) + '\n\n';
+    content += '='.repeat(70) + '\n\n';
+    
+    content += 'ERLAUBTE REGEX:\n';
+    content += '-'.repeat(94) + '\n';
+    content += '(meist leer - hier können Sie bei Bedarf Regex-Patterns einfügen)\n';
+    content += 'Beispiel / Example: ^https://moodle\\.example\\.com/mod/resource/view\\.php\\?id=\\d+$\n\n\n';
+    
+    content += 'BLOCKIERTE AUSDRÜCKE:\n';
+    content += '---hier-ab-erstem-Eintrag-auf-nächster-Zeile-kopieren' + '-'.repeat(39) + '\n';
+    content += config.expressionsBlocked.join('\n');
+    content += '\n---bis-Ende-Zeile-oberhalb-kopieren-' + '-'.repeat(49) + '\n\n';
+    
+    content += 'BLOCKIERTE REGEX:\n';
+    content += '-'.repeat(94) + '\n';
+    content += '(meist leer - hier können Sie bei Bedarf Regex-Patterns einfügen)\n';
+    content += 'Beispiel / Example: ^https://.*\\.(facebook|twitter|instagram)\\.com/.*$\n';
+} else {
+    content = 'MOODLE QUIZ CONFIGURATION - Safe Exam Browser URL Filtering\n';
+    content += '='.repeat(70) + '\n\n';
+    content += '⚠️ IMPORTANT: In the Moodle Quiz configuration, \'Enable URL filtering\'\n';
+    content += 'must be set to \'Yes\' for the URL fields to be visible.\n\n';
+    content += '='.repeat(70) + '\n\n';
+    
+    content += 'EXPRESSIONS ALLOWED:\n';
+    content += '---copy-from-first-entry-on-next-line' + '-'.repeat(47) + '\n';
+    content += config.expressionsAllowed.join('\n');
+    content += '\n---copy-until-end-of-line-above-' + '-'.repeat(52) + '\n\n';
+    content += '='.repeat(70) + '\n\n';
+    
+    content += 'REGEX ALLOWED:\n';
+    content += '-'.repeat(94) + '\n';
+    content += '(usually empty - you can add Regex patterns here if needed)\n';
+    content += 'Example: ^https://moodle\\.example\\.com/mod/resource/view\\.php\\?id=\\d+$\n\n\n';
+    
+    content += 'EXPRESSIONS BLOCKED:\n';
+    content += '---copy-from-first-entry-on-next-line' + '-'.repeat(47) + '\n';
+    content += config.expressionsBlocked.join('\n');
+    content += '\n---copy-until-end-of-line-above-' + '-'.repeat(52) + '\n\n';
+    
+    content += 'REGEX BLOCKED:\n';
+    content += '-'.repeat(94) + '\n';
+    content += '(usually empty - you can add Regex patterns here if needed)\n';
+    content += 'Example: ^https://.*\\.(facebook|twitter|instagram)\\.com/.*$\n';
+}
+
+// Create and download file
+const blob = new Blob([content], { type: 'text/plain' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'moodle-seb-config.txt';
+a.click();
+URL.revokeObjectURL(url);
+}
+
+// ============================================================================
 // EVENT LISTENERS
 // ============================================================================
 function attachEventListeners() {
@@ -2198,6 +2366,19 @@ document.getElementById('copyBtn').addEventListener('click', copyDomains);
 document.getElementById('customDomains').addEventListener('input', updatePreview);
 document.getElementById('blockedDomains').addEventListener('input', updatePreview);
 document.getElementById('startUrl').addEventListener('input', updatePreview);
+
+// Export format selection
+document.querySelectorAll('input[name="exportFormat"]').forEach(radio => {
+    radio.addEventListener('change', handleExportFormatChange);
+});
+document.getElementById('generateMoodleBtn').addEventListener('click', showMoodleModal);
+document.getElementById('downloadMoodleTxt').addEventListener('click', downloadMoodleTxt);
+
+// Modal close handlers
+document.querySelector('.modal-close').addEventListener('click', closeMoodleModal);
+document.getElementById('moodleModal').addEventListener('click', (e) => {
+    if (e.target.id === 'moodleModal') closeMoodleModal();
+});
 
 // SharePoint link parsing
 document.getElementById('sharepointLink').addEventListener('input', function() {

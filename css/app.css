@@ -1158,3 +1158,271 @@ textarea {
     padding: 40px;
     color: #6c7a89;
 }
+
+/* ============================================================================
+   MOODLE EXPORT SECTION
+   ============================================================================ */
+
+/* Export Format Selection */
+.export-format-section {
+    margin-bottom: 20px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.export-format-section h4 {
+    margin-bottom: 15px;
+    color: #2c3e5a;
+    font-size: 1.1em;
+}
+
+.export-format-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.export-format-option {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px;
+    border: 2px solid #dfe6f0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.export-format-option:hover {
+    border-color: #5b9bd5;
+    background: #f8fbff;
+}
+
+.export-format-option input[type="radio"] {
+    margin-right: 12px;
+    margin-top: 2px;
+    cursor: pointer;
+}
+
+.export-format-option span {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.export-format-option strong {
+    color: #2c3e5a;
+    font-size: 1em;
+}
+
+.export-format-option small {
+    color: #6c7a89;
+    font-size: 0.9em;
+}
+
+.export-format-option input[type="radio"]:checked + span strong {
+    color: #4a6fa5;
+}
+
+/* Moodle Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: 25px 30px;
+    border-bottom: 2px solid #dfe6f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #e8edf5 0%, #f5f7fb 100%);
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-header h2 {
+    color: #2c3e5a;
+    font-size: 1.5em;
+    margin: 0;
+}
+
+.modal-close {
+    color: #6c7a89;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: #2c3e5a;
+}
+
+.modal-body {
+    padding: 30px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-body > p {
+    color: #525f7f;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.modal-body .alert {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    border-left: 4px solid;
+}
+
+.modal-body .alert-warning {
+    background: #fff3cd;
+    border-color: #f4d03f;
+    color: #856404;
+}
+
+.modal-body .alert p {
+    margin: 0;
+    font-size: 0.95em;
+    line-height: 1.5;
+}
+
+.moodle-section {
+    margin-bottom: 20px;
+    border: 1px solid #dfe6f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.moodle-section summary {
+    padding: 15px 20px;
+    background: #f5f7fb;
+    cursor: pointer;
+    user-select: none;
+    font-size: 1em;
+    color: #2c3e5a;
+    transition: background 0.2s;
+}
+
+.moodle-section summary:hover {
+    background: #e8edf5;
+}
+
+.moodle-section[open] summary {
+    background: #e8f2fa;
+    border-bottom: 1px solid #dfe6f0;
+}
+
+.moodle-hint {
+    color: #6c7a89;
+    font-weight: normal;
+    font-size: 0.9em;
+    margin-left: 8px;
+}
+
+.moodle-field {
+    padding: 20px;
+}
+
+.moodle-field textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 12px;
+    border: 2px solid #dfe6f0;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #2c3e5a;
+    background: white;
+    resize: vertical;
+    margin-bottom: 12px;
+}
+
+.moodle-field textarea:focus {
+    outline: none;
+    border-color: #5b9bd5;
+    box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.1);
+}
+
+.moodle-field textarea.moodle-example {
+    background: #fef8e7;
+    border-color: #f4d03f;
+    color: #7d6608;
+    font-style: italic;
+}
+
+.moodle-example-note {
+    color: #856404;
+    background: #fff3cd;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    border-left: 4px solid #f4d03f;
+    font-size: 0.9em;
+}
+
+.btn-copy {
+    background: #4a6fa5;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: all 0.2s;
+}
+
+.btn-copy:hover {
+    background: #3d5170;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-footer {
+    padding: 20px 30px;
+    border-top: 2px solid #dfe6f0;
+    text-align: center;
+    background: #f5f7fb;
+    border-radius: 0 0 12px 12px;
+}
+
+.btn-secondary {
+    background: #6c7a89;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #525f7f;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
