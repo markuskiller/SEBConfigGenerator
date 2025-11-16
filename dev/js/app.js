@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.20.0a2
-// Build: 2025-11-16 12:15
+// Version: v0.20.0a3
+// Build: 2025-11-16 12:38
 // ============================================================================
 
 // ============================================================================
@@ -442,8 +442,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.20.0a2';
-const BUILD_DATE = new Date('2025-11-16T12:15:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.20.0a3';
+const BUILD_DATE = new Date('2025-11-16T12:38:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -2293,9 +2293,9 @@ if (lang === 'de') {
     content += '='.repeat(70) + '\n\n';
     
     content += 'ERLAUBTE AUSDRÜCKE:\n';
-    content += '---hier-ab-erstem-Eintrag-auf-nächster-Zeile-kopieren' + '-'.repeat(39) + '\n';
+    content += '---hier-ab-erstem-Eintrag-auf-nächster-Zeile-kopieren' + '-'.repeat(17) + '\n';
     content += config.expressionsAllowed.join('\n');
-    content += '\n---bis-Ende-Zeile-oberhalb-kopieren-' + '-'.repeat(49) + '\n\n';
+    content += '\n---bis-Ende-Zeile-oberhalb-kopieren-' + '-'.repeat(34) + '\n\n';
     content += '='.repeat(70) + '\n\n';
     
     content += 'ERLAUBTE REGEX:\n';
@@ -2304,9 +2304,9 @@ if (lang === 'de') {
     content += 'Beispiel / Example: ^https://moodle\\.example\\.com/mod/resource/view\\.php\\?id=\\d+$\n\n\n';
     
     content += 'BLOCKIERTE AUSDRÜCKE:\n';
-    content += '---hier-ab-erstem-Eintrag-auf-nächster-Zeile-kopieren' + '-'.repeat(39) + '\n';
+    content += '---hier-ab-erstem-Eintrag-auf-nächster-Zeile-kopieren' + '-'.repeat(17) + '\n';
     content += config.expressionsBlocked.join('\n');
-    content += '\n---bis-Ende-Zeile-oberhalb-kopieren-' + '-'.repeat(49) + '\n\n';
+    content += '\n---bis-Ende-Zeile-oberhalb-kopieren-' + '-'.repeat(34) + '\n\n';
     
     content += 'BLOCKIERTE REGEX:\n';
     content += '-'.repeat(94) + '\n';

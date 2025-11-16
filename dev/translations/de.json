@@ -75,7 +75,7 @@
   "exportFormatSeb": ".seb Datei (Desktop/Laptop)",
   "exportFormatSebDesc": "Für SEB Config Tool",
   "exportFormatMoodle": "Moodle Quiz-Einstellungen",
-  "exportFormatMoodleDesc": "Zum Kopieren in Moodle",
+  "exportFormatMoodleDesc": "Für Copy-Paste nach Moodle",
   "generateMoodleBtn": "📋 Moodle-Konfiguration anzeigen",
   "moodleModalTitle": "Moodle Quiz-Konfiguration",
   "moodleModalIntro": "Kopieren Sie die folgenden Werte in die entsprechenden Felder in Ihren Moodle Quiz-Einstellungen (Abschnitt \"Safe Exam Browser\"):",
