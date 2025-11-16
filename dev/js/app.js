@@ -2282,64 +2282,38 @@ setTimeout(() => {
 function downloadMoodleTxt() {
 const config = generateMoodleUrlConfig();
 const lang = document.documentElement.lang || 'de';
+const t = TRANSLATIONS[lang];
 
-let content = '';
+// Build content using translation keys
+let content = t.moodleTxtTitle + '\n';
+content += '='.repeat(70) + '\n\n';
+content += t.moodleTxtWarning + '\n\n';
+content += '='.repeat(70) + '\n\n';
 
-if (lang === 'de') {
-    content = 'MOODLE-Test-KONFIGURATION - Safe Exam Browser URL-Filter\n';
-    content += '='.repeat(70) + '\n\n';
-    content += '⚠️ WICHTIG: In der Moodle Quiz-Konfiguration muss \'URL-Filter erlauben\'\n';
-    content += 'auf \'Ja\' gesetzt sein, damit die URL-Felder sichtbar werden.\n\n';
-    content += '='.repeat(70) + '\n\n';
-    
-    content += 'ERLAUBTE AUSDRÜCKE:\n';
-    content += '---hier-ab-erstem-Eintrag-auf-nächster-Zeile-kopieren' + '-'.repeat(17) + '\n';
-    content += config.expressionsAllowed.join('\n');
-    content += '\n---bis-Ende-Zeile-oberhalb-kopieren-' + '-'.repeat(34) + '\n\n';
-    content += '='.repeat(70) + '\n\n';
-    
-    content += 'ERLAUBTE REGEX:\n';
-    content += '-'.repeat(94) + '\n';
-    content += '(meist leer - hier können Sie bei Bedarf Regex-Patterns einfügen)\n';
-    content += 'Beispiel / Example: ^https://moodle\\.example\\.com/mod/resource/view\\.php\\?id=\\d+$\n\n\n';
-    
-    content += 'BLOCKIERTE AUSDRÜCKE:\n';
-    content += '---hier-ab-erstem-Eintrag-auf-nächster-Zeile-kopieren' + '-'.repeat(17) + '\n';
-    content += config.expressionsBlocked.join('\n');
-    content += '\n---bis-Ende-Zeile-oberhalb-kopieren-' + '-'.repeat(34) + '\n\n';
-    
-    content += 'BLOCKIERTE REGEX:\n';
-    content += '-'.repeat(94) + '\n';
-    content += '(meist leer - hier können Sie bei Bedarf Regex-Patterns einfügen)\n';
-    content += 'Beispiel / Example: ^https://.*\\.(facebook|twitter|instagram)\\.com/.*$\n';
-} else {
-    content = 'MOODLE QUIZ CONFIGURATION - Safe Exam Browser URL Filtering\n';
-    content += '='.repeat(70) + '\n\n';
-    content += '⚠️ IMPORTANT: In the Moodle Quiz configuration, \'Enable URL filtering\'\n';
-    content += 'must be set to \'Yes\' for the URL fields to be visible.\n\n';
-    content += '='.repeat(70) + '\n\n';
-    
-    content += 'EXPRESSIONS ALLOWED:\n';
-    content += '---copy-from-first-entry-on-next-line' + '-'.repeat(47) + '\n';
-    content += config.expressionsAllowed.join('\n');
-    content += '\n---copy-until-end-of-line-above-' + '-'.repeat(52) + '\n\n';
-    content += '='.repeat(70) + '\n\n';
-    
-    content += 'REGEX ALLOWED:\n';
-    content += '-'.repeat(94) + '\n';
-    content += '(usually empty - you can add Regex patterns here if needed)\n';
-    content += 'Example: ^https://moodle\\.example\\.com/mod/resource/view\\.php\\?id=\\d+$\n\n\n';
-    
-    content += 'EXPRESSIONS BLOCKED:\n';
-    content += '---copy-from-first-entry-on-next-line' + '-'.repeat(47) + '\n';
-    content += config.expressionsBlocked.join('\n');
-    content += '\n---copy-until-end-of-line-above-' + '-'.repeat(52) + '\n\n';
-    
-    content += 'REGEX BLOCKED:\n';
-    content += '-'.repeat(94) + '\n';
-    content += '(usually empty - you can add Regex patterns here if needed)\n';
-    content += 'Example: ^https://.*\\.(facebook|twitter|instagram)\\.com/.*$\n';
-}
+// Expressions Allowed
+content += t.moodleTxtExpressionsAllowedLabel + '\n';
+content += t.moodleTxtCopyMarkerStart + '-'.repeat(70 - t.moodleTxtCopyMarkerStart.length) + '\n';
+content += config.expressionsAllowed.join('\n');
+content += '\n' + t.moodleTxtCopyMarkerEnd + '-'.repeat(70 - t.moodleTxtCopyMarkerEnd.length) + '\n\n';
+content += '='.repeat(70) + '\n\n';
+
+// Regex Allowed
+content += t.moodleTxtRegexAllowedLabel + '\n';
+content += '-'.repeat(94) + '\n';
+content += t.moodleTxtRegexEmpty + '\n';
+content += t.moodleTxtRegexExample + '\n\n\n';
+
+// Expressions Blocked
+content += t.moodleTxtExpressionsBlockedLabel + '\n';
+content += t.moodleTxtCopyMarkerStart + '-'.repeat(70 - t.moodleTxtCopyMarkerStart.length) + '\n';
+content += config.expressionsBlocked.join('\n');
+content += '\n' + t.moodleTxtCopyMarkerEnd + '-'.repeat(70 - t.moodleTxtCopyMarkerEnd.length) + '\n\n';
+
+// Regex Blocked
+content += t.moodleTxtRegexBlockedLabel + '\n';
+content += '-'.repeat(94) + '\n';
+content += t.moodleTxtRegexEmpty + '\n';
+content += t.moodleTxtRegexBlockedExample + '\n';
 
 // Create and download file
 const blob = new Blob([content], { type: 'text/plain' });

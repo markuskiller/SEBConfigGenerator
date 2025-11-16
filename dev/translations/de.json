@@ -150,5 +150,16 @@
   "privacyText": "Alle Daten werden ausschließlich lokal in Ihrem Browser verarbeitet. Es werden keine Konfigurationsdaten oder Eingaben an unseren Server gesendet oder gespeichert. Nur Ihre Sprachpräferenz wird lokal im Browser gespeichert.",
   "suggestService": "Dienst oder Hilfsmittel vorschlagen / Problem melden",
   "versionLabel": "Version",
-  "buildLabel": "Build"
+  "buildLabel": "Build",
+  "moodleTxtTitle": "MOODLE-Test-KONFIGURATION - Safe Exam Browser URL-Filter",
+  "moodleTxtWarning": "⚠️ WICHTIG: In der Moodle Quiz-Konfiguration muss 'URL-Filter erlauben'\nauf 'Ja' gesetzt sein, damit die URL-Felder sichtbar werden.",
+  "moodleTxtExpressionsAllowedLabel": "ERLAUBTE AUSDRÜCKE:",
+  "moodleTxtCopyMarkerStart": "---hier-ab-erstem-Eintrag-auf-nächster-Zeile-kopieren",
+  "moodleTxtCopyMarkerEnd": "---bis-Ende-Zeile-oberhalb-kopieren-",
+  "moodleTxtRegexAllowedLabel": "ERLAUBTE REGEX:",
+  "moodleTxtRegexEmpty": "(meist leer - hier können Sie bei Bedarf Regex-Patterns einfügen)",
+  "moodleTxtRegexExample": "Beispiel / Example: ^https://moodle\\.example\\.com/mod/resource/view\\.php\\?id=\\d+$",
+  "moodleTxtExpressionsBlockedLabel": "BLOCKIERTE AUSDRÜCKE:",
+  "moodleTxtRegexBlockedLabel": "BLOCKIERTE REGEX:",
+  "moodleTxtRegexBlockedExample": "Beispiel / Example: ^https://.*\\.(facebook|twitter|instagram)\\.com/.*$"
 }
