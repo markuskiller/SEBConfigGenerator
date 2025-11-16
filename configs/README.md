@@ -314,6 +314,6 @@ For issues specific to the SEB Config Generator:
 
 ---
 
-**Version:** v0.20.0a1  
+**Version:** v0.20.0a2  
 **Last Updated:** 2025-11-15  
 **Security Audit Completed:** Phase 6
