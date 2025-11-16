@@ -1,4 +1,4 @@
-# Quick Start Guide for Teachers
+# Guide for Teachers
 ## SEB Configuration Generator with Google Sites
 
 ### What is this tool?
