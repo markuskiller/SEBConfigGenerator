@@ -1,4 +1,4 @@
-# Schnellstart-Anleitung für Lehrpersonen
+# Anleitung für Lehrpersonen
 ## SEB Konfigurations-Generator mit Google Sites
 
 ### Was ist dieses Tool?

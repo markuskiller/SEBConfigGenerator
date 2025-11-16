@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.19.0rc7
-// Build: 2025-11-16 01:06
+// Version: v0.20.0a1
+// Build: 2025-11-16 01:22
 // ============================================================================
 
 // ============================================================================
@@ -442,8 +442,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.19.0rc7';
-const BUILD_DATE = new Date('2025-11-16T01:06:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.20.0a1';
+const BUILD_DATE = new Date('2025-11-16T01:22:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -568,9 +568,9 @@ const baseGitHubUrl = 'https://github.com/markuskiller/SEBConfigGenerator/blob/m
 const mainDocLink = document.getElementById('mainDocLink');
 if (mainDocLink) {
     if (lang === 'de') {
-        mainDocLink.href = baseGitHubUrl + 'docs/de/SCHNELLSTART.md';
+        mainDocLink.href = baseGitHubUrl + 'docs/de/ANLEITUNG.md';
     } else {
-        mainDocLink.href = baseGitHubUrl + 'docs/en/QUICKSTART.md';
+        mainDocLink.href = baseGitHubUrl + 'docs/en/GUIDE.md';
     }
 }
 
@@ -588,9 +588,9 @@ if (browserCaptureLink) {
 const quickstartLinkBasic = document.getElementById('quickstartLinkBasic');
 if (quickstartLinkBasic) {
     if (lang === 'de') {
-        quickstartLinkBasic.href = baseGitHubUrl + 'docs/de/ANLEITUNG.md';
+        quickstartLinkBasic.href = baseGitHubUrl + 'docs/de/SCHNELLSTART.md';
     } else {
-        quickstartLinkBasic.href = baseGitHubUrl + 'docs/en/GUIDE.md';
+        quickstartLinkBasic.href = baseGitHubUrl + 'docs/en/QUICKSTART.md';
     }
 }
 }
