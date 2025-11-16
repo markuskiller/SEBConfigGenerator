@@ -2233,15 +2233,18 @@ const format = e.target.value;
 const sebBtn = document.getElementById('generateBtn');
 const moodleBtn = document.getElementById('generateMoodleBtn');
 const sebWarning = document.getElementById('sebWarningBox');
+const nextStepsBox = document.getElementById('nextStepsBox');
 
 if (format === 'moodle') {
     sebBtn.style.display = 'none';
     moodleBtn.style.display = 'block';
     sebWarning.style.display = 'none';
+    nextStepsBox.style.display = 'none';
 } else {
     sebBtn.style.display = 'block';
     moodleBtn.style.display = 'none';
     sebWarning.style.display = 'flex';
+    nextStepsBox.style.display = 'block';
 }
 }
 
@@ -2579,6 +2582,7 @@ setLanguage(initialLang);
 document.getElementById('generateBtn').style.display = 'block';
 document.getElementById('generateMoodleBtn').style.display = 'none';
 document.getElementById('sebWarningBox').style.display = 'flex';
+document.getElementById('nextStepsBox').style.display = 'block';
 
 attachEventListeners();
 updatePreview();
