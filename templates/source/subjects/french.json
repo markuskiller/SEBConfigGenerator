@@ -1,0 +1,5 @@
+{
+  "id": "french",
+  "name": "Français",
+  "toolPresets": ["larousse", "reverso"]
+}

@@ -1,0 +1,13 @@
+{
+  "id": "kahoot",
+  "name": "Kahoot!",
+  "description": "Gamifizierte Quizze und Umfragen",
+  "category": "noLogin",
+  "startUrl": "https://kahoot.it",
+  "domains": [
+    "kahoot.it",
+    "*.kahoot.it",
+    "kahoot.com",
+    "*.kahoot.com"
+  ]
+}

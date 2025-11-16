@@ -1,0 +1,14 @@
+{
+  "id": "whiteboard",
+  "name": "Whiteboard.fi",
+  "description": "Kollaboratives Online-Whiteboard",
+  "category": "noLogin",
+  "startUrl": "https://whiteboard.fi",
+  "domains": [
+    "whiteboard.fi",
+    "whiteboard-storage-*.s3.*.amazonaws.com",
+    "cdn.jsdelivr.net",
+    "fonts.googleapis.com",
+    "fonts.gstatic.com"
+  ]
+}

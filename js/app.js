@@ -1,421 +1,36 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.18.5
-// Build: 2025-11-15 13:55
+// Version: v0.19.0rc7
+// Build: 2025-11-16 01:06
 // ============================================================================
 
 // ============================================================================
 // TRANSLATIONS / ÜBERSETZUNGEN
 // ============================================================================
-const TRANSLATIONS = {
-de: {
-    title: "SEB Konfigurations-Generator",
-    subtitle: "Erstellen Sie Safe Exam Browser Konfigurationen für Fokus-Modus im Unterricht",
-    step1: "1. Dienst auswählen",
-    groupNoLogin: "Ohne Anmeldung",
-    groupWithLogin: "Mit Anmeldung",
-    groupAllowedTools: "Erlaubte Hilfsmittel",
-    selectSubject: "Fach auswählen",
-    // Subject translations - add more as needed (subjectFrench, subjectSpanish, etc.)
-    subjectGerman: "Deutsch",
-    subjectEnglish: "Englisch",
-    subjectFrench: "Französisch",
-    step2: "2. Konfigurationseinstellungen",
-    step3: "3. Benutzerdefinierte Domains (Optional)",
-    step4: "4. Download",
-    advancedSettings: "Erweiterte Einstellungen",
-    previewAndDownload: "Vorschau & Download",
-    advancedHelpTitle: "Erweiterte Hilfe",
-    startUrl: "Start-URL",
-    configName: "Konfigurationsname",
-    
-    // SharePoint configuration
-    sharepointLinkLabel: "SharePoint-Link (Optional - für erweiterte Filterung)",
-    sharepointLinkPlaceholder: "https://schule.sharepoint.com/sites/...",
-    sharepointOptionsTitle: "📎 SharePoint-Einschränkungen",
-    sharepointPastePrompt: "Fügen Sie einen SharePoint-Link ein, um erweiterte Filteroptionen zu aktivieren",
-    sharepointHelpOneNote: "💡 OneNote: Rechtsklick auf Seite → 'Link zu dieser Seite kopieren'. Achtung: Abschnitts- oder Seiteneinschränkung nur sinnvoll in kollaborativen Bereichen/Abschnitten eines Notizbuchs (ausser reiner Lesezugriff reicht aus).",
-    sharepointHelpWord: "💡 Word: Link aus Browser-Adresszeile kopieren (wenn Dokument geöffnet). Achtung bei Kollaboration: Datei muss in Ordner mit Schreibzugriff sein. Für eigene Versionen: 'nur diese Datei' nicht auswählen → Ordnerzugriff ermöglichen.",
-    experimentalWarningTitle: "⚠️ Experimentelle Funktion",
-    experimentalWarningText: "OneNote/Word Online mit SharePoint-Einschränkungen ist in der Beta-Phase. Unbedingt gründlich testen, bevor die Konfiguration an Schüler*innen verteilt wird. In vielen Fällen funktioniert es nur, wenn Network Capture in exakt derselben Umgebung kurz vor dem Einsatz im Unterricht durchgeführt wird.",
-    experimentalWarningLink: "→ Network Capture Helper nutzen",
-    restrictToSchoolSharepoint: "Nur SharePoint unserer Schule",
-    restrictToTeamsSite: "Nur diese Teams-Site/Gruppe",
-    restrictToNotebook: "Nur dieses Notizbuch",
-    restrictToSection: "Nur dieser Abschnitt",
-    restrictToPage: "Nur diese Seite",
-    restrictToFolder: "Nur Dateien in diesem Ordner",
-    restrictToFile: "Nur diese Datei",
-    sharepointDetected: "SharePoint-Domäne erkannt",
-    teamsSiteDetected: "Teams-Site erkannt",
-    notebookDetected: "Notizbuch erkannt",
-    sectionDetected: "Abschnitt erkannt",
-    pageDetected: "Seite erkannt",
-    folderDetected: "Ordner erkannt",
-    fileDetected: "Datei erkannt",
-    securityLevel: "Sicherheitsstufe",
-    securityLevelExperimentalTitle: "⚙️ Experimentell",
-    securityLevelExperimentalText: "Die Sicherheitsstufen 'Locker' und 'Streng' sind noch in Entwicklung und haben derzeit nur minimale Auswirkungen auf die Konfiguration.",
-    
-    // Boolean options groups
-    allBooleanOptions: "Alle True-/False-Optionen",
-    platformReference: "📚 Menü-Referenz für:",
-    experimentalFeature: "Experimentelle Funktion",
-    booleanOptionsWarning: "Diese Funktion befindet sich in Entwicklung. Die Menü-Referenzen werden schrittweise für alle Plattformen ergänzt. Verwenden Sie diese Optionen mit Vorsicht und testen Sie die generierte Konfiguration gründlich.",
-    booleanOptionsInfo: "Diese Optionen werden dynamisch aus der SEB-Konfigurationsvorlage geladen. Standardwerte sind bereits gesetzt.",
-    browserOptions: "🌐 Browser-Einstellungen",
-    securityOptions: "🔒 Sicherheit & Zugriff",
-    interfaceOptions: "🖥️ Benutzeroberfläche",
-    systemOptions: "⚙️ System & Prozesse",
-    networkOptions: "🌍 Netzwerk",
-    mobileOptions: "📱 Mobile (iOS/iPadOS)",
-    otherOptions: "📋 Weitere Optionen",
-    sebConfigToolLocation: "SEB Config Tool",
-    
-    additionalOptions: "Zusätzliche Optionen",
-    allowDownloads: "Datei-Downloads erlauben",
-    allowSpellCheck: "Rechtschreibprüfung erlauben",
-    showReloadButton: "Neu-Laden-Button anzeigen",
-    allowBackForward: "Vor/Zurück-Navigation erlauben",
-    customDomainsLabel: "Zusätzliche erlaubte Domains hinzufügen (eine pro Zeile)",
-    customDomainsPlaceholder: "beispiel.ch\n*.schule-domain.ch",
-    blockedDomainsLabel: "Domains sperren (Optional, nur bei Wildcards in 'Zusätzliche Domains')",
-    blockedDomainsPlaceholder: "# Beispiel: Falls Sie *.beispiel.ch erlauben\n# aber mail.beispiel.ch sperren möchten:\nmail.beispiel.ch",
-    proTipTitle: "💡 Profi-Tipp",
-    proTipText: "Verwenden Sie Wildcards (*) um alle Subdomains zu erlauben. Zum Beispiel: *.microsoft.com erlaubt login.microsoft.com, account.microsoft.com, usw.<br><br><strong>Hinweis:</strong> Doppelte Domains werden automatisch entfernt.",
-    allowedDomains: "Erlaubte Domains",
-    downloadBtn: "📥 SEB Konfiguration herunterladen (.seb)",
-    copyBtn: "📋 Domain-Liste kopieren",
-    criticalWarningTitle: "Wichtiger Hinweis:",
-    criticalWarningText: "Die heruntergeladene .seb-Datei ist nur eine Vorlage! Die unten beschriebenen 'Nächsten Schritte' müssen zwingend ausgeführt werden, bevor die Konfiguration produktiv im Unterricht eingesetzt und an die Schülerinnen und Schüler verteilt werden kann.",
-    nextStepsTitle: "Nächste Schritte",
-    nextStepsText: "1. SEB-Konfigurationsdatei herunterladen (.seb)<br>2. Im SEB Config Tool öffnen<br>3. Einstellungen verfeinern und verschlüsseln<br>4. Als finale .seb-Datei speichern<br>5. Verschlüsselte Datei an Schüler*innen verteilen",
-    helperScriptTitle: "Network Capture Helper",
-    helperScriptText: "Benötigen Sie Hilfe beim Erfassen von Netzwerk-Domains? Wählen Sie die passende Methode für Ihr System:",
-    downloadHelperBtn: "⬇️ PowerShell (Windows)",
-    browserHelperBtn: "🌐 Browser-Methode (Alle OS)",
-    helperDocsTitle: "📖 Hilfe & Anleitungen:",
-    browserCaptureLink: "Browser Capture Anleitung",
-    quickstartLink: "Schnellstart mit Google Sites",
-    quickRefLink: "Schnellreferenz",
-    mainDocLink: "Vollständige Anleitung",
-    
-    // Presets
-    presetOnenote: "OneNote Online",
-    presetOnenoteDesc: "Microsoft OneNote Web-Client",
-    presetWord: "Word Online",
-    presetWordDesc: "Microsoft Word Web-Client",
-    presetTeams: "Microsoft Teams",
-    presetTeamsDesc: "Teams Web-Client für Zusammenarbeit",
-    presetGdocs: "Google Docs",
-    presetGdocsDesc: "Google Workspace Dokumenteneditor",
-    presetGsheets: "Google Tabellen",
-    presetGsheetsDesc: "Google Workspace Tabellenkalkulation",
-    presetWhiteboard: "Whiteboard.fi",
-    presetWhiteboardDesc: "Kollaboratives Online-Whiteboard",
-    presetPadlet: "Padlet",
-    presetPadletDesc: "Digitale Pinnwand für Zusammenarbeit",
-    presetKahoot: "Kahoot!",
-    presetKahootDesc: "Gamifizierte Quizze und Umfragen",
-    presetMentimeter: "Mentimeter",
-    presetMentimeterDesc: "Live-Umfragen und interaktive Präsentationen",
-    presetMiro: "Miro",
-    presetMiroDesc: "Digitales Whiteboard für Zusammenarbeit",
-    presetSlido: "Slido",
-    presetSlidoDesc: "Live Q&A und Umfragen",
-    presetEtherpad: "Etherpad",
-    presetEtherpadDesc: "Kollaboratives Textdokument",
-    presetForms: "Microsoft Forms",
-    presetFormsDesc: "Umfragen und Formulare (öffentlich)",
-    presetDuden: "Duden",
-    presetDudenDesc: "Deutsches Wörterbuch und Rechtschreibung",
-    presetDwds: "DWDS",
-    presetDwdsDesc: "Digitales Wörterbuch der deutschen Sprache",
-    presetOxford: "Oxford Dictionary",
-    presetOxfordDesc: "Englisches Lernwörterbuch",
-    presetCambridge: "Cambridge Dictionary",
-    presetCambridgeDesc: "Cambridge Englisch Wörterbuch",
-    presetLarousse: "Larousse",
-    presetLarousseDesc: "Französisches Wörterbuch und Enzyklopädie",
-    presetReverso: "Reverso",
-    presetReversoDesc: "Französisches Kontext-Wörterbuch und Übersetzung",
-    
-    // Security levels
-    securityRelaxed: "Locker",
-    securityRelaxedDesc: "Fokus-Modus - blockiert Ablenkungen, erlaubt Flexibilität",
-    securityBalanced: "Ausgewogen",
-    securityBalancedDesc: "Empfohlen - gutes Gleichgewicht zwischen Sicherheit und Benutzerfreundlichkeit",
-    securityStrict: "Streng",
-    securityStrictDesc: "Maximale Einschränkungen (kann Schüler frustrieren)",
-    
-    // Messages
-    copiedMsg: "✓ Kopiert!",
-    configNamePlaceholder: "Meine_Schule_",
-    
-    // Privacy
-    privacyTitle: "Datenschutz:",
-    privacyText: "Alle Daten werden ausschließlich lokal in Ihrem Browser verarbeitet. Es werden keine Konfigurationsdaten oder Eingaben an unseren Server gesendet oder gespeichert. Nur Ihre Sprachpräferenz wird lokal im Browser gespeichert.",
-    suggestService: "Dienst oder Hilfsmittel vorschlagen / Problem melden",
-    
-    // Version info
-    versionLabel: "Version",
-    buildLabel: "Build"
-},
-en: {
-    title: "SEB Config Generator",
-    subtitle: "Create Safe Exam Browser configurations for educational focus mode",
-    step1: "1. Choose Service",
-    groupNoLogin: "No Login Required",
-    groupWithLogin: "Login Required",
-    groupAllowedTools: "Allowed Reference Tools",
-    selectSubject: "Select Subject",
-    // Subject translations - add more as needed (subjectFrench, subjectSpanish, etc.)
-    subjectGerman: "German",
-    subjectEnglish: "English",
-    subjectFrench: "French",
-    step2: "2. Configuration Settings",
-    step3: "3. Custom Domains (Optional)",
-    step4: "4. Download",
-    advancedSettings: "Advanced Settings",
-    previewAndDownload: "Preview & Download",
-    advancedHelpTitle: "Advanced Help",
-    startUrl: "Start URL",
-    configName: "Configuration Name",
-    
-    // SharePoint configuration
-    sharepointLinkLabel: "SharePoint Link (Optional - for advanced filtering)",
-    sharepointLinkPlaceholder: "https://school.sharepoint.com/sites/...",
-    sharepointOptionsTitle: "📎 SharePoint Restrictions",
-    sharepointPastePrompt: "Paste a SharePoint link to enable advanced filtering options",
-    sharepointHelpOneNote: "💡 OneNote: Right-click on page → 'Copy link to this page'. Note: Section or page restrictions only make sense for collaborative sections/areas of a notebook (unless read-only access is sufficient).",
-    sharepointHelpWord: "💡 Word: Copy link from browser address bar (when document is open). Note for collaboration: File must be in folder with write access. For saving own versions: Don't select 'only this file' → enable folder access.",
-    experimentalWarningTitle: "⚠️ Experimental Feature",
-    experimentalWarningText: "OneNote/Word Online with SharePoint restrictions is in beta. Thoroughly test before deploying to students. In many cases it only works if Network Capture is run in exactly the same environment soon before the config is used in class.",
-    experimentalWarningLink: "→ Use Network Capture Helper",
-    restrictToSchoolSharepoint: "Only our school's SharePoint",
-    restrictToTeamsSite: "Only this Teams site/group",
-    restrictToNotebook: "Only this notebook",
-    restrictToSection: "Only this section",
-    restrictToPage: "Only this page",
-    restrictToFolder: "Only files in this folder",
-    restrictToFile: "Only this file",
-    sharepointDetected: "SharePoint domain detected",
-    teamsSiteDetected: "Teams site detected",
-    notebookDetected: "Notebook detected",
-    sectionDetected: "Section detected",
-    pageDetected: "Page detected",
-    folderDetected: "Folder detected",
-    fileDetected: "File detected",
-    securityLevel: "Security Level",
-    securityLevelExperimentalTitle: "⚙️ Experimental",
-    securityLevelExperimentalText: "The security levels 'Relaxed' and 'Strict' are still in development and currently have minimal impact on the configuration.",
-    
-    // Boolean options groups
-    allBooleanOptions: "All True/False Options",
-    platformReference: "📚 Menu Reference for:",
-    experimentalFeature: "Experimental Feature",
-    booleanOptionsWarning: "This feature is under development. Menu references are being added gradually for all platforms. Use these options with caution and thoroughly test the generated configuration.",
-    booleanOptionsInfo: "These options are dynamically loaded from the SEB configuration template. Default values are already set.",
-    browserOptions: "🌐 Browser Settings",
-    securityOptions: "🔒 Security & Access",
-    interfaceOptions: "🖥️ User Interface",
-    systemOptions: "⚙️ System & Processes",
-    networkOptions: "🌍 Network",
-    mobileOptions: "📱 Mobile (iOS/iPadOS)",
-    otherOptions: "📋 Other Options",
-    sebConfigToolLocation: "SEB Config Tool",
-    
-    additionalOptions: "Additional Options",
-    allowDownloads: "Allow file downloads",
-    allowSpellCheck: "Allow spell check",
-    showReloadButton: "Show reload button",
-    allowBackForward: "Allow back/forward navigation",
-    customDomainsLabel: "Add additional allowed domains (one per line)",
-    customDomainsPlaceholder: "example.ch\n*.school-domain.ch",
-    blockedDomainsLabel: "Block domains (Optional, only needed for wildcards in 'Additional Domains')",
-    blockedDomainsPlaceholder: "# Example: If you allow *.example.ch\n# but want to block mail.example.ch:\nmail.example.ch",
-    proTipTitle: "💡 Pro Tip",
-    proTipText: "Use wildcards (*) to allow all subdomains. For example: *.microsoft.com allows login.microsoft.com, account.microsoft.com, etc.<br><br><strong>Note:</strong> Duplicate domains are automatically removed.",
-    allowedDomains: "Allowed Domains",
-    downloadBtn: "📥 Download SEB Config (.seb)",
-    copyBtn: "📋 Copy Domain List",
-    criticalWarningTitle: "Important Notice:",
-    criticalWarningText: "The downloaded .seb file is only a template! The 'Next Steps' described below must be completed before the configuration can be used in production and distributed to students.",
-    nextStepsTitle: "Next Steps",
-    nextStepsText: "1. Download the SEB configuration file (.seb)<br>2. Open in SEB Config Tool<br>3. Refine settings and encrypt<br>4. Save as final .seb file<br>5. Distribute encrypted file to students",
-    helperScriptTitle: "Network Capture Helper",
-    helperScriptText: "Need help capturing network domains? Choose the method that works for your system:",
-    downloadHelperBtn: "⬇️ PowerShell (Windows)",
-    browserHelperBtn: "🌐 Browser Method (All OS)",
-    helperDocsTitle: "📖 Help & Guides:",
-    browserCaptureLink: "Browser Capture Guide",
-    quickstartLink: "Quick Start with Google Sites",
-    quickRefLink: "Quick Reference",
-    mainDocLink: "Complete Guide",
-    
-    // Presets
-    presetOnenote: "OneNote Online",
-    presetOnenoteDesc: "Microsoft OneNote web client",
-    presetWord: "Word Online",
-    presetWordDesc: "Microsoft Word web client",
-    presetTeams: "Microsoft Teams",
-    presetTeamsDesc: "Teams web client for collaboration",
-    presetGdocs: "Google Docs",
-    presetGdocsDesc: "Google Workspace document editor",
-    presetGsheets: "Google Sheets",
-    presetGsheetsDesc: "Google Workspace spreadsheet editor",
-    presetWhiteboard: "Whiteboard.fi",
-    presetWhiteboardDesc: "Collaborative online whiteboard",
-    presetPadlet: "Padlet",
-    presetPadletDesc: "Digital bulletin board for collaboration",
-    presetKahoot: "Kahoot!",
-    presetKahootDesc: "Gamified quizzes and polls",
-    presetMentimeter: "Mentimeter",
-    presetMentimeterDesc: "Live polls and interactive presentations",
-    presetMiro: "Miro",
-    presetMiroDesc: "Digital whiteboard for collaboration",
-    presetSlido: "Slido",
-    presetSlidoDesc: "Live Q&A and polls",
-    presetEtherpad: "Etherpad",
-    presetEtherpadDesc: "Collaborative text document",
-    presetForms: "Microsoft Forms",
-    presetFormsDesc: "Surveys and forms (public)",
-    presetDuden: "Duden",
-    presetDudenDesc: "German dictionary and spelling",
-    presetDwds: "DWDS",
-    presetDwdsDesc: "Digital Dictionary of German Language",
-    presetOxford: "Oxford Dictionary",
-    presetOxfordDesc: "English learner's dictionary",
-    presetCambridge: "Cambridge Dictionary",
-    presetCambridgeDesc: "Cambridge English Dictionary",
-    presetLarousse: "Larousse",
-    presetLarousseDesc: "French dictionary and encyclopedia",
-    presetReverso: "Reverso",
-    presetReversoDesc: "French contextual dictionary and translation",
-    
-    // Security levels
-    securityRelaxed: "Relaxed",
-    securityRelaxedDesc: "Focus mode - blocks distractions but allows flexibility",
-    securityBalanced: "Balanced",
-    securityBalancedDesc: "Recommended - good balance of security and usability",
-    securityStrict: "Strict",
-    securityStrictDesc: "Maximum restrictions (may frustrate students)",
-    
-    // Messages
-    copiedMsg: "✓ Copied!",
-    configNamePlaceholder: "My_School_",
-    
-    // Privacy
-    privacyTitle: "Privacy:",
-    privacyText: "All data is processed locally in your browser. No configuration data or inputs are sent to or stored on our server. Only your language preference is saved locally in your browser.",
-    suggestService: "Suggest Service or Tool / Report Issue",
-    
-    // Version info
-    versionLabel: "Version",
-    buildLabel: "Build"
-}
-};
+// TRANSLATIONS is loaded from external file:
+// - templates/generated/translations.js
+// Generated from: translations/*.json
+// To modify translations, edit the JSON files and run: bash scripts/build-translations.sh
+
+// OLD TRANSLATIONS OBJECT MOVED TO translations/*.json (lines 8-318 removed)
+// ============================================================================
+
+// ============================================================================
+
 
 // ============================================================================
 // PRESET CONFIGURATIONS
 // ============================================================================
-const PRESETS = {
-onenote: {
-    startUrl: "https://www.onenote.com/notebooks",
-    // Note: *.sharepoint.com covers school-specific SharePoint sites (e.g., school1.sharepoint.com)
-    domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office.net","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.onenote.com","onenote.officeapps.live.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","*.static.microsoft","browser.events.data.microsoft.com","chc-onenote.officeapps.live.com","common.online.office.com","euc-common.online.office.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
-    blockedDomains: ["outlook.office.com","outlook.office365.com","teams.microsoft.com","teams.live.com"]
-},
-word: {
-    startUrl: "https://www.office.com/launch/word",
-    // Note: *.sharepoint.com covers school-specific SharePoint sites (e.g., school1.sharepoint.com)
-    domains: ["*.microsoft.com","*.microsoftonline.com","*.msauth.net","*.msftauth.net","login.live.com","account.live.com","*.live.com","*.office.com","*.office.net","*.office365.com","*.officeapps.live.com","*.sharepoint.com","*.sharepointonline.com","*.msocdn.com","*.msecnd.net","*.azureedge.net","*.windows.net","*.static.microsoft","browser.events.data.microsoft.com","common.online.office.com","euc-common.online.office.com","login.microsoftonline.com","res-1.cdn.office.net","res-1.public.onecdn.static.microsoft","wise-m.public.cdn.office.net","wise.public.cdn.office.net"],
-    blockedDomains: ["outlook.office.com","outlook.office365.com","teams.microsoft.com","teams.live.com"]
-},
-whiteboard: {
-    startUrl: "https://whiteboard.fi",
-    domains: ["whiteboard.fi","whiteboard-storage-*.s3.*.amazonaws.com","cdn.jsdelivr.net","fonts.googleapis.com","fonts.gstatic.com"]
-},
-padlet: {
-    startUrl: "https://padlet.com",
-    domains: ["padlet.com","*.padlet.com","padlet.net","*.padlet.pics"]
-},
-kahoot: {
-    startUrl: "https://kahoot.it",
-    domains: ["kahoot.it","*.kahoot.it","kahoot.com","*.kahoot.com"]
-},
-mentimeter: {
-    startUrl: "https://www.menti.com",
-    domains: ["menti.com","*.menti.com","mentimeter.com","*.mentimeter.com"]
-},
-miro: {
-    startUrl: "https://miro.com",
-    domains: ["miro.com","*.miro.com","*.mirocdn.com"]
-},
-slido: {
-    startUrl: "https://www.slido.com",
-    domains: ["slido.com","*.slido.com","*.sli.do"]
-},
-etherpad: {
-    startUrl: "https://etherpad.org",
-    domains: ["etherpad.org","*.etherpad.org"]
-},
-forms: {
-    startUrl: "https://forms.office.com",
-    domains: ["forms.office.com","*.forms.office.com","*.microsoft.com","*.microsoftonline.com","*.office.com","*.office365.com","*.msocdn.com","*.msecnd.net","*.azureedge.net"]
-},
-duden: {
-    startUrl: "https://www.duden.de",
-    domains: ["duden.de","*.duden.de","*.doubleclick.net","*.googletagmanager.com","*.stroeerdigitalgroup.de","*.taboola.com","*.yieldlove.com","mitself.net"]
-},
-dwds: {
-    startUrl: "https://www.dwds.de",
-    domains: ["dwds.de","*.dwds.de"]
-},
-oxford: {
-    startUrl: "https://www.oxfordlearnersdictionaries.com",
-    domains: ["oxfordlearnersdictionaries.com","*.oxfordlearnersdictionaries.com","*.oup.com","*.cookielaw.org","*.doubleclick.net","*.google-analytics.com","*.google.com","*.googletagmanager.com","*.onetrust.com","*.polarbyte.com","html-load.com"]
-},
-cambridge: {
-    startUrl: "https://dictionary.cambridge.org",
-    domains: ["dictionary.cambridge.org","*.cambridge.org"]
-},
-larousse: {
-    startUrl: "https://www.larousse.fr/dictionnaires",
-    domains: ["larousse.fr","*.larousse.fr"]
-},
-reverso: {
-    startUrl: "https://www.reverso.net/",
-    domains: ["reverso.net","*.reverso.net","context.reverso.net"]
-}
-};
-
-// ============================================================================
-// SUBJECTS CONFIGURATION - Easily extensible for additional languages
-// ============================================================================
-const SUBJECTS = {
-german: {
-    toolPresets: ['duden', 'dwds']
-},
-english: {
-    toolPresets: ['oxford', 'cambridge']
-},
-french: {
-    toolPresets: ['larousse', 'reverso']
-}
-// Add more subjects here as needed:
-// spanish: { toolPresets: ['rae', 'wordreference'] },
-// italian: { toolPresets: ['treccani', 'dizionario'] }
-};
-
-const PRESET_GROUPS = {
-noLogin: ['whiteboard', 'kahoot', 'mentimeter', 'slido', 'forms', 'padlet', 'miro', 'etherpad'],
-withLogin: ['onenote', 'word'],
-// Generate allowedTools from SUBJECTS configuration
-allowedTools: Object.fromEntries(
-    Object.entries(SUBJECTS).map(([key, config]) => [key, config.toolPresets])
-)
-};
+// PRESETS, SUBJECTS, and PRESET_GROUPS are loaded from external template files:
+// - templates/generated/presets.js
+// - templates/generated/subjects.js
+// - templates/generated/preset-groups.js
+//
+// These files are auto-generated from JSON sources in templates/source/
+// To add new services or subjects, edit the JSON files and run:
+//   bash scripts/build-service-presets.sh
+//
+// DO NOT define PRESETS, SUBJECTS, or PRESET_GROUPS here - they come from templates!
 
 const SECURITY_LEVELS = {
 relaxed: {
@@ -733,7 +348,7 @@ try {
             data = LOCATIONS_IPADOS;
         }
     } catch (e) {
-        console.warn(`⚠️ LOCATIONS_${platform.toUpperCase()} not found! Make sure boolean-options-locations-${platform}.js is loaded.`);
+        console.warn(`⚠️ LOCATIONS_${platform.toUpperCase()} not found! Make sure seb-options-${platform}.js is loaded.`);
         return null;
     }
     
@@ -827,8 +442,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.18.5';
-const BUILD_DATE = new Date('2025-11-15T13:55:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.19.0rc7';
+const BUILD_DATE = new Date('2025-11-16T01:06:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -953,9 +568,9 @@ const baseGitHubUrl = 'https://github.com/markuskiller/SEBConfigGenerator/blob/m
 const mainDocLink = document.getElementById('mainDocLink');
 if (mainDocLink) {
     if (lang === 'de') {
-        mainDocLink.href = baseGitHubUrl + 'docs/de/SCHNELLSTART_ANLEITUNG.md';
+        mainDocLink.href = baseGitHubUrl + 'docs/de/SCHNELLSTART.md';
     } else {
-        mainDocLink.href = baseGitHubUrl + 'docs/en/TEACHER_GUIDE.md';
+        mainDocLink.href = baseGitHubUrl + 'docs/en/QUICKSTART.md';
     }
 }
 
@@ -973,25 +588,27 @@ if (browserCaptureLink) {
 const quickstartLinkBasic = document.getElementById('quickstartLinkBasic');
 if (quickstartLinkBasic) {
     if (lang === 'de') {
-        quickstartLinkBasic.href = baseGitHubUrl + 'docs/de/SCHNELLSTART_ANLEITUNG.md';
+        quickstartLinkBasic.href = baseGitHubUrl + 'docs/de/ANLEITUNG.md';
     } else {
-        quickstartLinkBasic.href = baseGitHubUrl + 'docs/en/TEACHER_GUIDE.md';
-    }
-}
-
-// Quick reference (in Basic section)
-const quickRefLinkBasic = document.getElementById('quickRefLinkBasic');
-if (quickRefLinkBasic) {
-    if (lang === 'de') {
-        quickRefLinkBasic.href = baseGitHubUrl + 'docs/de/SCHNELLREFERENZ.txt';
-    } else {
-        quickRefLinkBasic.href = baseGitHubUrl + 'docs/en/QUICK_REFERENCE.txt';
+        quickstartLinkBasic.href = baseGitHubUrl + 'docs/en/GUIDE.md';
     }
 }
 }
 
 function t(key) {
 return TRANSLATIONS[currentLang][key] || key;
+}
+
+// Helper function to convert kebab-case service IDs to camelCase for translation keys
+function toCamelCase(str) {
+return str.replace(/-([a-z])/g, (match, letter) => letter.toUpperCase());
+}
+
+// Helper function to get translation key for preset
+function getPresetTranslationKey(presetId, suffix = '') {
+const camelCaseId = toCamelCase(presetId);
+const capitalized = camelCaseId.charAt(0).toUpperCase() + camelCaseId.slice(1);
+return 'preset' + capitalized + suffix;
 }
 
 // ============================================================================
@@ -1011,8 +628,8 @@ PRESET_GROUPS.noLogin.forEach(key => {
     const btn = document.createElement('button');
     btn.className = `preset-btn ${selectedPresets.includes(key) ? 'active' : ''}`;
     btn.innerHTML = `
-        <h3>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1))}</h3>
-        <p>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1) + 'Desc')}</p>
+        <h3>${t(getPresetTranslationKey(key))}</h3>
+        <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
     btn.onclick = () => togglePreset(key);
     container.appendChild(btn);
@@ -1028,8 +645,8 @@ PRESET_GROUPS.withLogin.forEach(key => {
     const btn = document.createElement('button');
     btn.className = `preset-btn ${selectedPresets.includes(key) ? 'active' : ''}`;
     btn.innerHTML = `
-        <h3>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1))}</h3>
-        <p>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1) + 'Desc')}</p>
+        <h3>${t(getPresetTranslationKey(key))}</h3>
+        <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
     btn.onclick = () => togglePreset(key);
     container.appendChild(btn);
@@ -1151,8 +768,8 @@ PRESET_GROUPS.allowedTools[subject].forEach(key => {
     const btn = document.createElement('button');
     btn.className = `preset-btn ${selectedPresets.includes(key) ? 'active' : ''}`;
     btn.innerHTML = `
-        <h3>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1))}</h3>
-        <p>${t('preset' + key.charAt(0).toUpperCase() + key.slice(1) + 'Desc')}</p>
+        <h3>${t(getPresetTranslationKey(key))}</h3>
+        <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
     btn.onclick = () => togglePreset(key);
     container.appendChild(btn);
@@ -2717,33 +2334,36 @@ function updateDevBanner() {
         devBuildEl.textContent = `${day}.${month}.${year} ${hours}:${minutes}`;
     }
 
-// Try to fetch git commit ID from a separate file (if available)
-// This will be generated during deployment
-// Only attempt fetch if running on http/https (not file://)
-const devCommitEl = document.getElementById('devCommit');
-if (window.location.protocol === 'file:') {
-    // Running locally without server
-    if (devCommitEl) {
-        devCommitEl.textContent = 'local';
+    // Try to fetch git commit ID from a separate file (if available)
+    // This will be generated during deployment
+    // Only attempt fetch if running on http/https (not file://)
+    const devCommitEl = document.getElementById('devCommit');
+    if (window.location.protocol === 'file:') {
+        // Running locally without server
+        if (devCommitEl) {
+            devCommitEl.textContent = 'local';
+        }
+    } else {
+        // Running on server, try to fetch commit ID
+        fetch('GIT_COMMIT.txt')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('GIT_COMMIT.txt not found');
+                }
+                return response.text();
+            })
+            .then(commitId => {
+                if (devCommitEl && commitId) {
+                    // Show first 7 characters of commit hash
+                    devCommitEl.textContent = commitId.trim().substring(0, 7);
+                }
+            })
+            .catch(() => {
+                if (devCommitEl) {
+                    devCommitEl.textContent = 'N/A';
+                }
+            });
     }
-} else {
-    // Running on server, try to fetch commit ID
-    fetch('GIT_COMMIT.txt')
-        .then(response => response.ok ? response.text() : null)
-        .then(commitId => {
-            if (devCommitEl && commitId) {
-                // Show first 7 characters of commit hash
-                devCommitEl.textContent = commitId.trim().substring(0, 7);
-            } else if (devCommitEl) {
-                devCommitEl.textContent = 'local';
-            }
-        })
-        .catch(() => {
-            if (devCommitEl) {
-                devCommitEl.textContent = 'local';
-            }
-        });
-}
 }
 
 // ============================================================================

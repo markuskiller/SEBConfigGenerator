@@ -1,6 +1,4 @@
-// Auto-generated from example_config.xml - DO NOT EDIT MANUALLY
-// To regenerate: Run scripts/build-platform-options.sh
-const EXAMPLE_CONFIG_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -3345,4 +3343,3 @@ const EXAMPLE_CONFIG_XML = `<?xml version="1.0" encoding="UTF-8"?>
 	<false/>
 </dict>
 </plist>
-`;

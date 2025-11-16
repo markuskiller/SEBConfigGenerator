@@ -1,0 +1,12 @@
+{
+  "id": "miro",
+  "name": "Miro",
+  "description": "Digitales Whiteboard für Zusammenarbeit",
+  "category": "noLogin",
+  "startUrl": "https://miro.com",
+  "domains": [
+    "miro.com",
+    "*.miro.com",
+    "*.mirocdn.com"
+  ]
+}

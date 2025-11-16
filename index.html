@@ -20,9 +20,9 @@
     
     <!-- Load template data as JavaScript (works offline!) -->
     <script src="templates/xml-data.js"></script>
-    <script src="templates/boolean-options-locations-windows.js"></script>
-    <script src="templates/boolean-options-locations-macos.js"></script>
-    <script src="templates/boolean-options-locations-ipados.js"></script>
+    <script src="templates/generated/seb-options-windows.js"></script>
+    <script src="templates/generated/seb-options-macos.js"></script>
+    <script src="templates/generated/seb-options-ipados.js"></script>
 </head>
 <body>
     <!-- Dev Version Banner -->
@@ -259,9 +259,6 @@
                         <a href="#" id="quickstartLinkBasic" class="doc-link" target="_blank" rel="noopener noreferrer">
                             🚀 <span data-i18n="quickstartLink">Schnellstart (Google Sites)</span>
                         </a>
-                        <a href="#" id="quickRefLinkBasic" class="doc-link" target="_blank" rel="noopener noreferrer">
-                            📋 <span data-i18n="quickRefLink">Schnellreferenz</span>
-                        </a>
                     </div>
                 </div>
             </div>
@@ -270,6 +267,12 @@
             <span id="versionInfo"></span>
         </div>
     </div>
+    <!-- Generated Templates (loaded before app.js) -->
+    <script src="templates/generated/translations.js"></script>
+    <script src="templates/generated/presets.js"></script>
+    <script src="templates/generated/preset-groups.js"></script>
+    <script src="templates/generated/subjects.js"></script>
+    
     <!-- Main Application Script -->
     <script src="js/app.js"></script>
 </body>
