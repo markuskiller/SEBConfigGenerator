@@ -226,14 +226,38 @@
             
             <div class="section">
                 <h2><span data-i18n="step4">4. Download</span></h2>
-                <div class="actions">
+                <!-- Export Format Selection -->
+                <div class="export-format-section">
+                    <h4 data-i18n="exportFormatTitle">📥 Export-Format</h4>
+                    <div class="export-format-options">
+                        <label class="export-format-option">
+                            <input type="radio" name="exportFormat" value="seb" checked>
+                            <span>
+                                <strong data-i18n="exportFormatSeb">.seb Datei (Desktop/Laptop)</strong>
+                                <small data-i18n="exportFormatSebDesc">Für SEB Config Tool</small>
+                            </span>
+                        </label>
+                        <label class="export-format-option">
+                            <input type="radio" name="exportFormat" value="moodle">
+                            <span>
+                                <strong data-i18n="exportFormatMoodle">Moodle Quiz-Einstellungen</strong>
+                                <small data-i18n="exportFormatMoodleDesc">Zum Kopieren in Moodle</small>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="btn-container">
                     <button class="btn btn-primary btn-full-width" id="generateBtn">
                         <span data-i18n="downloadBtn">📥 SEB Konfiguration herunterladen (.seb)</span>
                     </button>
+                    <button class="btn btn-secondary btn-full-width" id="generateMoodleBtn" style="display:none">
+                        <span data-i18n="generateMoodleBtn">📋 Moodle-Konfiguration anzeigen</span>
+                    </button>
                 </div>
                 
-                <!-- Critical Warning Box -->
-                <div class="warning-box-critical">
+                <!-- Critical Warning Box (only for .seb export) -->
+                <div id="sebWarningBox" class="warning-box-critical">
                     <div class="warning-box-critical-icon">⚠️</div>
                     <div class="warning-box-critical-content">
                         <strong data-i18n="criticalWarningTitle">Wichtiger Hinweis:</strong>
@@ -267,6 +291,71 @@
             <span id="versionInfo"></span>
         </div>
     </div>
+
+    <!-- Moodle Configuration Modal -->
+    <div id="moodleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 data-i18n="moodleModalTitle">Moodle Quiz-Konfiguration</h2>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p data-i18n="moodleModalIntro">Kopieren Sie die folgenden Werte in die entsprechenden Felder in Ihren Moodle Quiz-Einstellungen (Abschnitt "Safe Exam Browser"):</p>
+                
+                <div class="alert alert-warning">
+                    <p data-i18n="moodleUrlFilterWarning">⚠️ Wichtig: In der Moodle Quiz-Konfiguration muss 'URL-Filter erlauben' auf 'Ja' gesetzt sein, damit die URL-Felder sichtbar werden.</p>
+                </div>
+                
+                <!-- Expressions Allowed -->
+                <details class="moodle-section" open>
+                    <summary><strong data-i18n="moodleExpressionsAllowed">Expressions allowed</strong></summary>
+                    <div class="moodle-field">
+                        <textarea id="moodleExpressionsAllowed" readonly></textarea>
+                        <button class="btn btn-copy" onclick="copyMoodleField('moodleExpressionsAllowed')">
+                            📋 <span data-i18n="copyBtn">Kopieren</span>
+                        </button>
+                    </div>
+                </details>
+
+                <!-- Regex Allowed -->
+                <details class="moodle-section">
+                    <summary><strong data-i18n="moodleRegexAllowed">Regex allowed</strong> <span class="moodle-hint" data-i18n="moodleRegexHint">(meist leer)</span></summary>
+                    <div class="moodle-field">
+                        <p class="moodle-example-note" data-i18n="moodleRegexExampleNote">⚠️ Beispiel (nicht kopieren): Für spezifische URL-Muster wie Moodle-Ressourcen</p>
+                        <textarea id="moodleRegexAllowed" readonly class="moodle-example">^https://moodle\.example\.com/mod/resource/view\.php\?id=\d+$</textarea>
+                    </div>
+                </details>
+
+                <!-- Expressions Blocked -->
+                <details class="moodle-section" id="moodleExpressionsBlockedSection">
+                    <summary><strong data-i18n="moodleExpressionsBlocked">Blockierte Ausdrücke</strong></summary>
+                    <div class="moodle-field">
+                        <textarea id="moodleExpressionsBlocked" readonly></textarea>
+                        <button class="btn btn-copy" onclick="copyMoodleField('moodleExpressionsBlocked')">
+                            📋 <span data-i18n="copyBtn">Kopieren</span>
+                        </button>
+                    </div>
+                </details>
+
+                <!-- Regex Blocked -->
+                <details class="moodle-section">
+                    <summary><strong data-i18n="moodleRegexBlocked">Regex blocked</strong> <span class="moodle-hint" data-i18n="moodleRegexHint">(meist leer)</span></summary>
+                    <div class="moodle-field">
+                        <p class="moodle-example-note" data-i18n="moodleRegexExampleNote">⚠️ Beispiel (nicht kopieren): Zum Blockieren spezifischer URL-Muster</p>
+                        <textarea id="moodleRegexBlocked" readonly class="moodle-example">^https://.*\.(facebook|twitter|instagram)\.com/.*$</textarea>
+                    </div>
+                </details>
+
+                <!-- Download Option -->
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="downloadMoodleTxt">
+                        💾 <span data-i18n="downloadMoodleTxt">Als TXT herunterladen</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Generated Templates (loaded before app.js) -->
     <script src="templates/generated/translations.js"></script>
     <script src="templates/generated/presets.js"></script>
