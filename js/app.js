@@ -443,8 +443,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.20.0';
-const BUILD_DATE = new Date('2025-11-16T20:31:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.20.1';
+const BUILD_DATE = new Date('2025-11-18T00:01:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
