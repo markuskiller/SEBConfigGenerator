@@ -1,0 +1,13 @@
+{
+  "id": "geogebra",
+  "name": "GeoGebra",
+  "description": "Dynamische Mathematik-Software für Geometrie, Algebra und Analysis",
+  "category": "tool",
+  "language": "maths",
+  "startUrl": "https://www.geogebra.org",
+  "domains": [
+    "geogebra.org",
+    "*.geogebra.org",
+    "*.ggbm.at"
+  ]
+}
