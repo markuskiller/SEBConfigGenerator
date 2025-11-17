@@ -1,7 +1,8 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.20.0
+// Version: v0.20.1
 // Build: 2025-11-16 20:31
+
 // ============================================================================
 
 // ============================================================================
@@ -687,7 +688,7 @@ if (hasOneNoteOrWord) {
     
     // Replace "Network Capture" with a link in the warning text
     const text = t('experimentalWarningText');
-    const linkText = '<a href="#networkCaptureHelper" style="color:#856404;font-weight:600;text-decoration:underline;">Network Capture</a>';
+    const linkText = '<a href="#networkCaptureHelper" class="warning-link">Network Capture</a>';
     warningText.innerHTML = text.replace('Network Capture', linkText);
     
     warningLink.textContent = t('experimentalWarningLink');
@@ -707,6 +708,7 @@ subjectSelector.classList.add('preset-subject-selector');
 
 const subjectLabel = document.createElement('label');
 subjectLabel.classList.add('preset-subject-label');
+subjectLabel.setAttribute('for', 'subjectSelect');
 subjectLabel.textContent = `${t('selectSubject')}:`;
 subjectSelector.appendChild(subjectLabel);
 
@@ -963,7 +965,7 @@ if (experimentalWarning) {
         
         // Replace "Network Capture" with a link in the warning text
         const text = t('experimentalWarningText');
-        const linkText = '<a href="#networkCaptureHelper" style="color:#856404;font-weight:600;text-decoration:underline;">Network Capture</a>';
+        const linkText = '<a href="#networkCaptureHelper" class="warning-link">Network Capture</a>';
         warningText.innerHTML = text.replace('Network Capture', linkText);
         
         warningLink.textContent = t('experimentalWarningLink');
@@ -2355,6 +2357,17 @@ document.getElementById('downloadMoodleTxt').addEventListener('click', downloadM
 document.querySelector('.modal-close').addEventListener('click', closeMoodleModal);
 document.getElementById('moodleModal').addEventListener('click', (e) => {
     if (e.target.id === 'moodleModal') closeMoodleModal();
+});
+
+// Moodle modal copy buttons (event delegation)
+document.getElementById('moodleModal').addEventListener('click', (e) => {
+    if (e.target.closest('.btn-copy')) {
+        const button = e.target.closest('.btn-copy');
+        const fieldId = button.getAttribute('data-field');
+        if (fieldId) {
+            copyMoodleField(fieldId);
+        }
+    }
 });
 
 // SharePoint link parsing
