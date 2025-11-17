@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.21.0a9
-// Build: 2025-11-17 15:46
+// Version: v0.21.0a10
+// Build: 2025-11-17 23:46
 // ============================================================================
 
 // ============================================================================
@@ -442,8 +442,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.21.0a9';
-const BUILD_DATE = new Date('2025-11-17T15:46:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.21.0a10';
+const BUILD_DATE = new Date('2025-11-17T23:46:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -631,7 +631,7 @@ PRESET_GROUPS.noLogin.forEach(key => {
         <h3>${t(getPresetTranslationKey(key))}</h3>
         <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
-    btn.addEventListener('click', () => togglePreset(key));
+    btn.onclick = () => togglePreset(key);
     container.appendChild(btn);
 });
 
