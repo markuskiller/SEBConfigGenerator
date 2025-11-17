@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.21.0a1
-// Build: 2025-11-16 20:33
+// Version: v0.21.0a2
+// Build: 2025-11-17 12:35
 // ============================================================================
 
 // ============================================================================
@@ -442,8 +442,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.21.0a1';
-const BUILD_DATE = new Date('2025-11-16T20:33:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.21.0a2';
+const BUILD_DATE = new Date('2025-11-17T12:35:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -2355,6 +2355,17 @@ document.getElementById('downloadMoodleTxt').addEventListener('click', downloadM
 document.querySelector('.modal-close').addEventListener('click', closeMoodleModal);
 document.getElementById('moodleModal').addEventListener('click', (e) => {
     if (e.target.id === 'moodleModal') closeMoodleModal();
+});
+
+// Moodle modal copy buttons (event delegation)
+document.getElementById('moodleModal').addEventListener('click', (e) => {
+    if (e.target.closest('.btn-copy')) {
+        const button = e.target.closest('.btn-copy');
+        const fieldId = button.getAttribute('data-field');
+        if (fieldId) {
+            copyMoodleField(fieldId);
+        }
+    }
 });
 
 // SharePoint link parsing

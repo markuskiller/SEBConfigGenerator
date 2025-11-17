@@ -251,7 +251,7 @@
                     <button class="btn btn-primary btn-full-width" id="generateBtn">
                         <span data-i18n="downloadBtn">📥 SEB Konfiguration herunterladen (.seb)</span>
                     </button>
-                    <button class="btn btn-secondary btn-full-width" id="generateMoodleBtn" style="display:none">
+                    <button class="btn btn-secondary btn-full-width" id="generateMoodleBtn">
                         <span data-i18n="generateMoodleBtn">📋 Moodle-Konfiguration anzeigen</span>
                     </button>
                 </div>
@@ -311,7 +311,7 @@
                     <summary><strong data-i18n="moodleExpressionsAllowed">Expressions allowed</strong></summary>
                     <div class="moodle-field">
                         <textarea id="moodleExpressionsAllowed" readonly></textarea>
-                        <button class="btn btn-copy" onclick="copyMoodleField('moodleExpressionsAllowed')">
+                        <button class="btn btn-copy" data-field="moodleExpressionsAllowed">
                             📋 <span data-i18n="copyBtn">Kopieren</span>
                         </button>
                     </div>
@@ -331,7 +331,7 @@
                     <summary><strong data-i18n="moodleExpressionsBlocked">Blockierte Ausdrücke</strong></summary>
                     <div class="moodle-field">
                         <textarea id="moodleExpressionsBlocked" readonly></textarea>
-                        <button class="btn btn-copy" onclick="copyMoodleField('moodleExpressionsBlocked')">
+                        <button class="btn btn-copy" data-field="moodleExpressionsBlocked">
                             📋 <span data-i18n="copyBtn">Kopieren</span>
                         </button>
                     </div>
