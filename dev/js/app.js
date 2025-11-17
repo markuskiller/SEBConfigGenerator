@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.21.0a2
-// Build: 2025-11-17 12:35
+// Version: v0.21.0a3
+// Build: 2025-11-17 12:48
 // ============================================================================
 
 // ============================================================================
@@ -442,8 +442,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.21.0a2';
-const BUILD_DATE = new Date('2025-11-17T12:35:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.21.0a3';
+const BUILD_DATE = new Date('2025-11-17T12:48:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -687,7 +687,7 @@ if (hasOneNoteOrWord) {
     
     // Replace "Network Capture" with a link in the warning text
     const text = t('experimentalWarningText');
-    const linkText = '<a href="#networkCaptureHelper" style="color:#856404;font-weight:600;text-decoration:underline;">Network Capture</a>';
+    const linkText = '<a href="#networkCaptureHelper" class="warning-link">Network Capture</a>';
     warningText.innerHTML = text.replace('Network Capture', linkText);
     
     warningLink.textContent = t('experimentalWarningLink');
@@ -963,7 +963,7 @@ if (experimentalWarning) {
         
         // Replace "Network Capture" with a link in the warning text
         const text = t('experimentalWarningText');
-        const linkText = '<a href="#networkCaptureHelper" style="color:#856404;font-weight:600;text-decoration:underline;">Network Capture</a>';
+        const linkText = '<a href="#networkCaptureHelper" class="warning-link">Network Capture</a>';
         warningText.innerHTML = text.replace('Network Capture', linkText);
         
         warningLink.textContent = t('experimentalWarningLink');

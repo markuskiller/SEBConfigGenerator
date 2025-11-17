@@ -928,6 +928,13 @@ textarea {
     cursor: pointer;
 }
 
+/* Warning link style (for dynamically generated links) */
+.warning-link {
+    color: #856404;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
 /* Subject Selector */
 .preset-subject-selector {
     grid-column: 1 / -1;
