@@ -631,7 +631,7 @@ PRESET_GROUPS.noLogin.forEach(key => {
         <h3>${t(getPresetTranslationKey(key))}</h3>
         <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
-    btn.addEventListener('click', () => togglePreset(key));
+    btn.onclick = () => togglePreset(key);
     container.appendChild(btn);
 });
 
