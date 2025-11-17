@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Security Headers (Meta Tags) -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     
-    <!-- Note: Additional security headers require HTTP headers (not meta tags):
+    <!-- Note: Security headers are configured via HTTP headers in _headers file:
+         - Content-Security-Policy
          - X-Frame-Options: DENY
          - X-Content-Type-Options: nosniff
          - Strict-Transport-Security (HSTS)
          - Permissions-Policy
-         See server configuration templates in /configs/ directory -->
+         For Apache/Nginx deployments, see templates in /configs/ directory -->
     
     <title>SEB Konfigurations-Generator</title>
     <link rel="stylesheet" href="css/app.css">
@@ -74,17 +72,17 @@
             <div class="section">
                 <h2><span data-i18n="step2">2. Konfigurationseinstellungen</span></h2>
                 <div class="form-group">
-                    <label data-i18n="startUrl">Start-URL</label>
+                    <label for="startUrl" data-i18n="startUrl">Start-URL</label>
                     <input type="url" id="startUrl" placeholder="https://www.onenote.com/notebooks">
                 </div>
                 <div class="form-group">
-                    <label data-i18n="configName">Konfigurationsname</label>
+                    <label for="configName" data-i18n="configName">Konfigurationsname</label>
                     <input type="text" id="configName" placeholder="Meine_Schule_OneNote">
                 </div>
                 
                 <!-- SharePoint Link Configuration (shown only for OneNote/Word) -->
                 <div class="form-group sharepoint-options-container" id="sharepointLinkGroup">
-                    <label data-i18n="sharepointLinkLabel">SharePoint-Link (Optional - für erweiterte Filterung)</label>
+                    <label for="sharepointLink" data-i18n="sharepointLinkLabel">SharePoint-Link (Optional - für erweiterte Filterung)</label>
                     <input type="url" id="sharepointLink" data-i18n-placeholder="sharepointLinkPlaceholder" placeholder="https://schule.sharepoint.com/sites/...">
                     <div id="sharepointHelp" class="sharepoint-help">
                         <!-- Help text will be inserted here dynamically -->
@@ -95,7 +93,7 @@
                 </div>
                 
                 <div class="form-group">
-                    <label data-i18n="additionalOptions">Zusätzliche Optionen</label>
+                    <div class="form-group-label" data-i18n="additionalOptions">Zusätzliche Optionen</div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="allowDownloads" checked>
                         <label for="allowDownloads" data-i18n="allowDownloads">Datei-Downloads erlauben</label>
@@ -117,11 +115,11 @@
             <div class="section">
                 <h2><span data-i18n="step3">3. Benutzerdefinierte Domains (Optional)</span></h2>
                 <div class="form-group">
-                    <label data-i18n="customDomainsLabel">Zusätzliche erlaubte Domains hinzufügen (eine pro Zeile)</label>
+                    <label for="customDomains" data-i18n="customDomainsLabel">Zusätzliche erlaubte Domains hinzufügen (eine pro Zeile)</label>
                     <textarea id="customDomains" data-i18n-placeholder="customDomainsPlaceholder" placeholder="beispiel.de&#10;*.schule-domain.de"></textarea>
                 </div>
                 <div class="form-group">
-                    <label data-i18n="blockedDomainsLabel">Zusätzlich zu sperrende Domains (Optional, eine pro Zeile)</label>
+                    <label for="blockedDomains" data-i18n="blockedDomainsLabel">Zusätzlich zu sperrende Domains (Optional, eine pro Zeile)</label>
                     <textarea id="blockedDomains" data-i18n-placeholder="blockedDomainsPlaceholder" placeholder="facebook.com&#10;instagram.com&#10;tiktok.com"></textarea>
                 </div>
                 <div class="info-box">
@@ -251,7 +249,7 @@
                     <button class="btn btn-primary btn-full-width" id="generateBtn">
                         <span data-i18n="downloadBtn">📥 SEB Konfiguration herunterladen (.seb)</span>
                     </button>
-                    <button class="btn btn-secondary btn-full-width" id="generateMoodleBtn" style="display:none">
+                    <button class="btn btn-secondary btn-full-width" id="generateMoodleBtn">
                         <span data-i18n="generateMoodleBtn">📋 Moodle-Konfiguration anzeigen</span>
                     </button>
                 </div>
@@ -311,7 +309,7 @@
                     <summary><strong data-i18n="moodleExpressionsAllowed">Expressions allowed</strong></summary>
                     <div class="moodle-field">
                         <textarea id="moodleExpressionsAllowed" readonly></textarea>
-                        <button class="btn btn-copy" onclick="copyMoodleField('moodleExpressionsAllowed')">
+                        <button class="btn btn-copy" data-field="moodleExpressionsAllowed">
                             📋 <span data-i18n="copyBtn">Kopieren</span>
                         </button>
                     </div>
@@ -331,7 +329,7 @@
                     <summary><strong data-i18n="moodleExpressionsBlocked">Blockierte Ausdrücke</strong></summary>
                     <div class="moodle-field">
                         <textarea id="moodleExpressionsBlocked" readonly></textarea>
-                        <button class="btn btn-copy" onclick="copyMoodleField('moodleExpressionsBlocked')">
+                        <button class="btn btn-copy" data-field="moodleExpressionsBlocked">
                             📋 <span data-i18n="copyBtn">Kopieren</span>
                         </button>
                     </div>

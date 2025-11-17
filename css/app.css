@@ -141,7 +141,8 @@ body {
     margin-bottom: 25px; 
 }
 
-label { 
+label,
+.form-group-label { 
     display: block; 
     font-weight: 600; 
     color: #2c3e5a; 
@@ -926,6 +927,13 @@ textarea {
     font-weight: 600;
     text-decoration: underline;
     cursor: pointer;
+}
+
+/* Warning link style (for dynamically generated links) */
+.warning-link {
+    color: #856404;
+    font-weight: 600;
+    text-decoration: underline;
 }
 
 /* Subject Selector */

@@ -1,31 +1,21 @@
 # Cloudflare Pages Security Headers
-# Version: v0.20.0
+# Version: v0.20.1
 # 
 # This file configures HTTP security headers for Cloudflare Pages deployment.
-# Replaces Apache .htaccess functionality for static hosting environments.
+# Documentation: https://developers.cloudflare.com/pages/configuration/headers/
 #
-# Documentation: https://developers.cloudflare.com/pages/platform/headers/
+# IMPORTANT: Comments must be outside header blocks, not inline with headers
 
-# Apply headers to all pages
+# Apply security headers to all pages
 /*
-  # Content Security Policy - Prevents XSS attacks
-  # No unsafe-inline or unsafe-eval - all code is externalized
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';
-  
-  # Prevent clickjacking attacks
   X-Frame-Options: DENY
-  
-  # Prevent MIME-type sniffing
   X-Content-Type-Options: nosniff
-  
-  # Control referrer information
   Referrer-Policy: strict-origin-when-cross-origin
-  
-  # Restrict browser features
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
-  
-  # Cache control for HTML files (no caching, always check server)
-  Cache-Control: no-cache, no-store, must-revalidate
+  Cache-Control: no-cache, no-store, must-revalidate, max-age=0
+  Pragma: no-cache
+  Expires: 0
 
 # Static assets - long cache duration
 /css/*
