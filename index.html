@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Security Headers (Meta Tags) -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     
-    <!-- Note: Additional security headers require HTTP headers (not meta tags):
+    <!-- Note: Security headers are configured via HTTP headers:
+         - Content-Security-Policy (via _headers file for Cloudflare Pages)
          - X-Frame-Options: DENY
          - X-Content-Type-Options: nosniff
          - Strict-Transport-Security (HSTS)
          - Permissions-Policy
-         See server configuration templates in /configs/ directory -->
+         For Apache/Nginx deployments, see templates in /configs/ directory -->
     
     <title>SEB Konfigurations-Generator</title>
     <link rel="stylesheet" href="css/app.css">
