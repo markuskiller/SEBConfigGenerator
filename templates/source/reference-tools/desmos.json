@@ -1,0 +1,12 @@
+{
+  "id": "desmos",
+  "name": "Desmos",
+  "description": "Graphing Calculator und Geometrie-Tool",
+  "category": "tool",
+  "language": "maths",
+  "startUrl": "https://www.desmos.com/calculator",
+  "domains": [
+    "desmos.com",
+    "*.desmos.com"
+  ]
+}
