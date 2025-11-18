@@ -546,6 +546,7 @@ if (parsedBooleanOptions.loaded) {
 // Re-render dynamic content
 renderPresets();
 renderSecurityLevels();
+updateStartUrlField(); // Update start URL dropdown labels
 
 // Save language preference
 localStorage.setItem('sebConfigLang', lang);
@@ -933,6 +934,61 @@ div.appendChild(infoEl);
 return div;
 }
 
+function updateStartUrlField() {
+const startUrlInput = document.getElementById('startUrl');
+const startUrlSelectorContainer = document.getElementById('startUrlSelectorContainer');
+const startUrlSelector = document.getElementById('startUrlSelector');
+
+if (selectedPresets.length === 0) {
+    // No presets selected - clear field and hide dropdown
+    startUrlInput.value = '';
+    startUrlSelectorContainer.classList.remove('visible');
+} else if (selectedPresets.length === 1) {
+    // Single selection - set start URL directly from preset
+    const presetKey = selectedPresets[0];
+    if (PRESETS[presetKey]) {
+        startUrlInput.value = PRESETS[presetKey].startUrl;
+    }
+    startUrlSelectorContainer.classList.remove('visible');
+} else {
+    // Multiple selections - show dropdown
+    startUrlSelectorContainer.classList.add('visible');
+    
+    // Clear and populate dropdown
+    startUrlSelector.innerHTML = '';
+    
+    // Add "Custom" option as default
+    const customOption = document.createElement('option');
+    customOption.value = '';
+    customOption.textContent = currentLang === 'de' ? '🔧 Benutzerdefiniert (eigene URL eingeben)' : '🔧 Custom (enter your own URL)';
+    startUrlSelector.appendChild(customOption);
+    
+    // Add option for each selected preset
+    selectedPresets.forEach(presetKey => {
+        const preset = PRESETS[presetKey];
+        if (preset && preset.startUrl) {
+            const option = document.createElement('option');
+            option.value = preset.startUrl;
+            const presetName = t(getPresetTranslationKey(presetKey));
+            option.textContent = `${presetName} (${preset.startUrl})`;
+            startUrlSelector.appendChild(option);
+        }
+    });
+    
+    // Set to custom (empty) by default
+    startUrlSelector.value = '';
+    startUrlInput.value = '';
+    
+    // Add change listener if not already added
+    if (!startUrlSelector.hasAttribute('data-listener-attached')) {
+        startUrlSelector.setAttribute('data-listener-attached', 'true');
+        startUrlSelector.addEventListener('change', (e) => {
+            startUrlInput.value = e.target.value;
+        });
+    }
+}
+}
+
 function togglePreset(key) {
 // Check if this is an allowed tool (Hilfsmittel)
 const isAllowedTool = Object.values(PRESET_GROUPS.allowedTools).flat().includes(key);
@@ -991,17 +1047,8 @@ if (hasOneNote && !hasWord) {
 // No longer enforce "at least one main preset" - allow using only Hilfsmittel
 // Users can now select only reference tools (e.g., Duden) with a custom start URL
 
-// Update start URL to first selected main preset (if any)
-const firstMainPreset = selectedPresets.find(p => !Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
-if (firstMainPreset && PRESETS[firstMainPreset]) {
-    document.getElementById('startUrl').value = PRESETS[firstMainPreset].startUrl;
-} else if (selectedPresets.length > 0 && !firstMainPreset) {
-    // If only Hilfsmittel selected, use first tool's start URL as suggestion
-    const firstTool = selectedPresets[0];
-    if (PRESETS[firstTool]) {
-        document.getElementById('startUrl').value = PRESETS[firstTool].startUrl;
-    }
-}
+// Update start URL based on selection count
+updateStartUrlField();
 
 // Update config name
 const mainPresetsForName = selectedPresets.filter(p => !Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
