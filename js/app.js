@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.21.2a1
-// Build: 2025-11-18 10:28
+// Version: v0.21.3a1
+// Build: 2025-11-18 23:46
 
 // ============================================================================
 
@@ -706,8 +706,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.21.2a1';
-const BUILD_DATE = new Date('2025-11-18T10:28:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.21.3a1';
+const BUILD_DATE = new Date('2025-11-18T23:46:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -3632,6 +3632,15 @@ let matches = 0;
 // Search in all dict sections
 const dictSections = document.querySelectorAll('.dict-section');
 dictSections.forEach(section => {
+    const content = section.querySelector('.dict-section-content');
+    const header = section.querySelector('.dict-section-header');
+    
+    // Lazy load content if not already loaded (for searching)
+    if (searchTerm && content && content.innerHTML.trim() === '') {
+        // Trigger click to load content
+        header.click();
+    }
+    
     const searchInputs = section.querySelectorAll('.dict-search-input');
     
     // Synchronize local search fields with global search

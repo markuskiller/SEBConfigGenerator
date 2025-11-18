@@ -36,6 +36,7 @@ const WIKIPEDIA_ARTICLES =
   "VNC": "Virtual_Network_Computing",
   "RealVNC": "Virtual_Network_Computing",
   "UltraVNC": "Virtual_Network_Computing",
+  "Chicken": "Crossloop",
   "LogMeIn.exe": "LogMeIn",
   "GoToMeeting.exe": "GoTo_Meeting",
   "Splashtop": "Splashtop",
