@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.21.3a3
-// Build: 2025-11-19 00:17
+// Version: v0.21.3a4
+// Build: 2025-11-19 00:20
 
 // ============================================================================
 
@@ -555,7 +555,7 @@ try {
     Object.keys(parsedDictStructures.categories).forEach(key => {
         const count = parsedDictStructures.categories[key].processes.length;
         if (count > 0) {
-            console.log(`   - ${key}: ${count} processes`);
+            debugLog(`   - ${key}: ${count} processes`);
         }
     });
     
@@ -608,7 +608,7 @@ try {
     
     const optionCount = Object.keys(data.options).length;
     const versionInfo = data._metadata.sebVersion !== 'TBD' ? ` (SEB v${data._metadata.sebVersion})` : '';
-    console.log(`✅ Loaded locations for ${optionCount} options${versionInfo}`);
+    debugLog(`✅ Loaded locations for ${optionCount} options${versionInfo}`);
     return data;
 } catch (error) {
     console.error(`Failed to load boolean options locations for ${platform}:`, error);
@@ -743,8 +743,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.21.3a3';
-const BUILD_DATE = new Date('2025-11-19T00:17:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.21.3a4';
+const BUILD_DATE = new Date('2025-11-19T00:20:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1454,12 +1454,12 @@ debugLog('🔍 Processing groups:', groupOrder);
 
 groupOrder.forEach(groupKey => {
     const group = parsedBooleanOptions.groups[groupKey];
-    console.log(`  - Group ${groupKey}:`, group);
+    debugLog(`  - Group ${groupKey}:`, group);
     if (!group || !group.options || group.options.length === 0) {
-        console.log(`  ⚠️ Skipping ${groupKey} (no options)`);
+        debugLog(`  ⚠️ Skipping ${groupKey} (no options)`);
         return;
     }
-    console.log(`  ✅ Rendering ${groupKey} with ${group.options.length} options`);
+    debugLog(`  ✅ Rendering ${groupKey} with ${group.options.length} options`);
     
     // Group container (collapsible)
     const groupDiv = document.createElement('div');
@@ -1656,7 +1656,7 @@ header.addEventListener('click', () => {
     
     if (isExpanding && !contentLoaded) {
         // Lazy load content
-        console.log(`🔄 Lazy loading ${type} processes...`);
+        debugLog(`🔄 Lazy loading ${type} processes...`);
         renderProcessCategories(content, type);
         contentLoaded = true;
     }
@@ -1897,7 +1897,7 @@ checkbox.addEventListener('change', (e) => {
     const key = `${type}_${proc.index}_${field}`;
     parsedDictStructures.userSelections[key] = e.target.checked;
     
-    console.log(`Updated ${proc.executable}.${field} = ${e.target.checked}`);
+    debugLog(`Updated ${proc.executable}.${field} = ${e.target.checked}`);
 });
 
 const lbl = document.createElement('label');
@@ -3398,7 +3398,7 @@ if (content.classList.contains('expanded')) {
             // Detect and set user's platform
             const detectedPlatform = detectUserPlatform();
             currentPlatform = detectedPlatform;
-            console.log(`🔍 Detected platform: ${detectedPlatform}`);
+            debugLog(`🔍 Detected platform: ${detectedPlatform}`);
             
             // Update platform button to show detected platform as active
             document.querySelectorAll('.platform-btn').forEach(btn => {
