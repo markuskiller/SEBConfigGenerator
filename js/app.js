@@ -46,6 +46,19 @@ strict: {
 };
 
 // ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+function getTimestamp() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}_${hours}-${minutes}`;
+}
+
+// ============================================================================
 // SHAREPOINT LINK PARSING
 // ============================================================================
 function parseSharePointLink(url, serviceType) {
@@ -271,7 +284,7 @@ try {
     
     // Categorize each option
     options.forEach(opt => {
-        const key = opt.key;
+        const { key } = opt;
         let group = 'other';
         
         // Browser-related
@@ -525,7 +538,7 @@ updateVersionInfo(lang);
 
 // Update SharePoint help text if visible
 const sharepointHelp = document.getElementById('sharepointHelp');
-if (sharepointHelp && sharepointHelp.style.display !== 'none') {
+if (sharepointHelp && !sharepointHelp.classList.contains('hidden')) {
     const hasOneNote = selectedPresets.includes('onenote');
     const hasWord = selectedPresets.includes('word');
     
@@ -633,7 +646,7 @@ PRESET_GROUPS.noLogin.forEach(key => {
         <h3>${t(getPresetTranslationKey(key))}</h3>
         <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
-    btn.onclick = () => togglePreset(key);
+    btn.addEventListener('click', () => togglePreset(key));
     container.appendChild(btn);
 });
 
@@ -650,7 +663,7 @@ PRESET_GROUPS.withLogin.forEach(key => {
         <h3>${t(getPresetTranslationKey(key))}</h3>
         <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
-    btn.onclick = () => togglePreset(key);
+    btn.addEventListener('click', () => togglePreset(key));
     container.appendChild(btn);
 });
 
@@ -681,7 +694,7 @@ const hasWord = selectedPresets.includes('word');
 const hasOneNoteOrWord = hasOneNote || hasWord;
 
 if (hasOneNoteOrWord) {
-    experimentalWarning.style.display = 'block';
+    experimentalWarning.classList.remove('hidden');
     const warningTitle = experimentalWarning.querySelector('strong');
     const warningText = experimentalWarning.querySelector('div');
     const warningLink = experimentalWarning.querySelector('a');
@@ -694,7 +707,7 @@ if (hasOneNoteOrWord) {
     
     warningLink.textContent = t('experimentalWarningLink');
 } else {
-    experimentalWarning.style.display = 'none';
+    experimentalWarning.classList.add('hidden');
 }
 
 // Group 3: Allowed Tools (with subject selection)
@@ -774,7 +787,7 @@ PRESET_GROUPS.allowedTools[subject].forEach(key => {
         <h3>${t(getPresetTranslationKey(key))}</h3>
         <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
-    btn.onclick = () => togglePreset(key);
+    btn.addEventListener('click', () => togglePreset(key));
     container.appendChild(btn);
 });
 }
@@ -790,7 +803,7 @@ container.innerHTML = '';
         <h4>${t('security' + key.charAt(0).toUpperCase() + key.slice(1))}</h4>
         <p>${t('security' + key.charAt(0).toUpperCase() + key.slice(1) + 'Desc')}</p>
     `;
-    div.onclick = () => selectSecurityLevel(key);
+    div.addEventListener('click', () => selectSecurityLevel(key));
     container.appendChild(div);
 });
 
@@ -801,12 +814,12 @@ updateSecurityLevelWarning();
 function renderSharePointOptions(serviceType, parsedLink) {
 const container = document.getElementById('sharepointOptions');
 if (!parsedLink || !parsedLink.isSharePoint) {
-    container.style.display = 'none';
+    container.classList.add('hidden');
     container.innerHTML = '';
     return;
 }
 
-container.style.display = 'block';
+container.classList.remove('hidden');
 container.innerHTML = '';
 
 // Title
@@ -910,13 +923,13 @@ const checkbox = document.createElement('input');
 checkbox.type = 'checkbox';
 checkbox.id = `sp_${serviceType}_${restrictionType}`;
 checkbox.classList.add('preset-option-checkbox');
-checkbox.onchange = () => {
+checkbox.addEventListener('change', () => {
     if (!sharepointConfig[serviceType].restrictions) {
         sharepointConfig[serviceType].restrictions = {};
     }
     sharepointConfig[serviceType].restrictions[restrictionType] = checkbox.checked;
     updatePreview();
-};
+});
 
 const labelEl = document.createElement('label');
 labelEl.htmlFor = checkbox.id;
@@ -1007,13 +1020,17 @@ const hasOneNote = selectedPresets.includes('onenote');
 const hasWord = selectedPresets.includes('word');
 const hasOneNoteOrWord = hasOneNote || hasWord;
 
-sharepointLinkGroup.style.display = hasOneNoteOrWord ? 'block' : 'none';
+if (hasOneNoteOrWord) {
+    sharepointLinkGroup.classList.remove('hidden');
+} else {
+    sharepointLinkGroup.classList.add('hidden');
+}
 
 // Update experimental warning visibility (created in renderPresets)
 const experimentalWarning = document.getElementById('experimentalWarning');
 if (experimentalWarning) {
     if (hasOneNoteOrWord) {
-        experimentalWarning.style.display = 'block';
+        experimentalWarning.classList.remove('hidden');
         const warningTitle = experimentalWarning.querySelector('strong');
         const warningText = experimentalWarning.querySelector('div');
         const warningLink = experimentalWarning.querySelector('a');
@@ -1026,22 +1043,22 @@ if (experimentalWarning) {
         
         warningLink.textContent = t('experimentalWarningLink');
     } else {
-        experimentalWarning.style.display = 'none';
+        experimentalWarning.classList.add('hidden');
     }
 }
 
 // Show appropriate help text
 if (hasOneNote && !hasWord) {
-    sharepointHelp.style.display = 'block';
+    sharepointHelp.classList.remove('hidden');
     sharepointHelp.textContent = t('sharepointHelpOneNote');
 } else if (hasWord && !hasOneNote) {
-    sharepointHelp.style.display = 'block';
+    sharepointHelp.classList.remove('hidden');
     sharepointHelp.textContent = t('sharepointHelpWord');
 } else if (hasOneNote && hasWord) {
-    sharepointHelp.style.display = 'block';
+    sharepointHelp.classList.remove('hidden');
     sharepointHelp.textContent = t('sharepointHelpOneNote') + '\n\n' + t('sharepointHelpWord');
 } else {
-    sharepointHelp.style.display = 'none';
+    sharepointHelp.classList.add('hidden');
 }
 
 // No longer enforce "at least one main preset" - allow using only Hilfsmittel
@@ -1056,15 +1073,15 @@ const toolPresetsForName = selectedPresets.filter(p => Object.values(PRESET_GROU
 
 if (mainPresetsForName.length === 1) {
     const presetName = t('preset' + mainPresetsForName[0].charAt(0).toUpperCase() + mainPresetsForName[0].slice(1));
-    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config`;
+    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config-${getTimestamp()}`;
 } else if (mainPresetsForName.length > 1) {
-    document.getElementById('configName').value = `Multi_Service_Config`;
+    document.getElementById('configName').value = `FocusMode-${getTimestamp()}`;
 } else if (toolPresetsForName.length === 1) {
     // Only one Hilfsmittel selected
     const presetName = t('preset' + toolPresetsForName[0].charAt(0).toUpperCase() + toolPresetsForName[0].slice(1));
-    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config`;
+    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config-${getTimestamp()}`;
 } else if (toolPresetsForName.length > 1) {
-    document.getElementById('configName').value = `Reference_Tools_Config`;
+    document.getElementById('configName').value = `FocusMode-${getTimestamp()}`;
 } else {
     document.getElementById('configName').value = '';
 }
@@ -1106,10 +1123,10 @@ if (showWarning) {
     const warningText = warningDiv.querySelector('div');
     warningTitle.textContent = t('securityLevelExperimentalTitle');
     warningText.textContent = t('securityLevelExperimentalText');
-    warningDiv.style.display = 'block';
+    warningDiv.classList.remove('hidden');
 } else if (warningDiv) {
     // Hide warning for balanced level
-    warningDiv.style.display = 'none';
+    warningDiv.classList.add('hidden');
 }
 }
 
@@ -1941,11 +1958,9 @@ if (parsedBooleanOptions.options && Object.keys(parsedBooleanOptions.options).le
     });
 }
 
-const finalXML = xml + booleanOptionsXML + `
+return xml + booleanOptionsXML + `
 </dict>
 </plist>`;
-
-return finalXML;
 }
 
 function escapeXML(str) {
@@ -2102,7 +2117,7 @@ console.log('  3. Paste into "Custom Domains" field in SEB Generator');
 console.log('\\n' + '='.repeat(60) + '\\n');
 })();`;
 
-const bookmarklet = `javascript:(function(){const domains=new Set();performance.getEntries().forEach(e=>{try{const u=new URL(e.name);if(u.hostname&&!u.hostname.match(/^(localhost|127\\\\.0\\\\.0\\\\.1|::1)$/)){domains.add(u.hostname)}}catch(err){}});const sorted=[...domains].sort();let output='SEB Domain Capture\\n'+'='.repeat(50)+'\\n\\n';output+='Total domains: '+sorted.length+'\\n\\n';output+='DOMAINS:\\n'+'-'.repeat(50)+'\\n';output+=sorted.join('\\n')+'\\n';output+='-'.repeat(50)+'\\n\\n';output+='Wildcards (recommended):\\n'+'-'.repeat(50)+'\\n';const wildcards=new Set();sorted.forEach(d=>{const parts=d.split('.');if(parts.length>2){wildcards.add('*.'+parts.slice(-2).join('.'))}else{wildcards.add(d)}});output+=[...wildcards].sort().join('\\n');const modal=document.createElement('div');modal.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.3);z-index:999999;max-width:600px;max-height:80vh;overflow:auto;font-family:monospace;';const pre=document.createElement('pre');pre.textContent=output;pre.style.cssText='background:#f5f5f5;padding:15px;border-radius:6px;overflow:auto;max-height:400px;font-size:12px;';const btnContainer=document.createElement('div');btnContainer.style.cssText='margin-top:20px;display:flex;gap:10px;';const copyBtn=document.createElement('button');copyBtn.textContent='📋 Copy';copyBtn.style.cssText='padding:12px 20px;background:#5e72e4;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;flex:1;';copyBtn.onclick=()=>{navigator.clipboard.writeText(sorted.join('\\n')).then(()=>{copyBtn.textContent='✓ Copied!';setTimeout(()=>copyBtn.textContent='📋 Copy',2000)})};const closeBtn=document.createElement('button');closeBtn.textContent='✕';closeBtn.style.cssText='padding:12px 20px;background:#e9ecef;color:#32325d;border:none;border-radius:6px;cursor:pointer;font-weight:600;';closeBtn.onclick=()=>modal.remove();btnContainer.appendChild(copyBtn);btnContainer.appendChild(closeBtn);modal.appendChild(pre);modal.appendChild(btnContainer);document.body.appendChild(modal)})();`;
+const bookmarklet = `javascript:(function(){const domains=new Set();performance.getEntries().forEach(e=>{try{const u=new URL(e.name);if(u.hostname&&!u.hostname.match(/^(localhost|127\\\\.0\\\\.0\\\\.1|::1)$/)){domains.add(u.hostname)}}catch(err){}});const sorted=[...domains].sort();let output='SEB Domain Capture\\n'+'='.repeat(50)+'\\n\\n';output+='Total domains: '+sorted.length+'\\n\\n';output+='DOMAINS:\\n'+'-'.repeat(50)+'\\n';output+=sorted.join('\\n')+'\\n';output+='-'.repeat(50)+'\\n\\n';output+='Wildcards (recommended):\\n'+'-'.repeat(50)+'\\n';const wildcards=new Set();sorted.forEach(d=>{const parts=d.split('.');if(parts.length>2){wildcards.add('*.'+parts.slice(-2).join('.'))}else{wildcards.add(d)}});output+=[...wildcards].sort().join('\\n');const modal=document.createElement('div');modal.className='domain-capture-modal';const pre=document.createElement('pre');pre.className='domain-capture-output';pre.textContent=output;const btnContainer=document.createElement('div');btnContainer.className='domain-capture-buttons';const copyBtn=document.createElement('button');copyBtn.className='domain-capture-copy-btn';copyBtn.textContent='📋 Copy';copyBtn.addEventListener('click',()=>{navigator.clipboard.writeText(sorted.join('\\n')).then(()=>{copyBtn.textContent='✓ Copied!';setTimeout(()=>copyBtn.textContent='📋 Copy',2000)})});const closeBtn=document.createElement('button');closeBtn.className='domain-capture-close-btn';closeBtn.textContent='✕';closeBtn.addEventListener('click',()=>modal.remove());btnContainer.appendChild(copyBtn);btnContainer.appendChild(closeBtn);modal.appendChild(pre);modal.appendChild(btnContainer);document.body.appendChild(modal)})();`;
 
 const instructions = currentLang === 'de' 
     ? {
@@ -2285,15 +2300,15 @@ const sebWarning = document.getElementById('sebWarningBox');
 const nextStepsBox = document.getElementById('nextStepsBox');
 
 if (format === 'moodle') {
-    sebBtn.style.display = 'none';
-    moodleBtn.style.display = 'block';
-    sebWarning.style.display = 'none';
-    nextStepsBox.style.display = 'none';
+    sebBtn.classList.add('hidden');
+    moodleBtn.classList.remove('hidden');
+    sebWarning.classList.add('hidden');
+    nextStepsBox.classList.add('hidden');
 } else {
-    sebBtn.style.display = 'block';
-    moodleBtn.style.display = 'none';
-    sebWarning.style.display = 'flex';
-    nextStepsBox.style.display = 'block';
+    sebBtn.classList.remove('hidden');
+    moodleBtn.classList.add('hidden');
+    sebWarning.classList.remove('hidden');
+    nextStepsBox.classList.remove('hidden');
 }
 }
 
@@ -2311,11 +2326,11 @@ if (config.expressionsBlocked.length > 0 && blockedSection) {
 }
 
 // Show modal
-document.getElementById('moodleModal').style.display = 'block';
+document.getElementById('moodleModal').classList.remove('hidden');
 }
 
 function closeMoodleModal() {
-document.getElementById('moodleModal').style.display = 'none';
+document.getElementById('moodleModal').classList.add('hidden');
 }
 
 function copyMoodleField(fieldId) {
@@ -2421,7 +2436,7 @@ document.getElementById('moodleModal').addEventListener('click', (e) => {
 document.getElementById('sharepointLink').addEventListener('input', function() {
     const url = this.value.trim();
     if (!url) {
-        document.getElementById('sharepointOptions').style.display = 'none';
+        document.getElementById('sharepointOptions').classList.add('hidden');
         return;
     }
     
@@ -2528,12 +2543,12 @@ function updateDevBanner() {
     
     // Hide banner for production releases
     if (!isDevelopmentVersion) {
-        devBanner.style.setProperty('display', 'none', 'important');
+        devBanner.classList.add('hidden');
         return;
     }
     
     // Show banner for development versions
-    devBanner.style.setProperty('display', 'flex', 'important');
+    devBanner.classList.remove('hidden');
     
     // Update version from APP_VERSION constant
     const devVersionEl = document.getElementById('devVersion');
@@ -2639,10 +2654,10 @@ const initialLang = urlLang || savedLang || 'de';
 setLanguage(initialLang);
 
 // Initialize export format buttons visibility (default: .seb selected)
-document.getElementById('generateBtn').style.display = 'block';
-document.getElementById('generateMoodleBtn').style.display = 'none';
-document.getElementById('sebWarningBox').style.display = 'flex';
-document.getElementById('nextStepsBox').style.display = 'block';
+document.getElementById('generateBtn').classList.remove('hidden');
+document.getElementById('generateMoodleBtn').classList.add('hidden');
+document.getElementById('sebWarningBox').classList.remove('hidden');
+document.getElementById('nextStepsBox').classList.remove('hidden');
 
 attachEventListeners();
 updatePreview();
