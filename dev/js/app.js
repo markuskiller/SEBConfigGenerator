@@ -1,9 +1,34 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.21.3a2
-// Build: 2025-11-19 00:11
+// Version: v0.21.3a3
+// Build: 2025-11-19 00:17
 
 // ============================================================================
+
+// ============================================================================
+// DEBUG LOGGING
+// ============================================================================
+// Debug mode can be enabled via URL parameter: ?debug=true
+// Example: https://dev.focusmode.ch/?debug=true
+// This will show detailed console logs for:
+// - XML parsing and loading
+// - Boolean options processing
+// - Dict structures rendering
+// - Platform switching
+// - Search functionality
+const DEBUG_MODE = new URLSearchParams(window.location.search).get('debug') === 'true';
+
+// Debug logger - only logs when DEBUG_MODE is true
+const debugLog = (...args) => {
+    if (DEBUG_MODE) {
+        console.log(...args);
+    }
+};
+
+// Log debug mode status on startup
+if (DEBUG_MODE) {
+    console.log('🐛 Debug mode enabled via ?debug=true');
+}
 
 // ============================================================================
 // TRANSLATIONS / ÜBERSETZUNGEN
@@ -248,7 +273,7 @@ try {
 // ============================================================================
 async function loadAndParseBooleanOptions() {
 try {
-    console.log('📥 Loading XML template from embedded data...');
+    debugLog('📥 Loading XML template from embedded data...');
     
     // Check if EXAMPLE_CONFIG_XML is available (loaded from xml-data.js)
     if (typeof EXAMPLE_CONFIG_XML === 'undefined') {
@@ -257,8 +282,8 @@ try {
     }
     
     const xmlText = EXAMPLE_CONFIG_XML;
-    console.log('📝 XML text length:', xmlText.length);
-    console.log('📝 First 200 chars:', xmlText.substring(0, 200));
+    debugLog('📝 XML text length:', xmlText.length);
+    debugLog('📝 First 200 chars:', xmlText.substring(0, 200));
     
     // Parse XML
     const parser = new DOMParser();
@@ -271,8 +296,8 @@ try {
         return false;
     }
     
-    console.log('✅ XML parsed successfully');
-    console.log('📊 Root element:', xmlDoc.documentElement.tagName);
+    debugLog('✅ XML parsed successfully');
+    debugLog('📊 Root element:', xmlDoc.documentElement.tagName);
     
     // Extract all boolean options
     const allKeys = xmlDoc.getElementsByTagName('key');
@@ -348,10 +373,10 @@ try {
         parsedBooleanOptions.userSelections[opt.key] = opt.defaultValue; // Initialize with defaults
     });
     
-    console.log(`✅ Parsed ${options.length} boolean options from XML`);
-    console.log('📊 Groups distribution:');
+    debugLog(`✅ Parsed ${options.length} boolean options from XML`);
+    debugLog('📊 Groups distribution:');
     Object.keys(groups).forEach(key => {
-        console.log(`   - ${key}: ${groups[key].options.length} options`);
+        debugLog(`   - ${key}: ${groups[key].options.length} options`);
     });
     return true;
 } catch (error) {
@@ -365,7 +390,7 @@ try {
 // ============================================================================
 async function parseXMLDictArrays() {
 try {
-    console.log('📦 Parsing dict array structures from XML...');
+    debugLog('📦 Parsing dict array structures from XML...');
     
     // Check if XML is available
     if (typeof EXAMPLE_CONFIG_XML === 'undefined') {
@@ -456,7 +481,7 @@ try {
                 parsedDictStructures.prohibitedProcesses.push(parsed);
             }
             
-            console.log(`✅ Parsed ${parsedDictStructures.prohibitedProcesses.length} prohibited processes`);
+            debugLog(`✅ Parsed ${parsedDictStructures.prohibitedProcesses.length} prohibited processes`);
         }
     }
     
@@ -480,7 +505,7 @@ try {
                 parsedDictStructures.permittedProcesses.push(parsed);
             }
             
-            console.log(`✅ Parsed ${parsedDictStructures.permittedProcesses.length} permitted processes`);
+            debugLog(`✅ Parsed ${parsedDictStructures.permittedProcesses.length} permitted processes`);
         }
     }
     
@@ -498,7 +523,7 @@ try {
                 parsedDictStructures.embeddedCertificates.push(parsed);
             }
             
-            console.log(`✅ Parsed ${parsedDictStructures.embeddedCertificates.length} embedded certificates`);
+            debugLog(`✅ Parsed ${parsedDictStructures.embeddedCertificates.length} embedded certificates`);
         }
     }
     
@@ -526,7 +551,7 @@ try {
         }
     });
     
-    console.log('📊 Category distribution:');
+    debugLog('📊 Category distribution:');
     Object.keys(parsedDictStructures.categories).forEach(key => {
         const count = parsedDictStructures.categories[key].processes.length;
         if (count > 0) {
@@ -555,7 +580,7 @@ if (booleanOptionsLocations[platform]) {
 }
 
 try {
-    console.log(`📍 Loading boolean options locations for ${platform}...`);
+    debugLog(`📍 Loading boolean options locations for ${platform}...`);
     
     // Get data from embedded JavaScript constants
     // Try to access the global variable directly (const variables are not on window object)
@@ -680,7 +705,7 @@ function getLocalizedLocation(optionKey) {
 
 // Platform selection handler
 async function selectPlatform(platform) {
-console.log(`🔄 Switching to ${platform} platform...`);
+debugLog(`🔄 Switching to ${platform} platform...`);
 currentPlatform = platform;
 
 // Update button styles
@@ -698,7 +723,7 @@ await loadBooleanOptionsLocations(platform);
 
 // Re-render options to show new locations
 renderBooleanOptions();
-console.log(`✅ Switched to ${platform} platform`);
+debugLog(`✅ Switched to ${platform} platform`);
 }
 
 // Generate human-readable label from key name
@@ -718,8 +743,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.21.3a2';
-const BUILD_DATE = new Date('2025-11-19T00:11:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.21.3a3';
+const BUILD_DATE = new Date('2025-11-19T00:17:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1413,7 +1438,7 @@ if (!container) {
     return;
 }
 
-console.log('📦 Container found, clearing content...');
+debugLog('📦 Container found, clearing content...');
 container.innerHTML = '';
 
 // Info box
@@ -1421,11 +1446,11 @@ const infoBox = document.createElement('div');
 infoBox.classList.add('preset-info-box');
 infoBox.innerHTML = `<strong>ℹ️ ${t('allBooleanOptions')}</strong><br>${t('booleanOptionsInfo')}`;
 container.appendChild(infoBox);
-console.log('ℹ️ Info box added');
+debugLog('ℹ️ Info box added');
 
 // Render each group
 const groupOrder = ['browser', 'security', 'interface', 'system', 'network', 'mobile', 'other'];
-console.log('🔍 Processing groups:', groupOrder);
+debugLog('🔍 Processing groups:', groupOrder);
 
 groupOrder.forEach(groupKey => {
     const group = parsedBooleanOptions.groups[groupKey];
@@ -1537,7 +1562,7 @@ if (!container) {
     return;
 }
 
-console.log('🎨 Rendering dict structures...');
+debugLog('🎨 Rendering dict structures...');
 
 // Clear existing content
 container.innerHTML = '';
@@ -1601,7 +1626,7 @@ if (parsedDictStructures.embeddedCertificates.length > 0) {
 }
 
 container.appendChild(mainDiv);
-console.log('✅ Dict structures rendered');
+debugLog('✅ Dict structures rendered');
 }
 
 // Helper function to create a process list section with categories
@@ -3387,7 +3412,7 @@ if (content.classList.contains('expanded')) {
                 (currentLang === 'de' ? 'Lade Optionen...' : 'Loading options...') + '</div>';
             
             // Load boolean options locations from JSON and parse options from XML template
-            console.log('🔄 Starting to load boolean options...');
+            debugLog('🔄 Starting to load boolean options...');
             
             // Load locations for detected platform (in parallel with XML parsing)
             const [locationsResult, optionsResult] = await Promise.all([
@@ -3395,18 +3420,18 @@ if (content.classList.contains('expanded')) {
                 loadAndParseBooleanOptions()
             ]);
             
-            console.log('✅ Loaded options:', parsedBooleanOptions);
+            debugLog('✅ Loaded options:', parsedBooleanOptions);
             parsedBooleanOptions.loaded = true;
             
             // Render boolean options
-            console.log('🎨 Rendering boolean options...');
+            debugLog('🎨 Rendering boolean options...');
             renderBooleanOptions();
-            console.log('✅ Rendering complete');
+            debugLog('✅ Rendering complete');
             
             // Also render dict structures (process lists, certificates)
-            console.log('🎨 Rendering dict structures...');
+            debugLog('🎨 Rendering dict structures...');
             await renderDictStructures();
-            console.log('✅ Dict structures rendered');
+            debugLog('✅ Dict structures rendered');
             
             // Setup global search after both are rendered
             setupGlobalSearch();
@@ -3574,7 +3599,7 @@ globalSearchInput.placeholder = currentLang === 'de'
     ? '🔍 Alle Einstellungen und Prozesse durchsuchen...'
     : '🔍 Search all settings and processes...';
 
-console.log('🔍 Setting up global search...');
+debugLog('🔍 Setting up global search...');
 
 globalSearchInput.addEventListener('input', (e) => {
     const searchTerm = e.target.value.toLowerCase();
@@ -3606,7 +3631,7 @@ globalSearchInput.addEventListener('input', (e) => {
     }
 });
 
-console.log('✅ Global search ready');
+debugLog('✅ Global search ready');
 }
 
 // Search in Boolean Options
@@ -3773,8 +3798,8 @@ window.testDictParsing = async function() {
 console.log('🧪 Testing dict structure parsing...');
 const success = await parseXMLDictArrays();
 if (success) {
-    console.log('✅ Parsing successful!');
-    console.log('📦 Parsed data:', parsedDictStructures);
+    debugLog('✅ Parsing successful!');
+    debugLog('📦 Parsed data:', parsedDictStructures);
     return parsedDictStructures;
 } else {
     console.error('❌ Parsing failed!');
@@ -3785,7 +3810,7 @@ if (success) {
 window.testDictRendering = async function() {
 console.log('🧪 Testing dict structure rendering...');
 await renderDictStructures();
-console.log('✅ Rendering complete! Check the page.');
+debugLog('✅ Rendering complete! Check the page.');
 };
 
 // Start the application
