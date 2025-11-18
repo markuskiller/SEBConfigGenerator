@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.21.2a1
-// Build: 2025-11-18 10:28
+// Version: v0.21.3a1
+// Build: 2025-11-18 23:46
 
 // ============================================================================
 
@@ -44,6 +44,44 @@ strict: {
     settings: {allowSwitchToApplications:false,allowQuit:false,browserViewMode:1,enableBrowserWindowToolbar:false,showMenuBar:false}
 }
 };
+
+// ============================================================================
+// WIKIPEDIA ARTICLE MAPPING
+// ============================================================================
+// WIKIPEDIA_ARTICLES is loaded from external file:
+// - templates/generated/wikipedia-mapping.js
+// Generated from: templates/source/wikipedia-mapping.json
+// To modify mappings, edit the JSON file and run: bash scripts/build-platform-options.sh
+
+// Function to get Wikipedia article name for a process
+function getWikipediaArticle(processName) {
+    // Direct lookup
+    if (WIKIPEDIA_ARTICLES[processName]) {
+        return WIKIPEDIA_ARTICLES[processName];
+    }
+    
+    // Try without extension
+    const nameWithoutExt = processName.replace(/\.(exe|app|dmg|pkg)$/i, '');
+    if (WIKIPEDIA_ARTICLES[nameWithoutExt]) {
+        return WIKIPEDIA_ARTICLES[nameWithoutExt];
+    }
+    
+    // Fallback: clean up name for generic search
+    return nameWithoutExt.replace(/[-_]/g, ' ').replace(/\s+/g, '_');
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+function getTimestamp() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}_${hours}-${minutes}`;
+}
 
 // ============================================================================
 // SHAREPOINT LINK PARSING
@@ -271,7 +309,7 @@ try {
     
     // Categorize each option
     options.forEach(opt => {
-        const key = opt.key;
+        const { key } = opt;
         let group = 'other';
         
         // Browser-related
@@ -318,6 +356,189 @@ try {
     return true;
 } catch (error) {
     console.error('Failed to load/parse boolean options from XML:', error);
+    return false;
+}
+}
+
+// ============================================================================
+// PARSE DICT ARRAY STRUCTURES FROM XML
+// ============================================================================
+async function parseXMLDictArrays() {
+try {
+    console.log('📦 Parsing dict array structures from XML...');
+    
+    // Check if XML is available
+    if (typeof EXAMPLE_CONFIG_XML === 'undefined') {
+        console.error('❌ EXAMPLE_CONFIG_XML not found!');
+        return false;
+    }
+    
+    // Parse XML
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(EXAMPLE_CONFIG_XML, 'application/xml');
+    
+    // Helper function to parse a dict element
+    function parseDict(dictElement) {
+        const dict = {};
+        let currentKey = null;
+        
+        for (let child of dictElement.children) {
+            if (child.tagName === 'key') {
+                currentKey = child.textContent.trim();
+            } else if (currentKey) {
+                // Get value based on element type
+                if (child.tagName === 'true') {
+                    dict[currentKey] = true;
+                } else if (child.tagName === 'false') {
+                    dict[currentKey] = false;
+                } else if (child.tagName === 'integer') {
+                    dict[currentKey] = parseInt(child.textContent.trim());
+                } else if (child.tagName === 'string') {
+                    dict[currentKey] = child.textContent.trim();
+                } else if (child.tagName === 'data') {
+                    dict[currentKey] = child.textContent.trim(); // Base64 data
+                }
+                currentKey = null;
+            }
+        }
+        return dict;
+    }
+    
+    // Helper function to categorize a process
+    function categorizeProcess(executable, identifier, description) {
+        const name = (executable || '').toLowerCase();
+        const id = (identifier || '').toLowerCase();
+        const desc = (description || '').toLowerCase();
+        const text = `${name} ${id} ${desc}`;
+        
+        // Categorization logic
+        if (text.match(/teams|zoom|skype|discord|slack|telegram|whatsapp|signal|element|riot|meet|gotomeeting|communicator|lync|messages|imessage|facetime|adium|ichat/)) {
+            return 'chat';
+        }
+        if (text.match(/anydesk|vnc|remote|teamviewer|chicken|chrome remote|desktop host|screen sharing|screenshare/)) {
+            return 'remote';
+        }
+        if (text.match(/camtasia|recorder|obs|capture|screen|video|quicktime player/)) {
+            return 'recording';
+        }
+        if (text.match(/chrome|firefox|safari|edge|brave|opera|vivaldi|browser/)) {
+            return 'browser';
+        }
+        if (text.match(/gpt|ai|assistant|copilot|chatbot/)) {
+            return 'ai';
+        }
+        if (text.match(/spotify|music|itunes|vlc|media player/)) {
+            return 'media';
+        }
+        if (text.match(/helper|plugin|service|daemon|background/)) {
+            return 'system';
+        }
+        return 'other';
+    }
+    
+    // Parse prohibited processes
+    const prohibitedKey = Array.from(xmlDoc.getElementsByTagName('key'))
+        .find(k => k.textContent === 'prohibitedProcesses');
+    
+    if (prohibitedKey) {
+        const arrayElement = prohibitedKey.nextElementSibling;
+        if (arrayElement && arrayElement.tagName === 'array') {
+            const dicts = arrayElement.getElementsByTagName('dict');
+            
+            for (let dict of dicts) {
+                const parsed = parseDict(dict);
+                const category = categorizeProcess(
+                    parsed.executable,
+                    parsed.identifier,
+                    parsed.description
+                );
+                parsed.category = category;
+                parsedDictStructures.prohibitedProcesses.push(parsed);
+            }
+            
+            console.log(`✅ Parsed ${parsedDictStructures.prohibitedProcesses.length} prohibited processes`);
+        }
+    }
+    
+    // Parse permitted processes
+    const permittedKey = Array.from(xmlDoc.getElementsByTagName('key'))
+        .find(k => k.textContent === 'permittedProcesses');
+    
+    if (permittedKey) {
+        const arrayElement = permittedKey.nextElementSibling;
+        if (arrayElement && arrayElement.tagName === 'array') {
+            const dicts = arrayElement.getElementsByTagName('dict');
+            
+            for (let dict of dicts) {
+                const parsed = parseDict(dict);
+                const category = categorizeProcess(
+                    parsed.executable,
+                    parsed.identifier,
+                    parsed.description
+                );
+                parsed.category = category;
+                parsedDictStructures.permittedProcesses.push(parsed);
+            }
+            
+            console.log(`✅ Parsed ${parsedDictStructures.permittedProcesses.length} permitted processes`);
+        }
+    }
+    
+    // Parse embedded certificates
+    const certsKey = Array.from(xmlDoc.getElementsByTagName('key'))
+        .find(k => k.textContent === 'embeddedCertificates');
+    
+    if (certsKey) {
+        const arrayElement = certsKey.nextElementSibling;
+        if (arrayElement && arrayElement.tagName === 'array') {
+            const dicts = arrayElement.getElementsByTagName('dict');
+            
+            for (let dict of dicts) {
+                const parsed = parseDict(dict);
+                parsedDictStructures.embeddedCertificates.push(parsed);
+            }
+            
+            console.log(`✅ Parsed ${parsedDictStructures.embeddedCertificates.length} embedded certificates`);
+        }
+    }
+    
+    // Group by category for easier rendering
+    parsedDictStructures.categories = {
+        chat: { title: 'Chat & Communication', processes: [] },
+        remote: { title: 'Remote Access & Screen Sharing', processes: [] },
+        recording: { title: 'Screen Recording & Capture', processes: [] },
+        browser: { title: 'Web Browsers', processes: [] },
+        ai: { title: 'AI Tools', processes: [] },
+        media: { title: 'Media Players', processes: [] },
+        system: { title: 'System Services', processes: [] },
+        other: { title: 'Other Applications', processes: [] }
+    };
+    
+    // Group prohibited processes by category
+    parsedDictStructures.prohibitedProcesses.forEach((proc, index) => {
+        const cat = proc.category || 'other';
+        if (parsedDictStructures.categories[cat]) {
+            parsedDictStructures.categories[cat].processes.push({
+                ...proc,
+                index,
+                type: 'prohibited'
+            });
+        }
+    });
+    
+    console.log('📊 Category distribution:');
+    Object.keys(parsedDictStructures.categories).forEach(key => {
+        const count = parsedDictStructures.categories[key].processes.length;
+        if (count > 0) {
+            console.log(`   - ${key}: ${count} processes`);
+        }
+    });
+    
+    parsedDictStructures.loaded = true;
+    return true;
+    
+} catch (error) {
+    console.error('Failed to parse dict array structures:', error);
     return false;
 }
 }
@@ -389,18 +610,60 @@ if (currentPlatform === 'windows') {
     return windowsLoc;
 }
 
-// For macOS/iPadOS format (direct location)
-return optionData.location || optionData.windows || null;
+// For macOS format (with windowsDifferent field)
+if (currentPlatform === 'macos') {
+    const macosLoc = optionData.macos;
+    const winDiff = optionData.windowsDifferent;
+    
+    if (winDiff) {
+        return `${macosLoc} (Windows: ${winDiff})`;
+    }
+    return macosLoc;
+}
+
+// For iPadOS format (direct location)
+return optionData.location || optionData.ipados || null;
 }
 
 function getTranslatedText(key) {
 const platformData = booleanOptionsLocations[currentPlatform];
 if (!platformData || !platformData._translations || !platformData._translations[currentLang]) {
-    return key === 'notDocumented' ? 
-        (currentLang === 'de' ? 'Noch nicht dokumentiert' : 'Not yet documented') :
-        (currentLang === 'de' ? 'Diese Option ist noch nicht in der Dokumentation erfasst' : 'This option is not yet documented');
+    // Fallback to main translations
+    return key === 'notDocumented' ? t('notDocumented') : t('notDocumentedHint');
 }
 return platformData._translations[currentLang][key];
+}
+
+// Get localized location for an option key
+// Maps each path component (menu names and option name) to German
+function getLocalizedLocation(optionKey) {
+    // Get English location path from JSON
+    const englishLocation = getOptionLocation(optionKey);
+    
+    if (!englishLocation) {
+        return null;
+    }
+    
+    // If not German, return English path
+    if (currentLang !== 'de') {
+        return englishLocation;
+    }
+    
+    // Check if SEB_OPTION_LABELS is loaded
+    if (typeof SEB_OPTION_LABELS === 'undefined' || !SEB_OPTION_LABELS.de) {
+        console.warn('⚠️ SEB_OPTION_LABELS not loaded');
+        return englishLocation;
+    }
+    
+    // Split path into components (menu names and option name)
+    const parts = englishLocation.split(' → ');
+    const labels = SEB_OPTION_LABELS.de;
+    
+    // Map each component to German (if translation exists)
+    const localizedParts = parts.map(part => labels[part] || part);
+    
+    // Rejoin with →
+    return localizedParts.join(' → ');
 }
 
 // Platform selection handler
@@ -443,8 +706,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.21.2a1';
-const BUILD_DATE = new Date('2025-11-18T10:28:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.21.3a1';
+const BUILD_DATE = new Date('2025-11-18T23:46:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -480,6 +743,17 @@ loaded: false, // Track if options have been loaded
 groups: {},
 options: {},
 userSelections: {} // Track user's checkbox selections
+};
+
+// Dict structures parsed from XML template (lazy loaded on demand)
+let parsedDictStructures = {
+loaded: false,
+prohibitedProcesses: [],
+permittedProcesses: [],
+embeddedCertificates: [],
+additionalResources: [],
+categories: {}, // Grouped by category
+userSelections: {} // Track checkbox changes
 };
 
 // Platform selection for boolean options reference
@@ -525,7 +799,7 @@ updateVersionInfo(lang);
 
 // Update SharePoint help text if visible
 const sharepointHelp = document.getElementById('sharepointHelp');
-if (sharepointHelp && sharepointHelp.style.display !== 'none') {
+if (sharepointHelp && !sharepointHelp.classList.contains('hidden')) {
     const hasOneNote = selectedPresets.includes('onenote');
     const hasWord = selectedPresets.includes('word');
     
@@ -633,7 +907,7 @@ PRESET_GROUPS.noLogin.forEach(key => {
         <h3>${t(getPresetTranslationKey(key))}</h3>
         <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
-    btn.onclick = () => togglePreset(key);
+    btn.addEventListener('click', () => togglePreset(key));
     container.appendChild(btn);
 });
 
@@ -650,7 +924,7 @@ PRESET_GROUPS.withLogin.forEach(key => {
         <h3>${t(getPresetTranslationKey(key))}</h3>
         <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
-    btn.onclick = () => togglePreset(key);
+    btn.addEventListener('click', () => togglePreset(key));
     container.appendChild(btn);
 });
 
@@ -681,7 +955,7 @@ const hasWord = selectedPresets.includes('word');
 const hasOneNoteOrWord = hasOneNote || hasWord;
 
 if (hasOneNoteOrWord) {
-    experimentalWarning.style.display = 'block';
+    experimentalWarning.classList.remove('hidden');
     const warningTitle = experimentalWarning.querySelector('strong');
     const warningText = experimentalWarning.querySelector('div');
     const warningLink = experimentalWarning.querySelector('a');
@@ -694,7 +968,7 @@ if (hasOneNoteOrWord) {
     
     warningLink.textContent = t('experimentalWarningLink');
 } else {
-    experimentalWarning.style.display = 'none';
+    experimentalWarning.classList.add('hidden');
 }
 
 // Group 3: Allowed Tools (with subject selection)
@@ -774,7 +1048,7 @@ PRESET_GROUPS.allowedTools[subject].forEach(key => {
         <h3>${t(getPresetTranslationKey(key))}</h3>
         <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
-    btn.onclick = () => togglePreset(key);
+    btn.addEventListener('click', () => togglePreset(key));
     container.appendChild(btn);
 });
 }
@@ -790,7 +1064,7 @@ container.innerHTML = '';
         <h4>${t('security' + key.charAt(0).toUpperCase() + key.slice(1))}</h4>
         <p>${t('security' + key.charAt(0).toUpperCase() + key.slice(1) + 'Desc')}</p>
     `;
-    div.onclick = () => selectSecurityLevel(key);
+    div.addEventListener('click', () => selectSecurityLevel(key));
     container.appendChild(div);
 });
 
@@ -801,12 +1075,12 @@ updateSecurityLevelWarning();
 function renderSharePointOptions(serviceType, parsedLink) {
 const container = document.getElementById('sharepointOptions');
 if (!parsedLink || !parsedLink.isSharePoint) {
-    container.style.display = 'none';
+    container.classList.add('hidden');
     container.innerHTML = '';
     return;
 }
 
-container.style.display = 'block';
+container.classList.remove('hidden');
 container.innerHTML = '';
 
 // Title
@@ -910,13 +1184,13 @@ const checkbox = document.createElement('input');
 checkbox.type = 'checkbox';
 checkbox.id = `sp_${serviceType}_${restrictionType}`;
 checkbox.classList.add('preset-option-checkbox');
-checkbox.onchange = () => {
+checkbox.addEventListener('change', () => {
     if (!sharepointConfig[serviceType].restrictions) {
         sharepointConfig[serviceType].restrictions = {};
     }
     sharepointConfig[serviceType].restrictions[restrictionType] = checkbox.checked;
     updatePreview();
-};
+});
 
 const labelEl = document.createElement('label');
 labelEl.htmlFor = checkbox.id;
@@ -1007,13 +1281,17 @@ const hasOneNote = selectedPresets.includes('onenote');
 const hasWord = selectedPresets.includes('word');
 const hasOneNoteOrWord = hasOneNote || hasWord;
 
-sharepointLinkGroup.style.display = hasOneNoteOrWord ? 'block' : 'none';
+if (hasOneNoteOrWord) {
+    sharepointLinkGroup.classList.remove('hidden');
+} else {
+    sharepointLinkGroup.classList.add('hidden');
+}
 
 // Update experimental warning visibility (created in renderPresets)
 const experimentalWarning = document.getElementById('experimentalWarning');
 if (experimentalWarning) {
     if (hasOneNoteOrWord) {
-        experimentalWarning.style.display = 'block';
+        experimentalWarning.classList.remove('hidden');
         const warningTitle = experimentalWarning.querySelector('strong');
         const warningText = experimentalWarning.querySelector('div');
         const warningLink = experimentalWarning.querySelector('a');
@@ -1026,22 +1304,22 @@ if (experimentalWarning) {
         
         warningLink.textContent = t('experimentalWarningLink');
     } else {
-        experimentalWarning.style.display = 'none';
+        experimentalWarning.classList.add('hidden');
     }
 }
 
 // Show appropriate help text
 if (hasOneNote && !hasWord) {
-    sharepointHelp.style.display = 'block';
+    sharepointHelp.classList.remove('hidden');
     sharepointHelp.textContent = t('sharepointHelpOneNote');
 } else if (hasWord && !hasOneNote) {
-    sharepointHelp.style.display = 'block';
+    sharepointHelp.classList.remove('hidden');
     sharepointHelp.textContent = t('sharepointHelpWord');
 } else if (hasOneNote && hasWord) {
-    sharepointHelp.style.display = 'block';
+    sharepointHelp.classList.remove('hidden');
     sharepointHelp.textContent = t('sharepointHelpOneNote') + '\n\n' + t('sharepointHelpWord');
 } else {
-    sharepointHelp.style.display = 'none';
+    sharepointHelp.classList.add('hidden');
 }
 
 // No longer enforce "at least one main preset" - allow using only Hilfsmittel
@@ -1056,15 +1334,15 @@ const toolPresetsForName = selectedPresets.filter(p => Object.values(PRESET_GROU
 
 if (mainPresetsForName.length === 1) {
     const presetName = t('preset' + mainPresetsForName[0].charAt(0).toUpperCase() + mainPresetsForName[0].slice(1));
-    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config`;
+    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config-${getTimestamp()}`;
 } else if (mainPresetsForName.length > 1) {
-    document.getElementById('configName').value = `Multi_Service_Config`;
+    document.getElementById('configName').value = `FocusMode-${getTimestamp()}`;
 } else if (toolPresetsForName.length === 1) {
     // Only one Hilfsmittel selected
     const presetName = t('preset' + toolPresetsForName[0].charAt(0).toUpperCase() + toolPresetsForName[0].slice(1));
-    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config`;
+    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config-${getTimestamp()}`;
 } else if (toolPresetsForName.length > 1) {
-    document.getElementById('configName').value = `Reference_Tools_Config`;
+    document.getElementById('configName').value = `FocusMode-${getTimestamp()}`;
 } else {
     document.getElementById('configName').value = '';
 }
@@ -1106,10 +1384,10 @@ if (showWarning) {
     const warningText = warningDiv.querySelector('div');
     warningTitle.textContent = t('securityLevelExperimentalTitle');
     warningText.textContent = t('securityLevelExperimentalText');
-    warningDiv.style.display = 'block';
+    warningDiv.classList.remove('hidden');
 } else if (warningDiv) {
     // Hide warning for balanced level
-    warningDiv.style.display = 'none';
+    warningDiv.classList.add('hidden');
 }
 }
 
@@ -1199,11 +1477,19 @@ groupOrder.forEach(groupKey => {
         const tooltip = document.createElement('div');
         tooltip.classList.add('bool-option-tooltip');
         
-        // Get location from JSON (English labels as in original tool)
-        const location = getOptionLocation(opt.key);
-        if (location) {
-            tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${location}`;
-            tooltip.title = location;
+        // Get English location (always shown as gray text)
+        const englishLocation = getOptionLocation(opt.key);
+        if (englishLocation) {
+            // Gray text: always English (matches SEB Config Tool)
+            tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${englishLocation}`;
+            
+            // Tooltip hover: German if language is DE, otherwise English
+            if (currentLang === 'de') {
+                const germanLocation = getLocalizedLocation(opt.key);
+                tooltip.title = germanLocation;
+            } else {
+                tooltip.title = englishLocation;
+            }
         } else {
             // Use translated hint texts for undocumented options
             const notDocText = getTranslatedText('notDocumented');
@@ -1227,6 +1513,420 @@ groupOrder.forEach(groupKey => {
     groupDiv.appendChild(groupContent);
     container.appendChild(groupDiv);
 });
+}
+
+// ============================================================================
+// DICT STRUCTURES RENDERING (Process Lists, Certificates, etc.)
+// ============================================================================
+async function renderDictStructures() {
+const container = document.getElementById('dictStructuresContainer');
+if (!container) {
+    console.error('❌ dictStructuresContainer not found!');
+    return;
+}
+
+console.log('🎨 Rendering dict structures...');
+
+// Clear existing content
+container.innerHTML = '';
+
+// Load data if not already loaded
+if (!parsedDictStructures.loaded) {
+    const success = await parseXMLDictArrays();
+    if (!success) {
+        container.innerHTML = '<div class="preset-info-box error">❌ Failed to load process lists</div>';
+        return;
+    }
+}
+
+// Main container
+const mainDiv = document.createElement('div');
+mainDiv.classList.add('dict-structures-main');
+
+// Section header
+const sectionHeader = document.createElement('div');
+sectionHeader.classList.add('dict-section-header');
+sectionHeader.innerHTML = `
+    <h3>📋 ${currentLang === 'de' ? 'Prozesslisten & Zertifikate' : 'Process Lists & Certificates'}</h3>
+    <p class="subtitle">${currentLang === 'de' 
+        ? 'Konfigurieren Sie blockierte/erlaubte Anwendungen und eingebettete Ressourcen' 
+        : 'Configure prohibited/permitted applications and embedded resources'}</p>
+`;
+mainDiv.appendChild(sectionHeader);
+
+// Info box
+const infoBox = document.createElement('div');
+infoBox.classList.add('preset-info-box');
+infoBox.innerHTML = currentLang === 'de'
+    ? '<strong>ℹ️ Hinweis:</strong> Ihre Änderungen an den Checkboxen werden automatisch in die generierte .seb-Datei übernommen.'
+    : '<strong>ℹ️ Note:</strong> Your checkbox changes will be automatically included in the generated .seb file.';
+mainDiv.appendChild(infoBox);
+
+// Prohibited Processes Section
+if (parsedDictStructures.prohibitedProcesses.length > 0) {
+    const prohibitedSection = createProcessListSection(
+        'prohibited',
+        '🚫 Prohibited Processes',
+        `These applications will be blocked when SEB is running (${parsedDictStructures.prohibitedProcesses.length} total)`
+    );
+    mainDiv.appendChild(prohibitedSection);
+}
+
+// Permitted Processes Section
+if (parsedDictStructures.permittedProcesses.length > 0) {
+    const permittedSection = createProcessListSection(
+        'permitted',
+        '✅ Permitted Processes',
+        `These applications are allowed to run alongside SEB (${parsedDictStructures.permittedProcesses.length} total)`
+    );
+    mainDiv.appendChild(permittedSection);
+}
+
+// Certificates Section
+if (parsedDictStructures.embeddedCertificates.length > 0) {
+    const certsSection = createCertificatesSection();
+    mainDiv.appendChild(certsSection);
+}
+
+container.appendChild(mainDiv);
+console.log('✅ Dict structures rendered');
+}
+
+// Helper function to create a process list section with categories
+function createProcessListSection(type, title, description) {
+const sectionDiv = document.createElement('div');
+sectionDiv.classList.add('dict-section');
+
+// Section header (collapsible)
+const header = document.createElement('div');
+header.classList.add('dict-section-header', 'collapsible');
+header.innerHTML = `
+    <span class="expand-icon">▶</span>
+    <strong>${title}</strong>
+    <span class="count-badge">${description}</span>
+`;
+
+// Content (initially hidden - lazy loading)
+const content = document.createElement('div');
+content.classList.add('dict-section-content');
+content.style.display = 'none';
+
+let contentLoaded = false;
+
+// Toggle functionality with lazy loading
+header.addEventListener('click', () => {
+    const isExpanding = content.style.display === 'none';
+    
+    if (isExpanding && !contentLoaded) {
+        // Lazy load content
+        console.log(`🔄 Lazy loading ${type} processes...`);
+        renderProcessCategories(content, type);
+        contentLoaded = true;
+    }
+    
+    // Toggle visibility
+    content.style.display = isExpanding ? 'block' : 'none';
+    header.querySelector('.expand-icon').textContent = isExpanding ? '▼' : '▶';
+});
+
+sectionDiv.appendChild(header);
+sectionDiv.appendChild(content);
+
+return sectionDiv;
+}
+
+// Render process categories with search
+function renderProcessCategories(container, type) {
+container.innerHTML = '';
+
+// Search bar
+const searchDiv = document.createElement('div');
+searchDiv.classList.add('dict-search-bar');
+searchDiv.innerHTML = `
+    <input type="text" 
+           id="search_${type}" 
+           class="dict-search-input" 
+           placeholder="🔍 Search processes by name or identifier...">
+    <span class="search-count" id="searchCount_${type}"></span>
+`;
+container.appendChild(searchDiv);
+
+// Categories container
+const categoriesDiv = document.createElement('div');
+categoriesDiv.classList.add('dict-categories');
+
+// Render each category
+const categoryOrder = ['chat', 'remote', 'recording', 'browser', 'ai', 'media', 'system', 'other'];
+categoryOrder.forEach(catKey => {
+    const category = parsedDictStructures.categories[catKey];
+    if (!category || category.processes.length === 0) return;
+    
+    const filteredProcesses = category.processes.filter(p => p.type === type);
+    if (filteredProcesses.length === 0) return;
+    
+    const categoryDiv = createCategoryAccordion(catKey, category.title, filteredProcesses, type);
+    categoriesDiv.appendChild(categoryDiv);
+});
+
+container.appendChild(categoriesDiv);
+
+// Setup search functionality
+const searchInput = document.getElementById(`search_${type}`);
+const searchCount = document.getElementById(`searchCount_${type}`);
+
+searchInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const allProcessCards = categoriesDiv.querySelectorAll('.process-card');
+    let visibleCount = 0;
+    
+    allProcessCards.forEach(card => {
+        const name = card.dataset.name.toLowerCase();
+        const identifier = card.dataset.identifier.toLowerCase();
+        const matches = name.includes(searchTerm) || identifier.includes(searchTerm);
+        
+        card.style.display = matches ? 'block' : 'none';
+        if (matches) visibleCount++;
+    });
+    
+    searchCount.textContent = searchTerm ? `${visibleCount} found` : '';
+    
+    // Show/hide empty categories
+    categoriesDiv.querySelectorAll('.dict-category').forEach(cat => {
+        const visibleCards = cat.querySelectorAll('.process-card[style="display: block;"], .process-card:not([style])');
+        cat.style.display = visibleCards.length > 0 ? 'block' : 'none';
+    });
+});
+}
+
+// Create category accordion
+function createCategoryAccordion(catKey, title, processes, type) {
+const catDiv = document.createElement('div');
+catDiv.classList.add('dict-category');
+
+const catHeader = document.createElement('div');
+catHeader.classList.add('dict-category-header');
+catHeader.innerHTML = `
+    <span class="category-icon">▶</span>
+    <strong>${title}</strong>
+    <span class="category-count">(${processes.length})</span>
+`;
+
+const catContent = document.createElement('div');
+catContent.classList.add('dict-category-content');
+catContent.style.display = 'none';
+
+// Toggle category
+catHeader.addEventListener('click', () => {
+    const isExpanding = catContent.style.display === 'none';
+    catContent.style.display = isExpanding ? 'grid' : 'none';
+    catHeader.querySelector('.category-icon').textContent = isExpanding ? '▼' : '▶';
+});
+
+// Render process cards
+processes.forEach(proc => {
+    const card = createProcessCard(proc, type);
+    catContent.appendChild(card);
+});
+
+catDiv.appendChild(catHeader);
+catDiv.appendChild(catContent);
+
+return catDiv;
+}
+
+// Create individual process card
+function createProcessCard(proc, type) {
+const card = document.createElement('div');
+card.classList.add('process-card');
+card.dataset.name = proc.executable || '';
+card.dataset.identifier = proc.identifier || '';
+
+// Process icon/name
+const header = document.createElement('div');
+header.classList.add('process-header');
+
+// Process name with VirusTotal link
+const nameContainer = document.createElement('div');
+nameContainer.classList.add('process-name-container');
+
+const nameSpan = document.createElement('strong');
+nameSpan.textContent = proc.executable || 'Unknown';
+nameContainer.appendChild(nameSpan);
+
+// Info links
+if (proc.executable) {
+    // Wikipedia link
+    const wikiLink = document.createElement('a');
+    const wikiArticle = getWikipediaArticle(proc.executable);
+    wikiLink.href = `https://en.wikipedia.org/wiki/${wikiArticle}`;
+    wikiLink.target = '_blank';
+    wikiLink.rel = 'noopener noreferrer';
+    wikiLink.classList.add('info-link', 'wiki-link');
+    wikiLink.innerHTML = 'Ⓦ';
+    wikiLink.title = t('openWikipedia');
+    nameContainer.appendChild(wikiLink);
+    
+    // Google search link
+    const googleLink = document.createElement('a');
+    // Prefer identifier if available, otherwise use executable name
+    const searchTerm = proc.identifier || (proc.executable + ' process');
+    googleLink.href = `https://www.google.com/search?q=${encodeURIComponent(searchTerm)}`;
+    googleLink.target = '_blank';
+    googleLink.rel = 'noopener noreferrer';
+    googleLink.classList.add('info-link', 'google-link');
+    googleLink.innerHTML = 'Ⓖ';
+    googleLink.title = t('googleSearchProcess');
+    nameContainer.appendChild(googleLink);
+}
+
+header.appendChild(nameContainer);
+
+// Identifier
+if (proc.identifier) {
+    const identifier = document.createElement('div');
+    identifier.classList.add('process-identifier');
+    identifier.textContent = proc.identifier;
+    header.appendChild(identifier);
+}
+
+card.appendChild(header);
+
+// Description (only if not empty)
+if (proc.description) {
+    const desc = document.createElement('div');
+    desc.classList.add('process-description');
+    desc.textContent = proc.description;
+    card.appendChild(desc);
+}
+
+// Checkboxes for boolean fields
+const checkboxes = document.createElement('div');
+checkboxes.classList.add('process-checkboxes');
+
+// Active
+const activeCheck = createProcessCheckbox(proc, 'active', '✓ Active', type);
+checkboxes.appendChild(activeCheck);
+
+// Ignore in AAC
+const ignoreCheck = createProcessCheckbox(proc, 'ignoreInAAC', '👁️ Ignore in AAC', type);
+checkboxes.appendChild(ignoreCheck);
+
+// Strong Kill
+const strongCheck = createProcessCheckbox(proc, 'strongKill', '💪 Strong Kill', type);
+checkboxes.appendChild(strongCheck);
+
+// Current User
+const userCheck = createProcessCheckbox(proc, 'currentUser', '👤 Current User', type);
+checkboxes.appendChild(userCheck);
+
+card.appendChild(checkboxes);
+
+return card;
+}
+
+// Create checkbox for process field
+function createProcessCheckbox(proc, field, label, type) {
+const div = document.createElement('div');
+div.classList.add('process-checkbox-item');
+
+const checkbox = document.createElement('input');
+checkbox.type = 'checkbox';
+checkbox.id = `${type}_${proc.index}_${field}`;
+checkbox.checked = proc[field] || false;
+checkbox.addEventListener('change', (e) => {
+    // Update data structure
+    if (type === 'prohibited') {
+        parsedDictStructures.prohibitedProcesses[proc.index][field] = e.target.checked;
+    } else {
+        parsedDictStructures.permittedProcesses[proc.index][field] = e.target.checked;
+    }
+    
+    // Track change
+    const key = `${type}_${proc.index}_${field}`;
+    parsedDictStructures.userSelections[key] = e.target.checked;
+    
+    console.log(`Updated ${proc.executable}.${field} = ${e.target.checked}`);
+});
+
+const lbl = document.createElement('label');
+lbl.htmlFor = checkbox.id;
+lbl.textContent = label;
+
+// Add tooltip with explanation
+const tooltipText = getProcessFieldTooltip(field);
+if (tooltipText) {
+    lbl.title = tooltipText;
+    lbl.style.cursor = 'help';
+}
+
+div.appendChild(checkbox);
+div.appendChild(lbl);
+
+return div;
+}
+
+// Get tooltip text for process field
+function getProcessFieldTooltip(field) {
+const tooltips = {
+    active: currentLang === 'de' 
+        ? 'Aktiv: Wenn aktiviert, wird dieser Prozess von SEB blockiert/überwacht. Deaktivieren, um die Regel zu ignorieren.'
+        : 'Active: When enabled, this process will be blocked/monitored by SEB. Disable to ignore this rule.',
+    
+    ignoreInAAC: currentLang === 'de'
+        ? 'In AAC ignorieren: Wenn aktiviert, wird dieser Prozess NICHT blockiert, wenn SEB im AAC-Modus (Automatic Assessment Configuration) läuft. AAC ist ein besonders restriktiver macOS/iOS-Modus für Prüfungen.'
+        : 'Ignore in AAC: When enabled, this process will NOT be blocked when SEB runs in AAC mode (Automatic Assessment Configuration). AAC is a highly restrictive macOS/iOS exam mode.',
+    
+    strongKill: currentLang === 'de'
+        ? 'Strong Kill: Wenn aktiviert, wird der Prozess hart beendet (SIGKILL). Wenn deaktiviert, sanftes Beenden (SIGTERM). Strong Kill sollte nur für hartnäckige Prozesse verwendet werden.'
+        : 'Strong Kill: When enabled, the process is forcefully terminated (SIGKILL). When disabled, graceful termination (SIGTERM). Use strong kill only for stubborn processes.',
+    
+    currentUser: currentLang === 'de'
+        ? 'Aktueller Benutzer: Wenn aktiviert, wird der Prozess nur für den aktuellen Benutzer blockiert. Wenn deaktiviert, systemweit für alle Benutzer.'
+        : 'Current User: When enabled, the process is only blocked for the current user. When disabled, blocked system-wide for all users.'
+};
+
+return tooltips[field] || '';
+}
+
+// Create certificates section
+function createCertificatesSection() {
+const sectionDiv = document.createElement('div');
+sectionDiv.classList.add('dict-section');
+
+const header = document.createElement('div');
+header.classList.add('dict-section-header', 'collapsible');
+header.innerHTML = `
+    <span class="expand-icon">▶</span>
+    <strong>📜 Embedded Certificates</strong>
+    <span class="count-badge">${parsedDictStructures.embeddedCertificates.length} certificates</span>
+`;
+
+const content = document.createElement('div');
+content.classList.add('dict-section-content');
+content.style.display = 'none';
+
+header.addEventListener('click', () => {
+    const isExpanding = content.style.display === 'none';
+    content.style.display = isExpanding ? 'block' : 'none';
+    header.querySelector('.expand-icon').textContent = isExpanding ? '▼' : '▶';
+});
+
+// Render certificate list
+parsedDictStructures.embeddedCertificates.forEach((cert, index) => {
+    const certCard = document.createElement('div');
+    certCard.classList.add('certificate-card');
+    certCard.innerHTML = `
+        <strong>Certificate ${index + 1}</strong>
+        ${cert.name ? `<div>Name: ${cert.name}</div>` : ''}
+        ${cert.certificateDataBase64 ? '<div>📄 Certificate data embedded</div>' : ''}
+    `;
+    content.appendChild(certCard);
+});
+
+sectionDiv.appendChild(header);
+sectionDiv.appendChild(content);
+
+return sectionDiv;
 }
 
 function getSharePointRestrictionInfo() {
@@ -1941,11 +2641,181 @@ if (parsedBooleanOptions.options && Object.keys(parsedBooleanOptions.options).le
     });
 }
 
-const finalXML = xml + booleanOptionsXML + `
+// Add dict structures (process lists, certificates, etc.)
+let dictStructuresXML = '';
+if (parsedDictStructures.loaded) {
+    dictStructuresXML += generateDictStructuresXML();
+}
+
+return xml + booleanOptionsXML + dictStructuresXML + `
 </dict>
 </plist>`;
+}
 
-return finalXML;
+// ============================================================================
+// GENERATE DICT STRUCTURES XML (Process Lists, Certificates, etc.)
+// ============================================================================
+function generateDictStructuresXML() {
+let xml = '';
+
+// Generate prohibited processes
+if (parsedDictStructures.prohibitedProcesses.length > 0) {
+    xml += `\n\t<key>prohibitedProcesses</key>\n\t<array>`;
+    
+    parsedDictStructures.prohibitedProcesses.forEach(proc => {
+        xml += `\n\t\t<dict>`;
+        xml += `\n\t\t\t<key>active</key>`;
+        xml += `\n\t\t\t<${proc.active ? 'true' : 'false'}/>`;
+        
+        if (proc.allowedExecutables !== undefined) {
+            xml += `\n\t\t\t<key>allowedExecutables</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.allowedExecutables)}</string>`;
+        }
+        
+        xml += `\n\t\t\t<key>currentUser</key>`;
+        xml += `\n\t\t\t<${proc.currentUser ? 'true' : 'false'}/>`;
+        
+        if (proc.description !== undefined) {
+            xml += `\n\t\t\t<key>description</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.description)}</string>`;
+        }
+        
+        if (proc.executable) {
+            xml += `\n\t\t\t<key>executable</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.executable)}</string>`;
+        }
+        
+        if (proc.identifier) {
+            xml += `\n\t\t\t<key>identifier</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.identifier)}</string>`;
+        }
+        
+        xml += `\n\t\t\t<key>ignoreInAAC</key>`;
+        xml += `\n\t\t\t<${proc.ignoreInAAC ? 'true' : 'false'}/>`;
+        
+        if (proc.originalName !== undefined) {
+            xml += `\n\t\t\t<key>originalName</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.originalName)}</string>`;
+        }
+        
+        if (proc.os !== undefined) {
+            xml += `\n\t\t\t<key>os</key>`;
+            xml += `\n\t\t\t<integer>${proc.os}</integer>`;
+        }
+        
+        xml += `\n\t\t\t<key>strongKill</key>`;
+        xml += `\n\t\t\t<${proc.strongKill ? 'true' : 'false'}/>`;
+        
+        if (proc.user !== undefined) {
+            xml += `\n\t\t\t<key>user</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.user)}</string>`;
+        }
+        
+        if (proc.windowHandlingProcess !== undefined) {
+            xml += `\n\t\t\t<key>windowHandlingProcess</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.windowHandlingProcess)}</string>`;
+        }
+        
+        xml += `\n\t\t</dict>`;
+    });
+    
+    xml += `\n\t</array>`;
+}
+
+// Generate permitted processes (if any exist)
+if (parsedDictStructures.permittedProcesses.length > 0) {
+    xml += `\n\t<key>permittedProcesses</key>\n\t<array>`;
+    
+    parsedDictStructures.permittedProcesses.forEach(proc => {
+        xml += `\n\t\t<dict>`;
+        // Same structure as prohibited processes
+        xml += `\n\t\t\t<key>active</key>`;
+        xml += `\n\t\t\t<${proc.active ? 'true' : 'false'}/>`;
+        
+        if (proc.allowedExecutables !== undefined) {
+            xml += `\n\t\t\t<key>allowedExecutables</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.allowedExecutables)}</string>`;
+        }
+        
+        xml += `\n\t\t\t<key>currentUser</key>`;
+        xml += `\n\t\t\t<${proc.currentUser ? 'true' : 'false'}/>`;
+        
+        if (proc.description !== undefined) {
+            xml += `\n\t\t\t<key>description</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.description)}</string>`;
+        }
+        
+        if (proc.executable) {
+            xml += `\n\t\t\t<key>executable</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.executable)}</string>`;
+        }
+        
+        if (proc.identifier) {
+            xml += `\n\t\t\t<key>identifier</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.identifier)}</string>`;
+        }
+        
+        xml += `\n\t\t\t<key>ignoreInAAC</key>`;
+        xml += `\n\t\t\t<${proc.ignoreInAAC ? 'true' : 'false'}/>`;
+        
+        if (proc.originalName !== undefined) {
+            xml += `\n\t\t\t<key>originalName</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.originalName)}</string>`;
+        }
+        
+        if (proc.os !== undefined) {
+            xml += `\n\t\t\t<key>os</key>`;
+            xml += `\n\t\t\t<integer>${proc.os}</integer>`;
+        }
+        
+        xml += `\n\t\t\t<key>strongKill</key>`;
+        xml += `\n\t\t\t<${proc.strongKill ? 'true' : 'false'}/>`;
+        
+        if (proc.user !== undefined) {
+            xml += `\n\t\t\t<key>user</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.user)}</string>`;
+        }
+        
+        if (proc.windowHandlingProcess !== undefined) {
+            xml += `\n\t\t\t<key>windowHandlingProcess</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.windowHandlingProcess)}</string>`;
+        }
+        
+        xml += `\n\t\t</dict>`;
+    });
+    
+    xml += `\n\t</array>`;
+}
+
+// Generate embedded certificates (if any exist)
+if (parsedDictStructures.embeddedCertificates.length > 0) {
+    xml += `\n\t<key>embeddedCertificates</key>\n\t<array>`;
+    
+    parsedDictStructures.embeddedCertificates.forEach(cert => {
+        xml += `\n\t\t<dict>`;
+        
+        if (cert.certificateDataBase64) {
+            xml += `\n\t\t\t<key>certificateDataBase64</key>`;
+            xml += `\n\t\t\t<data>${cert.certificateDataBase64}</data>`;
+        }
+        
+        if (cert.name) {
+            xml += `\n\t\t\t<key>name</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(cert.name)}</string>`;
+        }
+        
+        if (cert.type !== undefined) {
+            xml += `\n\t\t\t<key>type</key>`;
+            xml += `\n\t\t\t<integer>${cert.type}</integer>`;
+        }
+        
+        xml += `\n\t\t</dict>`;
+    });
+    
+    xml += `\n\t</array>`;
+}
+
+return xml;
 }
 
 function escapeXML(str) {
@@ -2102,7 +2972,7 @@ console.log('  3. Paste into "Custom Domains" field in SEB Generator');
 console.log('\\n' + '='.repeat(60) + '\\n');
 })();`;
 
-const bookmarklet = `javascript:(function(){const domains=new Set();performance.getEntries().forEach(e=>{try{const u=new URL(e.name);if(u.hostname&&!u.hostname.match(/^(localhost|127\\\\.0\\\\.0\\\\.1|::1)$/)){domains.add(u.hostname)}}catch(err){}});const sorted=[...domains].sort();let output='SEB Domain Capture\\n'+'='.repeat(50)+'\\n\\n';output+='Total domains: '+sorted.length+'\\n\\n';output+='DOMAINS:\\n'+'-'.repeat(50)+'\\n';output+=sorted.join('\\n')+'\\n';output+='-'.repeat(50)+'\\n\\n';output+='Wildcards (recommended):\\n'+'-'.repeat(50)+'\\n';const wildcards=new Set();sorted.forEach(d=>{const parts=d.split('.');if(parts.length>2){wildcards.add('*.'+parts.slice(-2).join('.'))}else{wildcards.add(d)}});output+=[...wildcards].sort().join('\\n');const modal=document.createElement('div');modal.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.3);z-index:999999;max-width:600px;max-height:80vh;overflow:auto;font-family:monospace;';const pre=document.createElement('pre');pre.textContent=output;pre.style.cssText='background:#f5f5f5;padding:15px;border-radius:6px;overflow:auto;max-height:400px;font-size:12px;';const btnContainer=document.createElement('div');btnContainer.style.cssText='margin-top:20px;display:flex;gap:10px;';const copyBtn=document.createElement('button');copyBtn.textContent='📋 Copy';copyBtn.style.cssText='padding:12px 20px;background:#5e72e4;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;flex:1;';copyBtn.onclick=()=>{navigator.clipboard.writeText(sorted.join('\\n')).then(()=>{copyBtn.textContent='✓ Copied!';setTimeout(()=>copyBtn.textContent='📋 Copy',2000)})};const closeBtn=document.createElement('button');closeBtn.textContent='✕';closeBtn.style.cssText='padding:12px 20px;background:#e9ecef;color:#32325d;border:none;border-radius:6px;cursor:pointer;font-weight:600;';closeBtn.onclick=()=>modal.remove();btnContainer.appendChild(copyBtn);btnContainer.appendChild(closeBtn);modal.appendChild(pre);modal.appendChild(btnContainer);document.body.appendChild(modal)})();`;
+const bookmarklet = `javascript:(function(){const domains=new Set();performance.getEntries().forEach(e=>{try{const u=new URL(e.name);if(u.hostname&&!u.hostname.match(/^(localhost|127\\\\.0\\\\.0\\\\.1|::1)$/)){domains.add(u.hostname)}}catch(err){}});const sorted=[...domains].sort();let output='SEB Domain Capture\\n'+'='.repeat(50)+'\\n\\n';output+='Total domains: '+sorted.length+'\\n\\n';output+='DOMAINS:\\n'+'-'.repeat(50)+'\\n';output+=sorted.join('\\n')+'\\n';output+='-'.repeat(50)+'\\n\\n';output+='Wildcards (recommended):\\n'+'-'.repeat(50)+'\\n';const wildcards=new Set();sorted.forEach(d=>{const parts=d.split('.');if(parts.length>2){wildcards.add('*.'+parts.slice(-2).join('.'))}else{wildcards.add(d)}});output+=[...wildcards].sort().join('\\n');const modal=document.createElement('div');modal.className='domain-capture-modal';const pre=document.createElement('pre');pre.className='domain-capture-output';pre.textContent=output;const btnContainer=document.createElement('div');btnContainer.className='domain-capture-buttons';const copyBtn=document.createElement('button');copyBtn.className='domain-capture-copy-btn';copyBtn.textContent='📋 Copy';copyBtn.addEventListener('click',()=>{navigator.clipboard.writeText(sorted.join('\\n')).then(()=>{copyBtn.textContent='✓ Copied!';setTimeout(()=>copyBtn.textContent='📋 Copy',2000)})});const closeBtn=document.createElement('button');closeBtn.className='domain-capture-close-btn';closeBtn.textContent='✕';closeBtn.addEventListener('click',()=>modal.remove());btnContainer.appendChild(copyBtn);btnContainer.appendChild(closeBtn);modal.appendChild(pre);modal.appendChild(btnContainer);document.body.appendChild(modal)})();`;
 
 const instructions = currentLang === 'de' 
     ? {
@@ -2285,15 +3155,15 @@ const sebWarning = document.getElementById('sebWarningBox');
 const nextStepsBox = document.getElementById('nextStepsBox');
 
 if (format === 'moodle') {
-    sebBtn.style.display = 'none';
-    moodleBtn.style.display = 'block';
-    sebWarning.style.display = 'none';
-    nextStepsBox.style.display = 'none';
+    sebBtn.classList.add('hidden');
+    moodleBtn.classList.remove('hidden');
+    sebWarning.classList.add('hidden');
+    nextStepsBox.classList.add('hidden');
 } else {
-    sebBtn.style.display = 'block';
-    moodleBtn.style.display = 'none';
-    sebWarning.style.display = 'flex';
-    nextStepsBox.style.display = 'block';
+    sebBtn.classList.remove('hidden');
+    moodleBtn.classList.add('hidden');
+    sebWarning.classList.remove('hidden');
+    nextStepsBox.classList.remove('hidden');
 }
 }
 
@@ -2311,11 +3181,11 @@ if (config.expressionsBlocked.length > 0 && blockedSection) {
 }
 
 // Show modal
-document.getElementById('moodleModal').style.display = 'block';
+document.getElementById('moodleModal').classList.remove('hidden');
 }
 
 function closeMoodleModal() {
-document.getElementById('moodleModal').style.display = 'none';
+document.getElementById('moodleModal').classList.add('hidden');
 }
 
 function copyMoodleField(fieldId) {
@@ -2421,7 +3291,7 @@ document.getElementById('moodleModal').addEventListener('click', (e) => {
 document.getElementById('sharepointLink').addEventListener('input', function() {
     const url = this.value.trim();
     if (!url) {
-        document.getElementById('sharepointOptions').style.display = 'none';
+        document.getElementById('sharepointOptions').classList.add('hidden');
         return;
     }
     
@@ -2505,6 +3375,14 @@ if (content.classList.contains('expanded')) {
             console.log('🎨 Rendering boolean options...');
             renderBooleanOptions();
             console.log('✅ Rendering complete');
+            
+            // Also render dict structures (process lists, certificates)
+            console.log('🎨 Rendering dict structures...');
+            await renderDictStructures();
+            console.log('✅ Dict structures rendered');
+            
+            // Setup global search after both are rendered
+            setupGlobalSearch();
         }
     }
 }
@@ -2528,12 +3406,12 @@ function updateDevBanner() {
     
     // Hide banner for production releases
     if (!isDevelopmentVersion) {
-        devBanner.style.setProperty('display', 'none', 'important');
+        devBanner.classList.add('hidden');
         return;
     }
     
     // Show banner for development versions
-    devBanner.style.setProperty('display', 'flex', 'important');
+    devBanner.classList.remove('hidden');
     
     // Update version from APP_VERSION constant
     const devVersionEl = document.getElementById('devVersion');
@@ -2639,14 +3517,212 @@ const initialLang = urlLang || savedLang || 'de';
 setLanguage(initialLang);
 
 // Initialize export format buttons visibility (default: .seb selected)
-document.getElementById('generateBtn').style.display = 'block';
-document.getElementById('generateMoodleBtn').style.display = 'none';
-document.getElementById('sebWarningBox').style.display = 'flex';
-document.getElementById('nextStepsBox').style.display = 'block';
+document.getElementById('generateBtn').classList.remove('hidden');
+document.getElementById('generateMoodleBtn').classList.add('hidden');
+document.getElementById('sebWarningBox').classList.remove('hidden');
+document.getElementById('nextStepsBox').classList.remove('hidden');
 
 attachEventListeners();
 updatePreview();
 }
+
+// ============================================================================
+// GLOBAL SEARCH (Boolean Options + Process Lists)
+// ============================================================================
+function setupGlobalSearch() {
+const globalSearchContainer = document.getElementById('globalSearchContainer');
+const globalSearchInput = document.getElementById('globalSearch');
+const globalSearchCount = document.getElementById('globalSearchCount');
+
+if (!globalSearchContainer || !globalSearchInput || !globalSearchCount) {
+    console.warn('⚠️ Global search elements not found');
+    return;
+}
+
+// Show global search container
+globalSearchContainer.classList.remove('hidden');
+
+// Update placeholder based on language
+globalSearchInput.placeholder = currentLang === 'de' 
+    ? '🔍 Alle Einstellungen und Prozesse durchsuchen...'
+    : '🔍 Search all settings and processes...';
+
+console.log('🔍 Setting up global search...');
+
+globalSearchInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    
+    let totalMatches = 0;
+    
+    // Search in Boolean Options
+    const booleanMatches = searchInBooleanOptions(searchTerm);
+    totalMatches += booleanMatches;
+    
+    // Search in Process Lists
+    const processMatches = searchInProcessLists(searchTerm);
+    totalMatches += processMatches;
+    
+    // Update count
+    if (searchTerm) {
+        globalSearchCount.textContent = currentLang === 'de'
+            ? `${totalMatches} gefunden`
+            : `${totalMatches} found`;
+    } else {
+        globalSearchCount.textContent = '';
+    }
+    
+    // Auto-expand sections with matches
+    if (searchTerm && totalMatches > 0) {
+        autoExpandMatchingSections();
+    }
+});
+
+console.log('✅ Global search ready');
+}
+
+// Search in Boolean Options
+function searchInBooleanOptions(searchTerm) {
+const booleanContainer = document.getElementById('booleanOptionsContainer');
+if (!booleanContainer) return 0;
+
+let matchCount = 0;
+
+// Search in all option items
+const allOptions = booleanContainer.querySelectorAll('.bool-option-item');
+allOptions.forEach(item => {
+    const labelText = item.querySelector('.bool-option-label-text')?.textContent.toLowerCase() || '';
+    const keyText = item.querySelector('.bool-option-key')?.textContent.toLowerCase() || '';
+    const tooltipText = item.querySelector('.bool-option-tooltip')?.textContent.toLowerCase() || '';
+    
+    const itemMatches = searchTerm === '' || 
+        labelText.includes(searchTerm) || 
+        keyText.includes(searchTerm) ||
+        tooltipText.includes(searchTerm);
+    
+    item.style.display = itemMatches ? 'flex' : 'none';
+    
+    if (itemMatches && searchTerm) {
+        matchCount++;
+    }
+});
+
+// Show/hide empty groups
+const groups = booleanContainer.querySelectorAll('.bool-group-container');
+groups.forEach(group => {
+    const visibleOptions = group.querySelectorAll('.bool-option-item[style="display: flex;"], .bool-option-item:not([style])');
+    const hasMatches = searchTerm === '' || visibleOptions.length > 0;
+    group.style.display = hasMatches ? 'block' : 'none';
+    
+    // Auto-expand groups with matches
+    if (searchTerm && visibleOptions.length > 0) {
+        const content = group.querySelector('.bool-group-content');
+        if (content) {
+            content.classList.add('show');
+        }
+    }
+});
+
+return matchCount;
+}
+
+// Search in Process Lists
+function searchInProcessLists(searchTerm) {
+let matches = 0;
+
+// Search in all dict sections
+const dictSections = document.querySelectorAll('.dict-section');
+dictSections.forEach(section => {
+    const content = section.querySelector('.dict-section-content');
+    const header = section.querySelector('.dict-section-header');
+    
+    // Lazy load content if not already loaded (for searching)
+    if (searchTerm && content && content.innerHTML.trim() === '') {
+        // Trigger click to load content
+        header.click();
+    }
+    
+    const searchInputs = section.querySelectorAll('.dict-search-input');
+    
+    // Synchronize local search fields with global search
+    searchInputs.forEach(input => {
+        input.value = searchTerm;
+        // Trigger input event to update local search
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    
+    // Count visible process cards
+    const visibleCards = section.querySelectorAll('.process-card:not([style*="display: none"])');
+    matches += visibleCards.length;
+});
+
+return matches;
+}
+
+// Auto-expand sections with matches
+function autoExpandMatchingSections() {
+// Expand boolean option groups with visible items
+const booleanGroups = document.querySelectorAll('.bool-group-container');
+booleanGroups.forEach(group => {
+    const visibleItems = group.querySelectorAll('.bool-option-item:not([style*="display: none"])');
+    if (visibleItems.length > 0) {
+        const content = group.querySelector('.bool-group-content');
+        if (content && !content.classList.contains('show')) {
+            content.classList.add('show');
+        }
+    }
+});
+
+// Expand dict categories with visible items
+const dictCategories = document.querySelectorAll('.dict-category');
+dictCategories.forEach(category => {
+    const visibleCards = category.querySelectorAll('.process-card:not([style*="display: none"])');
+    if (visibleCards.length > 0) {
+        const content = category.querySelector('.dict-category-content');
+        if (content && content.style.display === 'none') {
+            content.style.display = 'grid';
+            const icon = category.querySelector('.category-icon');
+            if (icon) icon.textContent = '▼';
+        }
+    }
+});
+
+// Expand main dict sections if they have content
+const dictSections = document.querySelectorAll('.dict-section');
+dictSections.forEach(section => {
+    const visibleCards = section.querySelectorAll('.process-card:not([style*="display: none"])');
+    if (visibleCards.length > 0) {
+        const content = section.querySelector('.dict-section-content');
+        const header = section.querySelector('.dict-section-header.collapsible');
+        if (content && header && content.style.display === 'none') {
+            content.style.display = 'block';
+            const icon = header.querySelector('.expand-icon');
+            if (icon) icon.textContent = '▼';
+        }
+    }
+});
+}
+
+// ============================================================================
+// TEST FUNCTIONS FOR DICT STRUCTURES (Development/Debug)
+// ============================================================================
+window.testDictParsing = async function() {
+console.log('🧪 Testing dict structure parsing...');
+const success = await parseXMLDictArrays();
+if (success) {
+    console.log('✅ Parsing successful!');
+    console.log('📦 Parsed data:', parsedDictStructures);
+    return parsedDictStructures;
+} else {
+    console.error('❌ Parsing failed!');
+    return null;
+}
+};
+
+window.testDictRendering = async function() {
+console.log('🧪 Testing dict structure rendering...');
+await renderDictStructures();
+console.log('✅ Rendering complete! Check the page.');
+};
 
 // Start the application
 init();

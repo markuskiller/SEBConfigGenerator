@@ -10,6 +10,11 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
     background: linear-gradient(135deg, #3d5170 0%, #4a6fa5 100%); 
@@ -1350,6 +1355,69 @@ textarea {
     line-height: 1.5;
 }
 
+/* Domain Capture Modal */
+.domain-capture-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    z-index: 999999;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: auto;
+    font-family: monospace;
+}
+
+.domain-capture-output {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 6px;
+    overflow: auto;
+    max-height: 400px;
+    font-size: 12px;
+}
+
+.domain-capture-buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.domain-capture-copy-btn {
+    padding: 12px 20px;
+    background: #5e72e4;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    flex: 1;
+    transition: background 0.2s;
+}
+
+.domain-capture-copy-btn:hover {
+    background: #4a5fcf;
+}
+
+.domain-capture-close-btn {
+    padding: 12px 20px;
+    background: #e9ecef;
+    color: #32325d;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.domain-capture-close-btn:hover {
+    background: #d4d9dd;
+}
+
 .moodle-section {
     margin-bottom: 20px;
     border: 1px solid #dfe6f0;
@@ -1464,4 +1532,306 @@ textarea {
     background: #525f7f;
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================================
+   DICT STRUCTURES (Process Lists, Certificates)
+   ============================================================================ */
+
+.dict-structures-main {
+    margin-top: 30px;
+}
+
+.dict-section-header {
+    margin-bottom: 10px;
+}
+
+.dict-section-header h3 {
+    color: #2c3e5a;
+    font-size: 1.3em;
+    margin-bottom: 5px;
+}
+
+.dict-section-header .subtitle {
+    color: #6c7a89;
+    font-size: 0.9em;
+}
+
+.dict-section {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.dict-section-header.collapsible {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    background: #f5f7fb;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.dict-section-header.collapsible:hover {
+    background: #e8edf5;
+}
+
+.expand-icon {
+    color: #2c3e5a;
+    font-weight: bold;
+    transition: transform 0.2s;
+}
+
+.count-badge {
+    color: #6c7a89;
+    font-size: 0.9em;
+    margin-left: auto;
+}
+
+.dict-section-content {
+    padding: 20px 10px;
+}
+
+/* Search Bar */
+.dict-search-bar {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.dict-search-input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 2px solid #dfe6f0;
+    border-radius: 6px;
+    font-size: 1em;
+    transition: border-color 0.2s;
+}
+
+.dict-search-input:focus {
+    outline: none;
+    border-color: #5b9bd5;
+}
+
+.search-count {
+    color: #6c7a89;
+    font-size: 0.9em;
+    min-width: 80px;
+    text-align: right;
+}
+
+/* Categories */
+.dict-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.dict-category {
+    border: 1px solid #dfe6f0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.dict-category-header {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    background: #f5f7fb;
+    transition: background 0.2s;
+}
+
+.dict-category-header:hover {
+    background: #e8edf5;
+}
+
+.category-icon {
+    color: #2c3e5a;
+    font-size: 0.8em;
+    transition: transform 0.2s;
+}
+
+.category-count {
+    color: #6c7a89;
+    font-size: 0.9em;
+    margin-left: auto;
+}
+
+.dict-category-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+    padding: 15px;
+    background: white;
+}
+
+/* Process Cards */
+.process-name-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.process-card {
+    border: 1px solid #dfe6f0;
+    border-radius: 6px;
+    padding: 12px;
+    background: white;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.process-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: #5b9bd5;
+}
+
+.process-header {
+    margin-bottom: 8px;
+}
+
+.process-header strong {
+    color: #2c3e5a;
+    font-size: 1em;
+    display: block;
+    margin-bottom: 4px;
+}
+
+/* Info Links (Wikipedia, Google) */
+.info-link {
+    font-size: 0.9em;
+    text-decoration: none;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s;
+    display: inline-block;
+}
+
+.info-link:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+/* Wikipedia link specific styling */
+.wiki-link {
+    color: #000;
+    font-size: 0.9em;
+}
+
+/* Google link specific styling */
+.google-link {
+    font-size: 0.9em;
+    color: #000;
+}
+
+.process-identifier {
+    color: #6c7a89;
+    font-size: 0.8em;
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+}
+
+.process-description {
+    color: #525f7f;
+    font-size: 0.85em;
+    margin-bottom: 10px;
+    padding: 8px;
+    background: #f5f7fb;
+    border-radius: 4px;
+}
+
+.process-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.process-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85em;
+}
+
+.process-checkbox-item input[type="checkbox"] {
+    cursor: pointer;
+}
+
+.process-checkbox-item label {
+    cursor: pointer;
+    color: #525f7f;
+    user-select: none;
+}
+
+/* Certificate Cards */
+.certificate-card {
+    border: 1px solid #dfe6f0;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #f5f7fb;
+}
+
+.certificate-card strong {
+    color: #2c3e5a;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.certificate-card div {
+    color: #525f7f;
+    font-size: 0.9em;
+    margin-top: 3px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dict-category-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================================================
+   GLOBAL SEARCH (Boolean Options + Process Lists)
+   ============================================================================ */
+
+.global-search-container {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.global-search-input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid #5b9bd5;
+    border-radius: 6px;
+    font-size: 1.1em;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.global-search-input:focus {
+    outline: none;
+    border-color: #4a6fa5;
+    box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.2);
+}
+
+.global-search-count {
+    color: #2c3e5a;
+    font-size: 1em;
+    font-weight: 600;
+    min-width: 100px;
+    text-align: right;
 }
