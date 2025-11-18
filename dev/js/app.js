@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.21.3a6
-// Build: 2025-11-19 00:35
+// Version: v0.21.3a7
+// Build: 2025-11-19 00:37
 
 // ============================================================================
 
@@ -743,8 +743,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.21.3a6';
-const BUILD_DATE = new Date('2025-11-19T00:35:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.21.3a7';
+const BUILD_DATE = new Date('2025-11-19T00:37:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -3422,8 +3422,37 @@ async function expandAdvancedSectionAndScroll(elementId) {
         if (!parsedBooleanOptions.loaded) {
             const container = document.getElementById('booleanOptionsContainer');
             if (container && container.children.length === 0) {
-                // Trigger the lazy loading
-                await toggleAdvancedSection();
+                // Detect and set user's platform
+                const detectedPlatform = detectUserPlatform();
+                currentPlatform = detectedPlatform;
+                debugLog(`🔍 Detected platform: ${detectedPlatform}`);
+                
+                // Update platform button to show detected platform as active
+                document.querySelectorAll('.platform-btn').forEach(btn => {
+                    if (btn.getAttribute('data-platform') === detectedPlatform) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Show loading indicator
+                container.innerHTML = '<div class="loading-indicator">⏳ ' + 
+                    (currentLang === 'de' ? 'Lade Optionen...' : 'Loading options...') + '</div>';
+                
+                // Load boolean options locations from JSON and parse options from XML template
+                debugLog('🔄 Starting to load boolean options...');
+                
+                // Load locations for detected platform (in parallel with XML parsing)
+                const [locationsResult, optionsResult] = await Promise.all([
+                    loadBooleanOptionsLocations(detectedPlatform),
+                    loadAndParseBooleanOptions()
+                ]);
+                
+                debugLog('✅ Loaded options:', parsedBooleanOptions);
+                parsedBooleanOptions.loaded = true;
+                
+                // Render all boolean options
+                renderBooleanOptions();
+                
                 // Wait a bit for rendering to complete
                 await new Promise(resolve => setTimeout(resolve, 300));
             }
