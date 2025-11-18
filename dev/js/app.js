@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.21.3a5
-// Build: 2025-11-19 00:29
+// Version: v0.21.3a6
+// Build: 2025-11-19 00:35
 
 // ============================================================================
 
@@ -743,8 +743,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.21.3a5';
-const BUILD_DATE = new Date('2025-11-19T00:29:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.21.3a6';
+const BUILD_DATE = new Date('2025-11-19T00:35:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1000,10 +1000,24 @@ if (hasOneNoteOrWord) {
     
     // Replace "Network Capture" with a link in the warning text
     const text = t('experimentalWarningText');
-    const linkText = '<a href="#networkCaptureHelper" class="warning-link">Network Capture</a>';
+    const linkText = '<a href="#networkCaptureHelper" class="warning-link network-capture-link">Network Capture</a>';
     warningText.innerHTML = text.replace('Network Capture', linkText);
     
+    // Add click handler to expand advanced section before scrolling
+    const networkCaptureLink = warningText.querySelector('.network-capture-link');
+    if (networkCaptureLink) {
+        networkCaptureLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            expandAdvancedSectionAndScroll('networkCaptureHelper');
+        });
+    }
+    
     warningLink.textContent = t('experimentalWarningLink');
+    // Also handle the main warning link
+    warningLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        expandAdvancedSectionAndScroll('networkCaptureHelper');
+    });
 } else {
     experimentalWarning.classList.add('hidden');
 }
@@ -1336,10 +1350,24 @@ if (experimentalWarning) {
         
         // Replace "Network Capture" with a link in the warning text
         const text = t('experimentalWarningText');
-        const linkText = '<a href="#networkCaptureHelper" class="warning-link">Network Capture</a>';
+        const linkText = '<a href="#networkCaptureHelper" class="warning-link network-capture-link">Network Capture</a>';
         warningText.innerHTML = text.replace('Network Capture', linkText);
         
+        // Add click handler to expand advanced section before scrolling
+        const networkCaptureLink = warningText.querySelector('.network-capture-link');
+        if (networkCaptureLink) {
+            networkCaptureLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                expandAdvancedSectionAndScroll('networkCaptureHelper');
+            });
+        }
+        
         warningLink.textContent = t('experimentalWarningLink');
+        // Also handle the main warning link
+        warningLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            expandAdvancedSectionAndScroll('networkCaptureHelper');
+        });
     } else {
         experimentalWarning.classList.add('hidden');
     }
@@ -3380,6 +3408,44 @@ document.querySelectorAll('.platform-btn').forEach(btn => {
 // ============================================================================
 // ADVANCED SECTION TOGGLE
 // ============================================================================
+// Helper function to expand advanced section and scroll to element
+async function expandAdvancedSectionAndScroll(elementId) {
+    const content = document.getElementById('advancedContent');
+    const toggle = document.querySelector('.advanced-toggle');
+    
+    // Expand if not already expanded
+    if (!content.classList.contains('expanded')) {
+        content.classList.add('expanded');
+        toggle.classList.add('expanded');
+        
+        // Lazy load content if needed
+        if (!parsedBooleanOptions.loaded) {
+            const container = document.getElementById('booleanOptionsContainer');
+            if (container && container.children.length === 0) {
+                // Trigger the lazy loading
+                await toggleAdvancedSection();
+                // Wait a bit for rendering to complete
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+        }
+        
+        // Wait for expansion animation
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    // Scroll to target element
+    const targetElement = document.getElementById(elementId);
+    if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Highlight the element briefly
+        targetElement.style.transition = 'background-color 0.3s ease';
+        targetElement.style.backgroundColor = '#fff3cd';
+        setTimeout(() => {
+            targetElement.style.backgroundColor = '';
+        }, 2000);
+    }
+}
+
 async function toggleAdvancedSection() {
 const content = document.getElementById('advancedContent');
 const toggle = document.querySelector('.advanced-toggle');
