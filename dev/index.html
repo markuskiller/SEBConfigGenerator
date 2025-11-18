@@ -73,7 +73,12 @@
                 <h2><span data-i18n="step2">2. Konfigurationseinstellungen</span></h2>
                 <div class="form-group">
                     <label for="startUrl" data-i18n="startUrl">Start-URL</label>
-                    <input type="url" id="startUrl" placeholder="https://www.onenote.com/notebooks">
+                    <div id="startUrlSelectorContainer" class="start-url-selector-container">
+                        <select id="startUrlSelector" class="start-url-selector">
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <input type="url" id="startUrl" placeholder="https://sites.google.com/view/your-secret-page-xyz123">
                 </div>
                 <div class="form-group">
                     <label for="configName" data-i18n="configName">Konfigurationsname</label>

@@ -960,6 +960,37 @@ textarea {
     cursor: pointer;
 }
 
+/* Start URL Selector Container */
+.start-url-selector-container {
+    display: none;
+    margin-bottom: 10px;
+}
+
+.start-url-selector-container.visible {
+    display: block;
+}
+
+/* Start URL Selector Dropdown */
+.start-url-selector {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #dfe6f0;
+    border-radius: 6px;
+    background: #f5f7fb;
+    color: #2c3e5a;
+    font-size: 1em;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.start-url-selector:focus {
+    outline: none;
+    border-color: #5b9bd5;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(91, 155, 213, 0.15);
+}
+
 /* Tools Container */
 .preset-tools-container {
     grid-column: 1 / -1;
