@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.21.3a1
-// Build: 2025-11-18 23:46
+// Version: v0.21.3a2
+// Build: 2025-11-19 00:11
 
 // ============================================================================
 
@@ -655,15 +655,27 @@ function getLocalizedLocation(optionKey) {
         return englishLocation;
     }
     
-    // Split path into components (menu names and option name)
-    const parts = englishLocation.split(' → ');
     const labels = SEB_OPTION_LABELS.de;
     
-    // Map each component to German (if translation exists)
-    const localizedParts = parts.map(part => labels[part] || part);
+    // Helper function to translate path components
+    const translatePath = (path) => {
+        return path.split(' → ')
+            .map(part => labels[part] || part)
+            .join(' → ');
+    };
     
-    // Rejoin with →
-    return localizedParts.join(' → ');
+    // Check if there's a platform difference notation (Mac: ... or Windows: ...)
+    const diffMatch = englishLocation.match(/^(.+?)\s+\((Mac|Windows):\s+(.+)\)$/);
+    
+    if (diffMatch) {
+        const [, mainPath, platformLabel, diffPath] = diffMatch;
+        const localizedMain = translatePath(mainPath);
+        const localizedDiff = translatePath(diffPath);
+        return `${localizedMain} (${platformLabel}: ${localizedDiff})`;
+    }
+    
+    // No platform difference, just translate the simple path
+    return translatePath(englishLocation);
 }
 
 // Platform selection handler
@@ -706,8 +718,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.21.3a1';
-const BUILD_DATE = new Date('2025-11-18T23:46:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.21.3a2';
+const BUILD_DATE = new Date('2025-11-19T00:11:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1690,10 +1702,25 @@ searchInput.addEventListener('input', (e) => {
     
     searchCount.textContent = searchTerm ? `${visibleCount} found` : '';
     
-    // Show/hide empty categories
+    // Show/hide empty categories and auto-open categories with matches
     categoriesDiv.querySelectorAll('.dict-category').forEach(cat => {
         const visibleCards = cat.querySelectorAll('.process-card[style="display: block;"], .process-card:not([style])');
-        cat.style.display = visibleCards.length > 0 ? 'block' : 'none';
+        const hasMatches = visibleCards.length > 0;
+        
+        cat.style.display = hasMatches ? 'block' : 'none';
+        
+        const catContent = cat.querySelector('.dict-category-content');
+        const catIcon = cat.querySelector('.category-icon');
+        
+        // Auto-open category if it has matches and search term is not empty
+        if (searchTerm && hasMatches && catContent && catContent.style.display === 'none') {
+            catContent.style.display = 'grid';
+            if (catIcon) catIcon.textContent = '▼';
+        } else if (!searchTerm && catContent && catContent.style.display === 'grid') {
+            // Collapse all categories when search is cleared
+            catContent.style.display = 'none';
+            if (catIcon) catIcon.textContent = '▶';
+        }
     });
 });
 }
@@ -3571,9 +3598,11 @@ globalSearchInput.addEventListener('input', (e) => {
         globalSearchCount.textContent = '';
     }
     
-    // Auto-expand sections with matches
+    // Auto-expand sections with matches or collapse all when search is cleared
     if (searchTerm && totalMatches > 0) {
         autoExpandMatchingSections();
+    } else if (!searchTerm) {
+        collapseAllSections();
     }
 });
 
@@ -3698,6 +3727,41 @@ dictSections.forEach(section => {
             const icon = header.querySelector('.expand-icon');
             if (icon) icon.textContent = '▼';
         }
+    }
+});
+}
+
+// Collapse all sections (called when search is cleared)
+function collapseAllSections() {
+// Collapse boolean option groups
+const booleanGroups = document.querySelectorAll('.bool-group-container');
+booleanGroups.forEach(group => {
+    const content = group.querySelector('.bool-group-content');
+    if (content && content.classList.contains('show')) {
+        content.classList.remove('show');
+    }
+});
+
+// Collapse dict categories
+const dictCategories = document.querySelectorAll('.dict-category');
+dictCategories.forEach(category => {
+    const content = category.querySelector('.dict-category-content');
+    const icon = category.querySelector('.category-icon');
+    if (content && content.style.display === 'grid') {
+        content.style.display = 'none';
+        if (icon) icon.textContent = '▶';
+    }
+});
+
+// Collapse main dict sections
+const dictSections = document.querySelectorAll('.dict-section');
+dictSections.forEach(section => {
+    const content = section.querySelector('.dict-section-content');
+    const header = section.querySelector('.dict-section-header.collapsible');
+    if (content && header && content.style.display === 'block') {
+        content.style.display = 'none';
+        const icon = header.querySelector('.expand-icon');
+        if (icon) icon.textContent = '▶';
     }
 });
 }
