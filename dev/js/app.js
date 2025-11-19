@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.21.3a7
-// Build: 2025-11-19 00:37
+// Version: v0.22.0a1
+// Build: 2025-11-19 21:52
 
 // ============================================================================
 
@@ -299,21 +299,35 @@ try {
     debugLog('✅ XML parsed successfully');
     debugLog('📊 Root element:', xmlDoc.documentElement.tagName);
     
-    // Extract all boolean options
-    const allKeys = xmlDoc.getElementsByTagName('key');
+    // Extract boolean options from ROOT level only (not from nested dict arrays)
+    // Find the root <dict> element (child of <plist>)
+    const plistElement = xmlDoc.documentElement;
+    const rootDict = plistElement.querySelector(':scope > dict');
+    
+    if (!rootDict) {
+        console.error('❌ No root <dict> found in XML');
+        return false;
+    }
+    
     const optionsMap = new Map(); // Use Map to automatically handle duplicates
     
-    for (let i = 0; i < allKeys.length; i++) {
-        const keyElement = allKeys[i];
-        const keyName = keyElement.textContent.trim();
-        const nextSibling = keyElement.nextElementSibling;
+    // Only process direct children of root dict
+    const rootChildren = rootDict.children;
+    for (let i = 0; i < rootChildren.length; i++) {
+        const element = rootChildren[i];
         
-        // Check if the next element is <true/> or <false/>
-        if (nextSibling && (nextSibling.tagName === 'true' || nextSibling.tagName === 'false')) {
-            const defaultValue = nextSibling.tagName === 'true';
-            // Only add if not already in map (first occurrence wins)
-            if (!optionsMap.has(keyName)) {
-                optionsMap.set(keyName, { key: keyName, defaultValue });
+        // Only process <key> elements that are direct children of root dict
+        if (element.tagName === 'key') {
+            const keyName = element.textContent.trim();
+            const nextSibling = element.nextElementSibling;
+            
+            // Check if the next element is <true/> or <false/>
+            if (nextSibling && (nextSibling.tagName === 'true' || nextSibling.tagName === 'false')) {
+                const defaultValue = nextSibling.tagName === 'true';
+                // Only add if not already in map (first occurrence wins)
+                if (!optionsMap.has(keyName)) {
+                    optionsMap.set(keyName, { key: keyName, defaultValue });
+                }
             }
         }
     }
@@ -524,6 +538,24 @@ try {
             }
             
             debugLog(`✅ Parsed ${parsedDictStructures.embeddedCertificates.length} embedded certificates`);
+        }
+    }
+    
+    // Parse URL filter rules
+    const urlFilterKey = Array.from(xmlDoc.getElementsByTagName('key'))
+        .find(k => k.textContent === 'URLFilterRules');
+    
+    if (urlFilterKey) {
+        const arrayElement = urlFilterKey.nextElementSibling;
+        if (arrayElement && arrayElement.tagName === 'array') {
+            const dicts = arrayElement.getElementsByTagName('dict');
+            
+            for (let dict of dicts) {
+                const parsed = parseDict(dict);
+                parsedDictStructures.urlFilterRules.push(parsed);
+            }
+            
+            debugLog(`✅ Parsed ${parsedDictStructures.urlFilterRules.length} URL filter rules`);
         }
     }
     
@@ -743,8 +775,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.21.3a7';
-const BUILD_DATE = new Date('2025-11-19T00:37:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.22.0a1';
+const BUILD_DATE = new Date('2025-11-19T21:52:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -788,6 +820,7 @@ loaded: false,
 prohibitedProcesses: [],
 permittedProcesses: [],
 embeddedCertificates: [],
+urlFilterRules: [],
 additionalResources: [],
 categories: {}, // Grouped by category
 userSelections: {} // Track checkbox changes
@@ -1399,17 +1432,22 @@ const toolPresetsForName = selectedPresets.filter(p => Object.values(PRESET_GROU
 
 if (mainPresetsForName.length === 1) {
     const presetName = t('preset' + mainPresetsForName[0].charAt(0).toUpperCase() + mainPresetsForName[0].slice(1));
-    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config-${getTimestamp()}`;
+    const configNameEl = document.getElementById('configName');
+    if (configNameEl) configNameEl.value = `${presetName.replace(/\s+/g, '_')}_Config-${getTimestamp()}`;
 } else if (mainPresetsForName.length > 1) {
-    document.getElementById('configName').value = `FocusMode-${getTimestamp()}`;
+    const configNameEl = document.getElementById('configName');
+    if (configNameEl) configNameEl.value = `FocusMode-${getTimestamp()}`;
 } else if (toolPresetsForName.length === 1) {
     // Only one Hilfsmittel selected
     const presetName = t('preset' + toolPresetsForName[0].charAt(0).toUpperCase() + toolPresetsForName[0].slice(1));
-    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config-${getTimestamp()}`;
+    const configNameEl = document.getElementById('configName');
+    if (configNameEl) configNameEl.value = `${presetName.replace(/\s+/g, '_')}_Config-${getTimestamp()}`;
 } else if (toolPresetsForName.length > 1) {
-    document.getElementById('configName').value = `FocusMode-${getTimestamp()}`;
+    const configNameEl = document.getElementById('configName');
+    if (configNameEl) configNameEl.value = `FocusMode-${getTimestamp()}`;
 } else {
-    document.getElementById('configName').value = '';
+    const configNameEl = document.getElementById('configName');
+    if (configNameEl) configNameEl.value = '';
 }
 
 renderPresets();
@@ -1454,6 +1492,268 @@ if (showWarning) {
     // Hide warning for balanced level
     warningDiv.classList.add('hidden');
 }
+}
+
+// ============================================================================
+// URL FILTER RULES RENDERING
+// ============================================================================
+function renderURLFilterRules() {
+// Insert into placeholder that is positioned BEFORE boolean options
+const placeholder = document.getElementById('urlFilterPlaceholder');
+if (!placeholder) {
+    console.error('❌ urlFilterPlaceholder not found!');
+    return;
+}
+
+debugLog('🌐 Rendering URL filter rules section...');
+
+// Create collapsible section for URL filter rules
+const section = document.createElement('div');
+section.classList.add('url-filter-section', 'bool-group-container');
+section.style.marginBottom = '1.5rem';
+
+// Header (collapsible) - styled like boolean option groups
+const header = document.createElement('div');
+header.classList.add('url-filter-header', 'bool-group-header');
+header.style.cursor = 'pointer';
+
+// Show placeholder text initially, will be updated when expanded
+const placeholderText = currentLang === 'de' 
+    ? 'Manuelle Regeln + automatisch generiert' 
+    : 'Manual rules + auto-generated';
+
+header.innerHTML = `
+    <strong>🌐 ${currentLang === 'de' ? 'URL-Filter-Regeln' : 'URL Filter Rules'}</strong>
+    <span>(${placeholderText})</span>
+`;
+
+// Content (initially hidden) - styled like boolean option group content
+const content = document.createElement('div');
+content.classList.add('url-filter-content', 'bool-group-content');
+content.style.padding = '1rem';
+
+// Toggle functionality with lazy loading
+let contentLoaded = false;
+header.addEventListener('click', async () => {
+    const isExpanding = !content.classList.contains('show');
+    
+    if (isExpanding && !contentLoaded) {
+        // Lazy load dict structures if not already loaded
+        if (!parsedDictStructures.loaded) {
+            debugLog('🔄 Lazy loading dict structures for URL filter rules...');
+            content.innerHTML = '<div class="loading-indicator">⏳ ' + 
+                (currentLang === 'de' ? 'Lade Filter-Regeln...' : 'Loading filter rules...') + '</div>';
+            content.classList.add('show');
+            
+            await parseXMLDictArrays();
+            parsedDictStructures.loaded = true;
+            debugLog('✅ Dict structures loaded');
+        }
+        
+        // Render content
+        debugLog('🔄 Rendering URL filter rules content...');
+        renderURLFilterContent(content);
+        contentLoaded = true;
+        
+        // Update count badge with actual numbers
+        const countSpan = header.querySelector('span');
+        const ruleCount = parsedDictStructures.urlFilterRules.length;
+        const autoGenText = currentLang === 'de' 
+            ? `+ ${getAllDomains().length} automatisch generiert` 
+            : `+ ${getAllDomains().length} auto-generated`;
+        countSpan.textContent = `(${ruleCount} ${currentLang === 'de' ? 'manuell' : 'manual'} ${autoGenText})`;
+    }
+    
+    // Toggle visibility
+    content.classList.toggle('show');
+});
+
+section.appendChild(header);
+section.appendChild(content);
+placeholder.appendChild(section);
+
+debugLog('✅ URL filter rules section shell created (lazy loading enabled)');
+}
+
+function renderURLFilterContent(container) {
+container.innerHTML = '';
+
+// Info box
+const infoBox = document.createElement('div');
+infoBox.style.cssText = `
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 4px;
+`;
+infoBox.innerHTML = currentLang === 'de'
+    ? '<strong>ℹ️ Hinweis:</strong> Manuelle Filter-Regeln werden zusätzlich zu den automatisch generierten Preset-Domains verwendet. Regex-Patterns sind fortgeschrittene Optionen für erfahrene Nutzer.'
+    : '<strong>ℹ️ Note:</strong> Manual filter rules are used in addition to auto-generated preset domains. Regex patterns are advanced options for experienced users.';
+container.appendChild(infoBox);
+
+// Rules list
+const rulesList = document.createElement('div');
+rulesList.classList.add('url-filter-rules-list');
+rulesList.id = 'urlFilterRulesList';
+
+if (parsedDictStructures.urlFilterRules.length === 0) {
+    const emptyMsg = document.createElement('div');
+    emptyMsg.style.cssText = 'padding: 2rem; text-align: center; color: #666;';
+    emptyMsg.textContent = currentLang === 'de' 
+        ? 'Keine manuellen Filter-Regeln vorhanden. Klicken Sie "+ Neue Regel", um eine hinzuzufügen.'
+        : 'No manual filter rules defined. Click "+ New Rule" to add one.';
+    rulesList.appendChild(emptyMsg);
+} else {
+    parsedDictStructures.urlFilterRules.forEach((rule, index) => {
+        const ruleCard = createURLFilterRuleCard(rule, index);
+        rulesList.appendChild(ruleCard);
+    });
+}
+
+container.appendChild(rulesList);
+
+// Add new rule button
+const addButton = document.createElement('button');
+addButton.classList.add('btn', 'btn-secondary');
+addButton.style.cssText = 'margin-top: 1rem;';
+addButton.innerHTML = `➕ ${currentLang === 'de' ? 'Neue Regel' : 'New Rule'}`;
+addButton.addEventListener('click', addNewURLFilterRule);
+container.appendChild(addButton);
+}
+
+function createURLFilterRuleCard(rule, index) {
+const card = document.createElement('div');
+card.classList.add('url-filter-rule-card');
+card.style.cssText = `
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+`;
+
+const actionColor = rule.action === 1 ? '#4caf50' : '#f44336';
+const actionLabel = rule.action === 1 
+    ? (currentLang === 'de' ? '✓ Erlauben' : '✓ Allow') 
+    : (currentLang === 'de' ? '✗ Blockieren' : '✗ Block');
+
+    card.innerHTML = `
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" 
+                       class="url-filter-active" 
+                       data-index="${index}"
+                       ${rule.active ? 'checked' : ''}>
+                <span style="font-weight: 500;">${currentLang === 'de' ? 'Aktiv' : 'Active'}</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" 
+                       class="url-filter-regex" 
+                       data-index="${index}"
+                       ${rule.regex ? 'checked' : ''}>
+                <span>Regex</span>
+            </label>
+            <input type="text" 
+                   class="url-filter-expression" 
+                   data-index="${index}"
+                   value="${(rule.expression || '').replace(/"/g, '&quot;')}"
+                   placeholder="${currentLang === 'de' ? 'URL-Pattern oder Regex...' : 'URL pattern or regex...'}"
+                   style="flex: 1; min-width: 200px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;">
+            <select class="url-filter-action" 
+                    data-index="${index}"
+                    style="padding: 0.5rem; border: none; border-radius: 4px; background: ${actionColor}; color: white; font-weight: 500;">
+                <option value="1" ${rule.action === 1 ? 'selected' : ''}>${currentLang === 'de' ? '✓ Erlauben' : '✓ Allow'}</option>
+                <option value="0" ${rule.action === 0 ? 'selected' : ''}>${currentLang === 'de' ? '✗ Blockieren' : '✗ Block'}</option>
+            </select>
+            <button class="btn-icon url-filter-delete" 
+                    data-index="${index}"
+                    style="color: #f44336; padding: 0.5rem; cursor: pointer; border: none; background: transparent; font-size: 1.2rem;"
+                    title="${currentLang === 'de' ? 'Regel löschen' : 'Delete rule'}">
+                🗑️
+            </button>
+        </div>
+    `;// Event listeners
+card.querySelector('.url-filter-active').addEventListener('change', (e) => {
+    parsedDictStructures.urlFilterRules[index].active = e.target.checked;
+    debugLog(`URLFilter rule ${index} active: ${e.target.checked}`);
+    updatePreview();
+});
+
+card.querySelector('.url-filter-regex').addEventListener('change', (e) => {
+    parsedDictStructures.urlFilterRules[index].regex = e.target.checked;
+    debugLog(`URLFilter rule ${index} regex: ${e.target.checked}`);
+    updatePreview();
+});
+
+card.querySelector('.url-filter-expression').addEventListener('input', (e) => {
+    parsedDictStructures.urlFilterRules[index].expression = e.target.value;
+    debugLog(`URLFilter rule ${index} expression: ${e.target.value}`);
+    updatePreview();
+});
+
+    card.querySelector('.url-filter-action').addEventListener('change', (e) => {
+        parsedDictStructures.urlFilterRules[index].action = parseInt(e.target.value);
+        debugLog(`URLFilter rule ${index} action: ${e.target.value}`);
+        // Update background color
+        const newColor = e.target.value === '1' ? '#4caf50' : '#f44336';
+        e.target.style.background = newColor;
+        updatePreview();
+    });card.querySelector('.url-filter-delete').addEventListener('click', () => {
+    if (confirm(currentLang === 'de' ? 'Regel wirklich löschen?' : 'Really delete this rule?')) {
+        parsedDictStructures.urlFilterRules.splice(index, 1);
+        // Re-render
+        const container = document.querySelector('.url-filter-content');
+        if (container) {
+            renderURLFilterContent(container);
+        }
+        // Update count in header
+        const countSpan = document.querySelector('.url-filter-header span');
+        if (countSpan) {
+            const ruleCount = parsedDictStructures.urlFilterRules.length;
+            const autoGenText = currentLang === 'de' 
+                ? `+ ${getAllDomains().length} automatisch generiert` 
+                : `+ ${getAllDomains().length} auto-generated`;
+            countSpan.textContent = `(${ruleCount} ${currentLang === 'de' ? 'manuell' : 'manual'} ${autoGenText})`;
+        }
+        // Update preview
+        updatePreview();
+    }
+});
+
+return card;
+}
+
+function addNewURLFilterRule() {
+const newRule = {
+    action: 1,  // Allow by default
+    active: true,
+    expression: '',
+    regex: false
+};
+
+parsedDictStructures.urlFilterRules.push(newRule);
+
+// Re-render
+const container = document.querySelector('.url-filter-content');
+if (container) {
+    renderURLFilterContent(container);
+}
+
+// Update count in header
+const countSpan = document.querySelector('.url-filter-header span');
+if (countSpan) {
+    const ruleCount = parsedDictStructures.urlFilterRules.length;
+    const autoGenText = currentLang === 'de' 
+        ? `+ ${getAllDomains().length} automatisch generiert` 
+        : `+ ${getAllDomains().length} auto-generated`;
+    countSpan.textContent = `(${ruleCount} ${currentLang === 'de' ? 'manuell' : 'manual'} ${autoGenText})`;
+}
+
+// Update preview
+updatePreview();
+
+debugLog('➕ New URL filter rule added');
 }
 
 // ============================================================================
@@ -1590,19 +1890,10 @@ if (!container) {
     return;
 }
 
-debugLog('🎨 Rendering dict structures...');
+debugLog('🎨 Rendering dict structures shells...');
 
 // Clear existing content
 container.innerHTML = '';
-
-// Load data if not already loaded
-if (!parsedDictStructures.loaded) {
-    const success = await parseXMLDictArrays();
-    if (!success) {
-        container.innerHTML = '<div class="preset-info-box error">❌ Failed to load process lists</div>';
-        return;
-    }
-}
 
 // Main container
 const mainDiv = document.createElement('div');
@@ -1627,34 +1918,29 @@ infoBox.innerHTML = currentLang === 'de'
     : '<strong>ℹ️ Note:</strong> Your checkbox changes will be automatically included in the generated .seb file.';
 mainDiv.appendChild(infoBox);
 
-// Prohibited Processes Section
-if (parsedDictStructures.prohibitedProcesses.length > 0) {
-    const prohibitedSection = createProcessListSection(
-        'prohibited',
-        '🚫 Prohibited Processes',
-        `These applications will be blocked when SEB is running (${parsedDictStructures.prohibitedProcesses.length} total)`
-    );
-    mainDiv.appendChild(prohibitedSection);
-}
+// Always render section shells (will lazy load on first expand or search)
+// Prohibited Processes Section (shell only)
+const prohibitedSection = createProcessListSection(
+    'prohibited',
+    '🚫 Prohibited Processes',
+    'Blocked applications (will be loaded when expanded)'
+);
+mainDiv.appendChild(prohibitedSection);
 
-// Permitted Processes Section
-if (parsedDictStructures.permittedProcesses.length > 0) {
-    const permittedSection = createProcessListSection(
-        'permitted',
-        '✅ Permitted Processes',
-        `These applications are allowed to run alongside SEB (${parsedDictStructures.permittedProcesses.length} total)`
-    );
-    mainDiv.appendChild(permittedSection);
-}
+// Permitted Processes Section (shell only)
+const permittedSection = createProcessListSection(
+    'permitted',
+    '✅ Permitted Processes',
+    'Allowed applications (will be loaded when expanded)'
+);
+mainDiv.appendChild(permittedSection);
 
-// Certificates Section
-if (parsedDictStructures.embeddedCertificates.length > 0) {
-    const certsSection = createCertificatesSection();
-    mainDiv.appendChild(certsSection);
-}
+// Certificates Section (shell only)
+const certsSection = createCertificatesSection();
+mainDiv.appendChild(certsSection);
 
 container.appendChild(mainDiv);
-debugLog('✅ Dict structures rendered');
+debugLog('✅ Dict structures shells rendered (lazy loading enabled)');
 }
 
 // Helper function to create a process list section with categories
@@ -1679,14 +1965,35 @@ content.style.display = 'none';
 let contentLoaded = false;
 
 // Toggle functionality with lazy loading
-header.addEventListener('click', () => {
+header.addEventListener('click', async () => {
     const isExpanding = content.style.display === 'none';
     
     if (isExpanding && !contentLoaded) {
-        // Lazy load content
-        debugLog(`🔄 Lazy loading ${type} processes...`);
+        // Lazy load dict structures if not already loaded
+        if (!parsedDictStructures.loaded) {
+            debugLog(`🔄 Lazy loading dict structures for ${type} processes...`);
+            content.innerHTML = '<div class="loading-indicator">⏳ ' + 
+                (currentLang === 'de' ? 'Lade Prozesslisten...' : 'Loading process lists...') + '</div>';
+            content.style.display = 'block';
+            
+            await parseXMLDictArrays();
+            parsedDictStructures.loaded = true;
+            debugLog('✅ Dict structures loaded');
+        }
+        
+        // Render content
+        debugLog(`🔄 Rendering ${type} processes...`);
         renderProcessCategories(content, type);
         contentLoaded = true;
+        
+        // Update count badge with actual numbers
+        const countBadge = header.querySelector('.count-badge');
+        const processCount = type === 'prohibited' 
+            ? parsedDictStructures.prohibitedProcesses.length 
+            : parsedDictStructures.permittedProcesses.length;
+        countBadge.textContent = currentLang === 'de'
+            ? `${processCount} Anwendungen`
+            : `${processCount} applications`;
     }
     
     // Toggle visibility
@@ -1978,29 +2285,64 @@ header.classList.add('dict-section-header', 'collapsible');
 header.innerHTML = `
     <span class="expand-icon">▶</span>
     <strong>📜 Embedded Certificates</strong>
-    <span class="count-badge">${parsedDictStructures.embeddedCertificates.length} certificates</span>
+    <span class="count-badge">Certificates (will be loaded when expanded)</span>
 `;
 
 const content = document.createElement('div');
 content.classList.add('dict-section-content');
 content.style.display = 'none';
 
-header.addEventListener('click', () => {
+let contentLoaded = false;
+
+header.addEventListener('click', async () => {
     const isExpanding = content.style.display === 'none';
+    
+    if (isExpanding && !contentLoaded) {
+        // Lazy load dict structures if not already loaded
+        if (!parsedDictStructures.loaded) {
+            debugLog('🔄 Lazy loading dict structures for certificates...');
+            content.innerHTML = '<div class="loading-indicator">⏳ ' + 
+                (currentLang === 'de' ? 'Lade Zertifikate...' : 'Loading certificates...') + '</div>';
+            content.style.display = 'block';
+            
+            await parseXMLDictArrays();
+            parsedDictStructures.loaded = true;
+            debugLog('✅ Dict structures loaded');
+        }
+        
+        // Render certificate list
+        content.innerHTML = '';
+        if (parsedDictStructures.embeddedCertificates.length === 0) {
+            content.innerHTML = '<div class="preset-info-box" style="margin: 1rem;">' + 
+                (currentLang === 'de' 
+                    ? 'Keine eingebetteten Zertifikate im Template vorhanden.' 
+                    : 'No embedded certificates in template.') + 
+                '</div>';
+        } else {
+            parsedDictStructures.embeddedCertificates.forEach((cert, index) => {
+                const certCard = document.createElement('div');
+                certCard.classList.add('certificate-card');
+                certCard.innerHTML = `
+                    <strong>Certificate ${index + 1}</strong>
+                    ${cert.name ? `<div>Name: ${cert.name}</div>` : ''}
+                    ${cert.certificateDataBase64 ? '<div>📄 Certificate data embedded</div>' : ''}
+                `;
+                content.appendChild(certCard);
+            });
+        }
+        
+        // Update count badge
+        const countBadge = header.querySelector('.count-badge');
+        const certCount = parsedDictStructures.embeddedCertificates.length;
+        countBadge.textContent = currentLang === 'de'
+            ? `${certCount} Zertifikate`
+            : `${certCount} certificates`;
+        
+        contentLoaded = true;
+    }
+    
     content.style.display = isExpanding ? 'block' : 'none';
     header.querySelector('.expand-icon').textContent = isExpanding ? '▼' : '▶';
-});
-
-// Render certificate list
-parsedDictStructures.embeddedCertificates.forEach((cert, index) => {
-    const certCard = document.createElement('div');
-    certCard.classList.add('certificate-card');
-    certCard.innerHTML = `
-        <strong>Certificate ${index + 1}</strong>
-        ${cert.name ? `<div>Name: ${cert.name}</div>` : ''}
-        ${cert.certificateDataBase64 ? '<div>📄 Certificate data embedded</div>' : ''}
-    `;
-    content.appendChild(certCard);
 });
 
 sectionDiv.appendChild(header);
@@ -2196,7 +2538,8 @@ selectedPresets.forEach(presetKey => {
     }
 });
 
-const customDomains = document.getElementById('customDomains').value
+const customDomainsValue = document.getElementById('customDomains')?.value || '';
+const customDomains = customDomainsValue
     .split('\n')
     .slice(0, MAX_CUSTOM_DOMAINS)  // Limit number of lines
     .map(d => d.trim())
@@ -2328,7 +2671,8 @@ selectedPresets.forEach(presetKey => {
     }
 });
 
-const customDomains = document.getElementById('customDomains').value
+const customDomainsValue = document.getElementById('customDomains')?.value || '';
+const customDomains = customDomainsValue
     .split('\n')
     .map(d => d.trim())
     .filter(d => d && !d.startsWith('#'));
@@ -2338,7 +2682,8 @@ const domains = getAllDomains();
 const duplicatesRemoved = allDomainsBeforeDedup.length - domains.length;
 
 const container = document.getElementById('domainPreview');
-document.getElementById('domainCount').textContent = domains.length;
+const domainCountEl = document.getElementById('domainCount');
+if (domainCountEl) domainCountEl.textContent = domains.length;
 
 // Clear container safely
 container.innerHTML = '';
@@ -2456,6 +2801,19 @@ domains.forEach(domain => {
     container.appendChild(div);
 });
 
+// Add manual URL filter rules (allowed, non-regex) from advanced settings
+if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
+    parsedDictStructures.urlFilterRules.forEach(rule => {
+        if (rule.active && rule.expression && rule.action === 1 && !rule.regex) {
+            const div = document.createElement('div');
+            div.className = 'domain-item';
+            const label = t('urlFilterAllowLabel');
+            div.textContent = `✓ ${rule.expression} ${label}`;
+            container.appendChild(div);
+        }
+    });
+}
+
 // Show SharePoint restriction info box if active
 const restrictionInfo = getSharePointRestrictionInfo();
 
@@ -2523,9 +2881,19 @@ selectedPresets.forEach(presetKey => {
     }
 });
 
+// Add manual URL filter rules (blocked, non-regex) from advanced settings
+const urlFilterBlockedRules = [];
+if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
+    parsedDictStructures.urlFilterRules.forEach(rule => {
+        if (rule.active && rule.expression && rule.action === 0 && !rule.regex) {
+            urlFilterBlockedRules.push(rule.expression);
+        }
+    });
+}
+
 // Add custom blocked domains from user input
 const MAX_BLOCKED_DOMAINS = 500;  // Limit blocked domains to prevent performance issues
-const customBlockedInput = document.getElementById('blockedDomains').value;
+const customBlockedInput = document.getElementById('blockedDomains')?.value || '';
 if (customBlockedInput.trim()) {
     const customBlockedDomains = customBlockedInput
         .split('\n')
@@ -2535,7 +2903,7 @@ if (customBlockedInput.trim()) {
     blockedDomains.push(...customBlockedDomains);
 }
 
-if (blockedDomains.length > 0) {
+if (blockedDomains.length > 0 || urlFilterBlockedRules.length > 0) {
     const blockedTitleDiv = document.createElement('div');
     blockedTitleDiv.classList.add('preview-blocked-title');
     const blockedTitleStrong = document.createElement('strong');
@@ -2553,6 +2921,64 @@ if (blockedDomains.length > 0) {
         div.textContent = `✗ ${domain}`;
         container.appendChild(div);
     });
+    
+    // Add URL filter blocked rules with label
+    urlFilterBlockedRules.forEach(domain => {
+        const div = document.createElement('div');
+        div.className = 'domain-item blocked';
+        const label = t('urlFilterBlockLabel');
+        div.textContent = `✗ ${domain} ${label}`;
+        container.appendChild(div);
+    });
+}
+
+// Show regex rules from URL filter if any
+const regexAllowed = [];
+const regexBlocked = [];
+if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
+    parsedDictStructures.urlFilterRules.forEach(rule => {
+        if (rule.active && rule.expression && rule.regex) {
+            if (rule.action === 1) {
+                regexAllowed.push(rule.expression);
+            } else if (rule.action === 0) {
+                regexBlocked.push(rule.expression);
+            }
+        }
+    });
+}
+
+if (regexAllowed.length > 0) {
+    const regexTitleDiv = document.createElement('div');
+    regexTitleDiv.classList.add('preview-blocked-title');
+    const regexTitleStrong = document.createElement('strong');
+    const regexTitle = t('previewRegexAllowedTitle');
+    regexTitleStrong.textContent = regexTitle;
+    regexTitleDiv.appendChild(regexTitleStrong);
+    container.appendChild(regexTitleDiv);
+    
+    regexAllowed.forEach(pattern => {
+        const div = document.createElement('div');
+        div.className = 'domain-item';
+        div.textContent = `✓ ${pattern}`;
+        container.appendChild(div);
+    });
+}
+
+if (regexBlocked.length > 0) {
+    const regexTitleDiv = document.createElement('div');
+    regexTitleDiv.classList.add('preview-blocked-title');
+    const regexTitleStrong = document.createElement('strong');
+    const regexTitle = t('previewRegexBlockedTitle');
+    regexTitleStrong.textContent = regexTitle;
+    regexTitleDiv.appendChild(regexTitleStrong);
+    container.appendChild(regexTitleDiv);
+    
+    regexBlocked.forEach(pattern => {
+        const div = document.createElement('div');
+        div.className = 'domain-item blocked';
+        div.textContent = `✗ ${pattern}`;
+        container.appendChild(div);
+    });
 }
 }
 
@@ -2562,7 +2988,7 @@ if (blockedDomains.length > 0) {
 function generateConfigXML() {
 const securitySettings = SECURITY_LEVELS[currentSecurityLevel].settings;
 const domains = getAllDomains();
-const startUrlInput = document.getElementById('startUrl').value;
+const startUrlInput = document.getElementById('startUrl')?.value || '';
 
 // Validate start URL
 if (!isValidURL(startUrlInput)) {
@@ -2615,7 +3041,7 @@ selectedPresets.forEach(presetKey => {
 });
 
 // Add custom blocked domains (blacklist - action: 0) from user input
-const customBlockedInput = document.getElementById('blockedDomains').value;
+const customBlockedInput = document.getElementById('blockedDomains')?.value || '';
 if (customBlockedInput.trim()) {
     const MAX_BLOCKED_DOMAINS = 500;  // Limit blocked domains to prevent performance issues
     const customBlockedDomains = customBlockedInput
@@ -2638,6 +3064,21 @@ if (customBlockedInput.trim()) {
 `;
     });
 }
+
+// Add manual URL filter rules from advanced settings
+parsedDictStructures.urlFilterRules.forEach(rule => {
+    urlFilterRulesXML += `\t\t<dict>
+\t\t\t<key>action</key>
+\t\t\t<integer>${rule.action}</integer>
+\t\t\t<key>active</key>
+\t\t\t<${rule.active ? 'true' : 'false'}/>
+\t\t\t<key>expression</key>
+\t\t\t<string>${escapeXML(rule.expression || '')}</string>
+\t\t\t<key>regex</key>
+\t\t\t<${rule.regex ? 'true' : 'false'}/>
+\t\t</dict>
+`;
+});
 
 // Generate complete plist XML with version info
 const buildDateFormatted = formatBuildDate('en'); // Use international format for file
@@ -2940,7 +3381,7 @@ if (!configXML) {
     return;
 }
 
-const rawConfigName = document.getElementById('configName').value || 'SEB_Config';
+const rawConfigName = document.getElementById('configName')?.value || 'SEB_Config';
 const configName = sanitizeFilename(rawConfigName);
 const blob = new Blob([configXML], { type: 'application/xml' });
 const url = URL.createObjectURL(blob);
@@ -3188,7 +3629,9 @@ modal.addEventListener('click', (e) => {
 function generateMoodleUrlConfig() {
 const config = {
     expressionsAllowed: [],
-    expressionsBlocked: []
+    expressionsBlocked: [],
+    regexAllowed: [],
+    regexBlocked: []
 };
 
 // Collect domains from selected services
@@ -3202,8 +3645,28 @@ selectedPresets.forEach(presetId => {
     }
 });
 
+// Add manual URL filter rules from advanced settings (if loaded)
+if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
+    parsedDictStructures.urlFilterRules.forEach(rule => {
+        // Only include active rules
+        if (rule.active && rule.expression) {
+            // Regex rules
+            if (rule.regex && rule.action === 1) {
+                config.regexAllowed.push(rule.expression);
+            } else if (rule.regex && rule.action === 0) {
+                config.regexBlocked.push(rule.expression);
+            // Wildcard rules
+            } else if (!rule.regex && rule.action === 1) {
+                config.expressionsAllowed.push(rule.expression);
+            } else if (!rule.regex && rule.action === 0) {
+                config.expressionsBlocked.push(rule.expression);
+            }
+        }
+    });
+}
+
 // Add custom domains
-const customDomainInput = document.getElementById('customDomains').value.trim();
+const customDomainInput = document.getElementById('customDomains')?.value?.trim() || '';
 if (customDomainInput) {
     const customDomains = customDomainInput.split('\n')
         .map(d => d.trim())
@@ -3212,7 +3675,7 @@ if (customDomainInput) {
 }
 
 // Add blocked domains
-const blockedDomainInput = document.getElementById('blockedDomains').value.trim();
+const blockedDomainInput = document.getElementById('blockedDomains')?.value?.trim() || '';
 if (blockedDomainInput) {
     const blockedDomains = blockedDomainInput.split('\n')
         .map(d => d.trim())
@@ -3248,24 +3711,127 @@ if (format === 'moodle') {
 }
 
 function showMoodleModal() {
+debugLog('🔵 showMoodleModal called');
 const config = generateMoodleUrlConfig();
+debugLog('📊 Moodle config generated:', config);
 
-// Populate textareas
-document.getElementById('moodleExpressionsAllowed').value = config.expressionsAllowed.join('\n');
-document.getElementById('moodleExpressionsBlocked').value = config.expressionsBlocked.join('\n');
+// Populate expression textareas
+const expressionsAllowed = document.getElementById('moodleExpressionsAllowed');
+const expressionsBlocked = document.getElementById('moodleExpressionsBlocked');
+const expressionsAllowedSection = document.getElementById('moodleExpressionsAllowedSection');
+const expressionsBlockedSection = document.getElementById('moodleExpressionsBlockedSection');
 
-// Open "Expressions Blocked" section if it has content
-const blockedSection = document.getElementById('moodleExpressionsBlockedSection');
-if (config.expressionsBlocked.length > 0 && blockedSection) {
-    blockedSection.setAttribute('open', '');
+if (expressionsAllowed) {
+    expressionsAllowed.value = config.expressionsAllowed.join('\n');
+}
+// Open Expressions Allowed section if it has content
+if (config.expressionsAllowed.length > 0 && expressionsAllowedSection) {
+    expressionsAllowedSection.setAttribute('open', '');
+}
+
+if (expressionsBlocked) {
+    expressionsBlocked.value = config.expressionsBlocked.join('\n');
+}
+// Open Expressions Blocked section if it has content
+if (config.expressionsBlocked.length > 0 && expressionsBlockedSection) {
+    expressionsBlockedSection.setAttribute('open', '');
+}
+
+// Populate regex textareas
+const regexAllowedTextarea = document.getElementById('moodleRegexAllowed');
+const regexBlockedTextarea = document.getElementById('moodleRegexBlocked');
+
+// Regex Allowed: Show user's regex rules if available, otherwise show example
+const regexAllowedSection = document.getElementById('moodleRegexAllowedSection');
+const regexAllowedCopyBtn = document.querySelector('[data-field="moodleRegexAllowed"]');
+if (config.regexAllowed.length > 0 && regexAllowedTextarea) {
+    regexAllowedTextarea.value = config.regexAllowed.join('\n');
+    regexAllowedTextarea.classList.remove('moodle-example');
+    regexAllowedTextarea.removeAttribute('readonly');
+    // Show copy button
+    if (regexAllowedCopyBtn) {
+        regexAllowedCopyBtn.style.display = 'block';
+    }
+    // Hide/remove example note
+    const note = regexAllowedTextarea.previousElementSibling;
+    if (note && note.classList.contains('moodle-example-note')) {
+        note.style.display = 'none';
+    }
+    // Open section since it has real data
+    if (regexAllowedSection) {
+        regexAllowedSection.setAttribute('open', '');
+    }
+} else if (regexAllowedTextarea) {
+    // Show example (read-only)
+    regexAllowedTextarea.value = '^https://moodle\\.example\\.com/mod/resource/view\\.php\\?id=\\d+$';
+    regexAllowedTextarea.classList.add('moodle-example');
+    regexAllowedTextarea.setAttribute('readonly', 'readonly');
+    // Hide copy button
+    if (regexAllowedCopyBtn) {
+        regexAllowedCopyBtn.style.display = 'none';
+    }
+    // Show example note
+    const note = regexAllowedTextarea.previousElementSibling;
+    if (note && note.classList.contains('moodle-example-note')) {
+        note.style.display = 'block';
+    }
+}
+
+// Regex Blocked: Show user's regex rules if available, otherwise show example
+const regexBlockedSection = document.getElementById('moodleRegexBlockedSection');
+const regexBlockedCopyBtn = document.querySelector('[data-field="moodleRegexBlocked"]');
+if (config.regexBlocked.length > 0) {
+    if (regexBlockedTextarea) {
+        regexBlockedTextarea.value = config.regexBlocked.join('\n');
+        regexBlockedTextarea.classList.remove('moodle-example');
+        regexBlockedTextarea.removeAttribute('readonly');
+    }
+    // Show copy button
+    if (regexBlockedCopyBtn) {
+        regexBlockedCopyBtn.style.display = 'block';
+    }
+    // Hide example note
+    const note = regexBlockedTextarea.previousElementSibling;
+    if (note && note.classList.contains('moodle-example-note')) {
+        note.style.display = 'none';
+    }
+    if (regexBlockedSection) {
+        regexBlockedSection.setAttribute('open', '');
+    }
+} else {
+    // Show example (read-only)
+    if (regexBlockedTextarea) {
+        regexBlockedTextarea.value = '^https://.*\\.(facebook|twitter|instagram)\\.com/.*$';
+        regexBlockedTextarea.classList.add('moodle-example');
+        regexBlockedTextarea.setAttribute('readonly', 'readonly');
+    }
+    // Hide copy button
+    if (regexBlockedCopyBtn) {
+        regexBlockedCopyBtn.style.display = 'none';
+    }
+    // Show example note
+    const note = regexBlockedTextarea?.previousElementSibling;
+    if (note && note.classList.contains('moodle-example-note')) {
+        note.style.display = 'block';
+    }
 }
 
 // Show modal
-document.getElementById('moodleModal').classList.remove('hidden');
+const modal = document.getElementById('moodleModal');
+debugLog('🎭 Modal element found:', modal);
+if (modal) {
+    modal.classList.remove('hidden');
+    debugLog('✅ Modal should now be visible');
+} else {
+    console.error('❌ Modal element not found!');
+}
 }
 
 function closeMoodleModal() {
-document.getElementById('moodleModal').classList.add('hidden');
+const modal = document.getElementById('moodleModal');
+if (modal) {
+    modal.classList.add('hidden');
+}
 }
 
 function copyMoodleField(fieldId) {
@@ -3302,8 +3868,13 @@ content += '='.repeat(70) + '\n\n';
 // Regex Allowed
 content += t.moodleTxtRegexAllowedLabel + '\n';
 content += '-'.repeat(94) + '\n';
-content += t.moodleTxtRegexEmpty + '\n';
-content += t.moodleTxtRegexExample + '\n\n\n';
+if (config.regexAllowed.length > 0) {
+    content += config.regexAllowed.join('\n') + '\n';
+} else {
+    content += t.moodleTxtRegexEmpty + '\n';
+    content += t.moodleTxtRegexExample + '\n';
+}
+content += '\n\n';
 
 // Expressions Blocked
 content += t.moodleTxtExpressionsBlockedLabel + '\n';
@@ -3314,8 +3885,12 @@ content += '\n' + t.moodleTxtCopyMarkerEnd + '-'.repeat(70 - t.moodleTxtCopyMark
 // Regex Blocked
 content += t.moodleTxtRegexBlockedLabel + '\n';
 content += '-'.repeat(94) + '\n';
-content += t.moodleTxtRegexEmpty + '\n';
-content += t.moodleTxtRegexBlockedExample + '\n';
+if (config.regexBlocked.length > 0) {
+    content += config.regexBlocked.join('\n') + '\n';
+} else {
+    content += t.moodleTxtRegexEmpty + '\n';
+    content += t.moodleTxtRegexBlockedExample + '\n';
+}
 
 // Create and download file
 const blob = new Blob([content], { type: 'text/plain' });
@@ -3371,7 +3946,7 @@ document.getElementById('moodleModal').addEventListener('click', (e) => {
 document.getElementById('sharepointLink').addEventListener('input', function() {
     const url = this.value.trim();
     if (!url) {
-        document.getElementById('sharepointOptions').classList.add('hidden');
+        document.getElementById('sharepointOptions')?.classList.add('hidden');
         return;
     }
     
@@ -3450,8 +4025,21 @@ async function expandAdvancedSectionAndScroll(elementId) {
                 debugLog('✅ Loaded options:', parsedBooleanOptions);
                 parsedBooleanOptions.loaded = true;
                 
-                // Render all boolean options
+                // Render boolean options first (clears container)
                 renderBooleanOptions();
+                
+                // Render dict structures (process lists, certificates) FIRST
+                debugLog('🎨 Rendering dict structures...');
+                await renderDictStructures();
+                debugLog('✅ Dict structures rendered');
+                
+                // Render URL filter rules shell AFTER dict structures (collapsed, will lazy load on expand)
+                debugLog('🌐 Rendering URL filter rules shell...');
+                renderURLFilterRules();
+                debugLog('✅ URL filter rules shell rendered');
+                
+                // Setup global search
+                setupGlobalSearch();
                 
                 // Wait a bit for rendering to complete
                 await new Promise(resolve => setTimeout(resolve, 300));
@@ -3518,15 +4106,20 @@ if (content.classList.contains('expanded')) {
             debugLog('✅ Loaded options:', parsedBooleanOptions);
             parsedBooleanOptions.loaded = true;
             
-            // Render boolean options
+            // Render boolean options first (clears container)
             debugLog('🎨 Rendering boolean options...');
             renderBooleanOptions();
             debugLog('✅ Rendering complete');
             
-            // Also render dict structures (process lists, certificates)
+            // Render dict structures (process lists, certificates) FIRST
             debugLog('🎨 Rendering dict structures...');
             await renderDictStructures();
             debugLog('✅ Dict structures rendered');
+            
+            // Render URL filter rules shell AFTER dict structures (collapsed, will lazy load on expand)
+            debugLog('🌐 Rendering URL filter rules shell...');
+            renderURLFilterRules();
+            debugLog('✅ URL filter rules shell rendered');
             
             // Setup global search after both are rendered
             setupGlobalSearch();
@@ -3664,10 +4257,10 @@ const initialLang = urlLang || savedLang || 'de';
 setLanguage(initialLang);
 
 // Initialize export format buttons visibility (default: .seb selected)
-document.getElementById('generateBtn').classList.remove('hidden');
-document.getElementById('generateMoodleBtn').classList.add('hidden');
-document.getElementById('sebWarningBox').classList.remove('hidden');
-document.getElementById('nextStepsBox').classList.remove('hidden');
+document.getElementById('generateBtn')?.classList.remove('hidden');
+document.getElementById('generateMoodleBtn')?.classList.add('hidden');
+document.getElementById('sebWarningBox')?.classList.remove('hidden');
+document.getElementById('nextStepsBox')?.classList.remove('hidden');
 
 attachEventListeners();
 updatePreview();
@@ -3696,8 +4289,16 @@ globalSearchInput.placeholder = currentLang === 'de'
 
 debugLog('🔍 Setting up global search...');
 
-globalSearchInput.addEventListener('input', (e) => {
+globalSearchInput.addEventListener('input', async (e) => {
     const searchTerm = e.target.value.toLowerCase();
+    
+    // Lazy load dict structures if user is searching and they're not loaded yet
+    if (searchTerm && !parsedDictStructures.loaded) {
+        debugLog('🔄 Lazy loading dict structures for global search...');
+        await parseXMLDictArrays();
+        parsedDictStructures.loaded = true;
+        debugLog('✅ Dict structures loaded for search');
+    }
     
     let totalMatches = 0;
     
@@ -3705,9 +4306,11 @@ globalSearchInput.addEventListener('input', (e) => {
     const booleanMatches = searchInBooleanOptions(searchTerm);
     totalMatches += booleanMatches;
     
-    // Search in Process Lists
-    const processMatches = searchInProcessLists(searchTerm);
-    totalMatches += processMatches;
+    // Search in Process Lists (only if dict structures are loaded)
+    if (parsedDictStructures.loaded) {
+        const processMatches = searchInProcessLists(searchTerm);
+        totalMatches += processMatches;
+    }
     
     // Update count
     if (searchTerm) {

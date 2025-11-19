@@ -45,7 +45,7 @@
   "securityLevel": "Sicherheitsstufe",
   "securityLevelExperimentalTitle": "⚙️ Experimentell",
   "securityLevelExperimentalText": "Die Sicherheitsstufen 'Locker' und 'Streng' sind noch in Entwicklung und haben derzeit nur minimale Auswirkungen auf die Konfiguration.",
-  "allBooleanOptions": "Alle True-/False-Optionen",
+  "allBooleanOptions": "Erweiterte Optionen (für fortgeschrittene Anwender)",
   "platformReference": "📚 Menü-Referenz für:",
   "experimentalFeature": "Experimentelle Funktion",
   "booleanOptionsWarning": "Diese Funktion befindet sich in Entwicklung. Die Menü-Referenzen werden schrittweise für alle Plattformen ergänzt. Verwenden Sie diese Optionen mit Vorsicht und testen Sie die generierte Konfiguration gründlich.",
@@ -191,5 +191,9 @@
   "openWikipedia": "Wikipedia-Artikel öffnen",
   "googleSearchProcess": "Google-Suche für diesen Prozess",
   "notDocumented": "Nicht dokumentiert",
-  "notDocumentedHint": "Diese Option wurde noch nicht in der SEB Config Tool Menü-Referenz dokumentiert"
+  "notDocumentedHint": "Diese Option wurde noch nicht in der SEB Config Tool Menü-Referenz dokumentiert",
+  "urlFilterAllowLabel": "(URL-Filter: erlauben, aktiv, nicht-regex)",
+  "urlFilterBlockLabel": "(URL-Filter: blockieren, aktiv, nicht-regex)",
+  "previewRegexAllowedTitle": "🔤 Erlaubte Regex-Patterns (URL-Filter)",
+  "previewRegexBlockedTitle": "🔤 Blockierte Regex-Patterns (URL-Filter)"
 }

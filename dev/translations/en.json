@@ -45,7 +45,7 @@
   "securityLevel": "Security Level",
   "securityLevelExperimentalTitle": "⚙️ Experimental",
   "securityLevelExperimentalText": "The security levels 'Relaxed' and 'Strict' are still in development and currently have minimal impact on the configuration.",
-  "allBooleanOptions": "All True/False Options",
+  "allBooleanOptions": "Advanced Options (for experienced users)",
   "platformReference": "📚 Menu Reference for:",
   "experimentalFeature": "Experimental Feature",
   "booleanOptionsWarning": "This feature is under development. Menu references are being added gradually for all platforms. Use these options with caution and thoroughly test the generated configuration.",
@@ -191,5 +191,13 @@
   "sebMenuIOSSettings": "iOS Settings",
   "sebMenuSystemLockdown": "System Lockdown",
   "sebMenuRegistry": "Registry",
-  "sebMenuHookedKeys": "Hooked Keys"
+  "sebMenuHookedKeys": "Hooked Keys",
+  "openWikipedia": "Open Wikipedia article",
+  "googleSearchProcess": "Google search for this process",
+  "notDocumented": "Not documented",
+  "notDocumentedHint": "This option has not yet been documented in the SEB Config Tool menu reference",
+  "urlFilterAllowLabel": "(URL filter: allow, active, non-regex)",
+  "urlFilterBlockLabel": "(URL filter: block, active, non-regex)",
+  "previewRegexAllowedTitle": "🔤 Allowed Regex Patterns (URL Filter)",
+  "previewRegexBlockedTitle": "🔤 Blocked Regex Patterns (URL Filter)"
 }
