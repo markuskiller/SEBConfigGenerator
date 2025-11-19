@@ -1,9 +1,34 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.20.1
-// Build: 2025-11-16 20:31
+// Version: v0.22.0rc1
+// Build: 2025-11-19 22:34
 
 // ============================================================================
+
+// ============================================================================
+// DEBUG LOGGING
+// ============================================================================
+// Debug mode can be enabled via URL parameter: ?debug=true
+// Example: https://dev.focusmode.ch/?debug=true
+// This will show detailed console logs for:
+// - XML parsing and loading
+// - Boolean options processing
+// - Dict structures rendering
+// - Platform switching
+// - Search functionality
+const DEBUG_MODE = new URLSearchParams(window.location.search).get('debug') === 'true';
+
+// Debug logger - only logs when DEBUG_MODE is true
+const debugLog = (...args) => {
+    if (DEBUG_MODE) {
+        console.log(...args);
+    }
+};
+
+// Log debug mode status on startup
+if (DEBUG_MODE) {
+    console.log('🐛 Debug mode enabled via ?debug=true');
+}
 
 // ============================================================================
 // TRANSLATIONS / ÜBERSETZUNGEN
@@ -44,6 +69,44 @@ strict: {
     settings: {allowSwitchToApplications:false,allowQuit:false,browserViewMode:1,enableBrowserWindowToolbar:false,showMenuBar:false}
 }
 };
+
+// ============================================================================
+// WIKIPEDIA ARTICLE MAPPING
+// ============================================================================
+// WIKIPEDIA_ARTICLES is loaded from external file:
+// - templates/generated/wikipedia-mapping.js
+// Generated from: templates/source/wikipedia-mapping.json
+// To modify mappings, edit the JSON file and run: bash scripts/build-platform-options.sh
+
+// Function to get Wikipedia article name for a process
+function getWikipediaArticle(processName) {
+    // Direct lookup
+    if (WIKIPEDIA_ARTICLES[processName]) {
+        return WIKIPEDIA_ARTICLES[processName];
+    }
+    
+    // Try without extension
+    const nameWithoutExt = processName.replace(/\.(exe|app|dmg|pkg)$/i, '');
+    if (WIKIPEDIA_ARTICLES[nameWithoutExt]) {
+        return WIKIPEDIA_ARTICLES[nameWithoutExt];
+    }
+    
+    // Fallback: clean up name for generic search
+    return nameWithoutExt.replace(/[-_]/g, ' ').replace(/\s+/g, '_');
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+function getTimestamp() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}_${hours}-${minutes}`;
+}
 
 // ============================================================================
 // SHAREPOINT LINK PARSING
@@ -210,7 +273,7 @@ try {
 // ============================================================================
 async function loadAndParseBooleanOptions() {
 try {
-    console.log('📥 Loading XML template from embedded data...');
+    debugLog('📥 Loading XML template from embedded data...');
     
     // Check if EXAMPLE_CONFIG_XML is available (loaded from xml-data.js)
     if (typeof EXAMPLE_CONFIG_XML === 'undefined') {
@@ -219,8 +282,8 @@ try {
     }
     
     const xmlText = EXAMPLE_CONFIG_XML;
-    console.log('📝 XML text length:', xmlText.length);
-    console.log('📝 First 200 chars:', xmlText.substring(0, 200));
+    debugLog('📝 XML text length:', xmlText.length);
+    debugLog('📝 First 200 chars:', xmlText.substring(0, 200));
     
     // Parse XML
     const parser = new DOMParser();
@@ -233,24 +296,38 @@ try {
         return false;
     }
     
-    console.log('✅ XML parsed successfully');
-    console.log('📊 Root element:', xmlDoc.documentElement.tagName);
+    debugLog('✅ XML parsed successfully');
+    debugLog('📊 Root element:', xmlDoc.documentElement.tagName);
     
-    // Extract all boolean options
-    const allKeys = xmlDoc.getElementsByTagName('key');
+    // Extract boolean options from ROOT level only (not from nested dict arrays)
+    // Find the root <dict> element (child of <plist>)
+    const plistElement = xmlDoc.documentElement;
+    const rootDict = plistElement.querySelector(':scope > dict');
+    
+    if (!rootDict) {
+        console.error('❌ No root <dict> found in XML');
+        return false;
+    }
+    
     const optionsMap = new Map(); // Use Map to automatically handle duplicates
     
-    for (let i = 0; i < allKeys.length; i++) {
-        const keyElement = allKeys[i];
-        const keyName = keyElement.textContent.trim();
-        const nextSibling = keyElement.nextElementSibling;
+    // Only process direct children of root dict
+    const rootChildren = rootDict.children;
+    for (let i = 0; i < rootChildren.length; i++) {
+        const element = rootChildren[i];
         
-        // Check if the next element is <true/> or <false/>
-        if (nextSibling && (nextSibling.tagName === 'true' || nextSibling.tagName === 'false')) {
-            const defaultValue = nextSibling.tagName === 'true';
-            // Only add if not already in map (first occurrence wins)
-            if (!optionsMap.has(keyName)) {
-                optionsMap.set(keyName, { key: keyName, defaultValue });
+        // Only process <key> elements that are direct children of root dict
+        if (element.tagName === 'key') {
+            const keyName = element.textContent.trim();
+            const nextSibling = element.nextElementSibling;
+            
+            // Check if the next element is <true/> or <false/>
+            if (nextSibling && (nextSibling.tagName === 'true' || nextSibling.tagName === 'false')) {
+                const defaultValue = nextSibling.tagName === 'true';
+                // Only add if not already in map (first occurrence wins)
+                if (!optionsMap.has(keyName)) {
+                    optionsMap.set(keyName, { key: keyName, defaultValue });
+                }
             }
         }
     }
@@ -271,7 +348,7 @@ try {
     
     // Categorize each option
     options.forEach(opt => {
-        const key = opt.key;
+        const { key } = opt;
         let group = 'other';
         
         // Browser-related
@@ -310,14 +387,215 @@ try {
         parsedBooleanOptions.userSelections[opt.key] = opt.defaultValue; // Initialize with defaults
     });
     
-    console.log(`✅ Parsed ${options.length} boolean options from XML`);
-    console.log('📊 Groups distribution:');
+    debugLog(`✅ Parsed ${options.length} boolean options from XML`);
+    debugLog('📊 Groups distribution:');
     Object.keys(groups).forEach(key => {
-        console.log(`   - ${key}: ${groups[key].options.length} options`);
+        debugLog(`   - ${key}: ${groups[key].options.length} options`);
     });
     return true;
 } catch (error) {
     console.error('Failed to load/parse boolean options from XML:', error);
+    return false;
+}
+}
+
+// ============================================================================
+// PARSE DICT ARRAY STRUCTURES FROM XML
+// ============================================================================
+async function parseXMLDictArrays() {
+try {
+    debugLog('📦 Parsing dict array structures from XML...');
+    
+    // Check if XML is available
+    if (typeof EXAMPLE_CONFIG_XML === 'undefined') {
+        console.error('❌ EXAMPLE_CONFIG_XML not found!');
+        return false;
+    }
+    
+    // Parse XML
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(EXAMPLE_CONFIG_XML, 'application/xml');
+    
+    // Helper function to parse a dict element
+    function parseDict(dictElement) {
+        const dict = {};
+        let currentKey = null;
+        
+        for (let child of dictElement.children) {
+            if (child.tagName === 'key') {
+                currentKey = child.textContent.trim();
+            } else if (currentKey) {
+                // Get value based on element type
+                if (child.tagName === 'true') {
+                    dict[currentKey] = true;
+                } else if (child.tagName === 'false') {
+                    dict[currentKey] = false;
+                } else if (child.tagName === 'integer') {
+                    dict[currentKey] = parseInt(child.textContent.trim());
+                } else if (child.tagName === 'string') {
+                    dict[currentKey] = child.textContent.trim();
+                } else if (child.tagName === 'data') {
+                    dict[currentKey] = child.textContent.trim(); // Base64 data
+                }
+                currentKey = null;
+            }
+        }
+        return dict;
+    }
+    
+    // Helper function to categorize a process
+    function categorizeProcess(executable, identifier, description) {
+        const name = (executable || '').toLowerCase();
+        const id = (identifier || '').toLowerCase();
+        const desc = (description || '').toLowerCase();
+        const text = `${name} ${id} ${desc}`;
+        
+        // Categorization logic
+        if (text.match(/teams|zoom|skype|discord|slack|telegram|whatsapp|signal|element|riot|meet|gotomeeting|communicator|lync|messages|imessage|facetime|adium|ichat/)) {
+            return 'chat';
+        }
+        if (text.match(/anydesk|vnc|remote|teamviewer|chicken|chrome remote|desktop host|screen sharing|screenshare/)) {
+            return 'remote';
+        }
+        if (text.match(/camtasia|recorder|obs|capture|screen|video|quicktime player/)) {
+            return 'recording';
+        }
+        if (text.match(/chrome|firefox|safari|edge|brave|opera|vivaldi|browser/)) {
+            return 'browser';
+        }
+        if (text.match(/gpt|ai|assistant|copilot|chatbot/)) {
+            return 'ai';
+        }
+        if (text.match(/spotify|music|itunes|vlc|media player/)) {
+            return 'media';
+        }
+        if (text.match(/helper|plugin|service|daemon|background/)) {
+            return 'system';
+        }
+        return 'other';
+    }
+    
+    // Parse prohibited processes
+    const prohibitedKey = Array.from(xmlDoc.getElementsByTagName('key'))
+        .find(k => k.textContent === 'prohibitedProcesses');
+    
+    if (prohibitedKey) {
+        const arrayElement = prohibitedKey.nextElementSibling;
+        if (arrayElement && arrayElement.tagName === 'array') {
+            const dicts = arrayElement.getElementsByTagName('dict');
+            
+            for (let dict of dicts) {
+                const parsed = parseDict(dict);
+                const category = categorizeProcess(
+                    parsed.executable,
+                    parsed.identifier,
+                    parsed.description
+                );
+                parsed.category = category;
+                parsedDictStructures.prohibitedProcesses.push(parsed);
+            }
+            
+            debugLog(`✅ Parsed ${parsedDictStructures.prohibitedProcesses.length} prohibited processes`);
+        }
+    }
+    
+    // Parse permitted processes
+    const permittedKey = Array.from(xmlDoc.getElementsByTagName('key'))
+        .find(k => k.textContent === 'permittedProcesses');
+    
+    if (permittedKey) {
+        const arrayElement = permittedKey.nextElementSibling;
+        if (arrayElement && arrayElement.tagName === 'array') {
+            const dicts = arrayElement.getElementsByTagName('dict');
+            
+            for (let dict of dicts) {
+                const parsed = parseDict(dict);
+                const category = categorizeProcess(
+                    parsed.executable,
+                    parsed.identifier,
+                    parsed.description
+                );
+                parsed.category = category;
+                parsedDictStructures.permittedProcesses.push(parsed);
+            }
+            
+            debugLog(`✅ Parsed ${parsedDictStructures.permittedProcesses.length} permitted processes`);
+        }
+    }
+    
+    // Parse embedded certificates
+    const certsKey = Array.from(xmlDoc.getElementsByTagName('key'))
+        .find(k => k.textContent === 'embeddedCertificates');
+    
+    if (certsKey) {
+        const arrayElement = certsKey.nextElementSibling;
+        if (arrayElement && arrayElement.tagName === 'array') {
+            const dicts = arrayElement.getElementsByTagName('dict');
+            
+            for (let dict of dicts) {
+                const parsed = parseDict(dict);
+                parsedDictStructures.embeddedCertificates.push(parsed);
+            }
+            
+            debugLog(`✅ Parsed ${parsedDictStructures.embeddedCertificates.length} embedded certificates`);
+        }
+    }
+    
+    // Parse URL filter rules
+    const urlFilterKey = Array.from(xmlDoc.getElementsByTagName('key'))
+        .find(k => k.textContent === 'URLFilterRules');
+    
+    if (urlFilterKey) {
+        const arrayElement = urlFilterKey.nextElementSibling;
+        if (arrayElement && arrayElement.tagName === 'array') {
+            const dicts = arrayElement.getElementsByTagName('dict');
+            
+            for (let dict of dicts) {
+                const parsed = parseDict(dict);
+                parsedDictStructures.urlFilterRules.push(parsed);
+            }
+            
+            debugLog(`✅ Parsed ${parsedDictStructures.urlFilterRules.length} URL filter rules`);
+        }
+    }
+    
+    // Group by category for easier rendering
+    parsedDictStructures.categories = {
+        chat: { title: 'Chat & Communication', processes: [] },
+        remote: { title: 'Remote Access & Screen Sharing', processes: [] },
+        recording: { title: 'Screen Recording & Capture', processes: [] },
+        browser: { title: 'Web Browsers', processes: [] },
+        ai: { title: 'AI Tools', processes: [] },
+        media: { title: 'Media Players', processes: [] },
+        system: { title: 'System Services', processes: [] },
+        other: { title: 'Other Applications', processes: [] }
+    };
+    
+    // Group prohibited processes by category
+    parsedDictStructures.prohibitedProcesses.forEach((proc, index) => {
+        const cat = proc.category || 'other';
+        if (parsedDictStructures.categories[cat]) {
+            parsedDictStructures.categories[cat].processes.push({
+                ...proc,
+                index,
+                type: 'prohibited'
+            });
+        }
+    });
+    
+    debugLog('📊 Category distribution:');
+    Object.keys(parsedDictStructures.categories).forEach(key => {
+        const count = parsedDictStructures.categories[key].processes.length;
+        if (count > 0) {
+            debugLog(`   - ${key}: ${count} processes`);
+        }
+    });
+    
+    parsedDictStructures.loaded = true;
+    return true;
+    
+} catch (error) {
+    console.error('Failed to parse dict array structures:', error);
     return false;
 }
 }
@@ -334,7 +612,7 @@ if (booleanOptionsLocations[platform]) {
 }
 
 try {
-    console.log(`📍 Loading boolean options locations for ${platform}...`);
+    debugLog(`📍 Loading boolean options locations for ${platform}...`);
     
     // Get data from embedded JavaScript constants
     // Try to access the global variable directly (const variables are not on window object)
@@ -362,7 +640,7 @@ try {
     
     const optionCount = Object.keys(data.options).length;
     const versionInfo = data._metadata.sebVersion !== 'TBD' ? ` (SEB v${data._metadata.sebVersion})` : '';
-    console.log(`✅ Loaded locations for ${optionCount} options${versionInfo}`);
+    debugLog(`✅ Loaded locations for ${optionCount} options${versionInfo}`);
     return data;
 } catch (error) {
     console.error(`Failed to load boolean options locations for ${platform}:`, error);
@@ -389,23 +667,77 @@ if (currentPlatform === 'windows') {
     return windowsLoc;
 }
 
-// For macOS/iPadOS format (direct location)
-return optionData.location || optionData.windows || null;
+// For macOS format (with windowsDifferent field)
+if (currentPlatform === 'macos') {
+    const macosLoc = optionData.macos;
+    const winDiff = optionData.windowsDifferent;
+    
+    if (winDiff) {
+        return `${macosLoc} (Windows: ${winDiff})`;
+    }
+    return macosLoc;
+}
+
+// For iPadOS format (direct location)
+return optionData.location || optionData.ipados || null;
 }
 
 function getTranslatedText(key) {
 const platformData = booleanOptionsLocations[currentPlatform];
 if (!platformData || !platformData._translations || !platformData._translations[currentLang]) {
-    return key === 'notDocumented' ? 
-        (currentLang === 'de' ? 'Noch nicht dokumentiert' : 'Not yet documented') :
-        (currentLang === 'de' ? 'Diese Option ist noch nicht in der Dokumentation erfasst' : 'This option is not yet documented');
+    // Fallback to main translations
+    return key === 'notDocumented' ? t('notDocumented') : t('notDocumentedHint');
 }
 return platformData._translations[currentLang][key];
 }
 
+// Get localized location for an option key
+// Maps each path component (menu names and option name) to German
+function getLocalizedLocation(optionKey) {
+    // Get English location path from JSON
+    const englishLocation = getOptionLocation(optionKey);
+    
+    if (!englishLocation) {
+        return null;
+    }
+    
+    // If not German, return English path
+    if (currentLang !== 'de') {
+        return englishLocation;
+    }
+    
+    // Check if SEB_OPTION_LABELS is loaded
+    if (typeof SEB_OPTION_LABELS === 'undefined' || !SEB_OPTION_LABELS.de) {
+        console.warn('⚠️ SEB_OPTION_LABELS not loaded');
+        return englishLocation;
+    }
+    
+    const labels = SEB_OPTION_LABELS.de;
+    
+    // Helper function to translate path components
+    const translatePath = (path) => {
+        return path.split(' → ')
+            .map(part => labels[part] || part)
+            .join(' → ');
+    };
+    
+    // Check if there's a platform difference notation (Mac: ... or Windows: ...)
+    const diffMatch = englishLocation.match(/^(.+?)\s+\((Mac|Windows):\s+(.+)\)$/);
+    
+    if (diffMatch) {
+        const [, mainPath, platformLabel, diffPath] = diffMatch;
+        const localizedMain = translatePath(mainPath);
+        const localizedDiff = translatePath(diffPath);
+        return `${localizedMain} (${platformLabel}: ${localizedDiff})`;
+    }
+    
+    // No platform difference, just translate the simple path
+    return translatePath(englishLocation);
+}
+
 // Platform selection handler
 async function selectPlatform(platform) {
-console.log(`🔄 Switching to ${platform} platform...`);
+debugLog(`🔄 Switching to ${platform} platform...`);
 currentPlatform = platform;
 
 // Update button styles
@@ -423,7 +755,7 @@ await loadBooleanOptionsLocations(platform);
 
 // Re-render options to show new locations
 renderBooleanOptions();
-console.log(`✅ Switched to ${platform} platform`);
+debugLog(`✅ Switched to ${platform} platform`);
 }
 
 // Generate human-readable label from key name
@@ -443,8 +775,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.20.1';
-const BUILD_DATE = new Date('2025-11-18T00:01:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.22.0rc1';
+const BUILD_DATE = new Date('2025-11-19T22:34:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -480,6 +812,18 @@ loaded: false, // Track if options have been loaded
 groups: {},
 options: {},
 userSelections: {} // Track user's checkbox selections
+};
+
+// Dict structures parsed from XML template (lazy loaded on demand)
+let parsedDictStructures = {
+loaded: false,
+prohibitedProcesses: [],
+permittedProcesses: [],
+embeddedCertificates: [],
+urlFilterRules: [],
+additionalResources: [],
+categories: {}, // Grouped by category
+userSelections: {} // Track checkbox changes
 };
 
 // Platform selection for boolean options reference
@@ -525,7 +869,7 @@ updateVersionInfo(lang);
 
 // Update SharePoint help text if visible
 const sharepointHelp = document.getElementById('sharepointHelp');
-if (sharepointHelp && sharepointHelp.style.display !== 'none') {
+if (sharepointHelp && !sharepointHelp.classList.contains('hidden')) {
     const hasOneNote = selectedPresets.includes('onenote');
     const hasWord = selectedPresets.includes('word');
     
@@ -546,6 +890,7 @@ if (parsedBooleanOptions.loaded) {
 // Re-render dynamic content
 renderPresets();
 renderSecurityLevels();
+updateStartUrlField(); // Update start URL dropdown labels
 
 // Save language preference
 localStorage.setItem('sebConfigLang', lang);
@@ -632,7 +977,7 @@ PRESET_GROUPS.noLogin.forEach(key => {
         <h3>${t(getPresetTranslationKey(key))}</h3>
         <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
-    btn.onclick = () => togglePreset(key);
+    btn.addEventListener('click', () => togglePreset(key));
     container.appendChild(btn);
 });
 
@@ -649,7 +994,7 @@ PRESET_GROUPS.withLogin.forEach(key => {
         <h3>${t(getPresetTranslationKey(key))}</h3>
         <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
-    btn.onclick = () => togglePreset(key);
+    btn.addEventListener('click', () => togglePreset(key));
     container.appendChild(btn);
 });
 
@@ -680,7 +1025,7 @@ const hasWord = selectedPresets.includes('word');
 const hasOneNoteOrWord = hasOneNote || hasWord;
 
 if (hasOneNoteOrWord) {
-    experimentalWarning.style.display = 'block';
+    experimentalWarning.classList.remove('hidden');
     const warningTitle = experimentalWarning.querySelector('strong');
     const warningText = experimentalWarning.querySelector('div');
     const warningLink = experimentalWarning.querySelector('a');
@@ -688,12 +1033,26 @@ if (hasOneNoteOrWord) {
     
     // Replace "Network Capture" with a link in the warning text
     const text = t('experimentalWarningText');
-    const linkText = '<a href="#networkCaptureHelper" class="warning-link">Network Capture</a>';
+    const linkText = '<a href="#networkCaptureHelper" class="warning-link network-capture-link">Network Capture</a>';
     warningText.innerHTML = text.replace('Network Capture', linkText);
     
+    // Add click handler to expand advanced section before scrolling
+    const networkCaptureLink = warningText.querySelector('.network-capture-link');
+    if (networkCaptureLink) {
+        networkCaptureLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            expandAdvancedSectionAndScroll('networkCaptureHelper');
+        });
+    }
+    
     warningLink.textContent = t('experimentalWarningLink');
+    // Also handle the main warning link
+    warningLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        expandAdvancedSectionAndScroll('networkCaptureHelper');
+    });
 } else {
-    experimentalWarning.style.display = 'none';
+    experimentalWarning.classList.add('hidden');
 }
 
 // Group 3: Allowed Tools (with subject selection)
@@ -773,7 +1132,7 @@ PRESET_GROUPS.allowedTools[subject].forEach(key => {
         <h3>${t(getPresetTranslationKey(key))}</h3>
         <p>${t(getPresetTranslationKey(key, 'Desc'))}</p>
     `;
-    btn.onclick = () => togglePreset(key);
+    btn.addEventListener('click', () => togglePreset(key));
     container.appendChild(btn);
 });
 }
@@ -789,7 +1148,7 @@ container.innerHTML = '';
         <h4>${t('security' + key.charAt(0).toUpperCase() + key.slice(1))}</h4>
         <p>${t('security' + key.charAt(0).toUpperCase() + key.slice(1) + 'Desc')}</p>
     `;
-    div.onclick = () => selectSecurityLevel(key);
+    div.addEventListener('click', () => selectSecurityLevel(key));
     container.appendChild(div);
 });
 
@@ -800,12 +1159,12 @@ updateSecurityLevelWarning();
 function renderSharePointOptions(serviceType, parsedLink) {
 const container = document.getElementById('sharepointOptions');
 if (!parsedLink || !parsedLink.isSharePoint) {
-    container.style.display = 'none';
+    container.classList.add('hidden');
     container.innerHTML = '';
     return;
 }
 
-container.style.display = 'block';
+container.classList.remove('hidden');
 container.innerHTML = '';
 
 // Title
@@ -909,13 +1268,13 @@ const checkbox = document.createElement('input');
 checkbox.type = 'checkbox';
 checkbox.id = `sp_${serviceType}_${restrictionType}`;
 checkbox.classList.add('preset-option-checkbox');
-checkbox.onchange = () => {
+checkbox.addEventListener('change', () => {
     if (!sharepointConfig[serviceType].restrictions) {
         sharepointConfig[serviceType].restrictions = {};
     }
     sharepointConfig[serviceType].restrictions[restrictionType] = checkbox.checked;
     updatePreview();
-};
+});
 
 const labelEl = document.createElement('label');
 labelEl.htmlFor = checkbox.id;
@@ -931,6 +1290,61 @@ div.appendChild(labelEl);
 div.appendChild(infoEl);
 
 return div;
+}
+
+function updateStartUrlField() {
+const startUrlInput = document.getElementById('startUrl');
+const startUrlSelectorContainer = document.getElementById('startUrlSelectorContainer');
+const startUrlSelector = document.getElementById('startUrlSelector');
+
+if (selectedPresets.length === 0) {
+    // No presets selected - clear field and hide dropdown
+    startUrlInput.value = '';
+    startUrlSelectorContainer.classList.remove('visible');
+} else if (selectedPresets.length === 1) {
+    // Single selection - set start URL directly from preset
+    const presetKey = selectedPresets[0];
+    if (PRESETS[presetKey]) {
+        startUrlInput.value = PRESETS[presetKey].startUrl;
+    }
+    startUrlSelectorContainer.classList.remove('visible');
+} else {
+    // Multiple selections - show dropdown
+    startUrlSelectorContainer.classList.add('visible');
+    
+    // Clear and populate dropdown
+    startUrlSelector.innerHTML = '';
+    
+    // Add "Custom" option as default
+    const customOption = document.createElement('option');
+    customOption.value = '';
+    customOption.textContent = currentLang === 'de' ? '🔧 Benutzerdefiniert (eigene URL eingeben)' : '🔧 Custom (enter your own URL)';
+    startUrlSelector.appendChild(customOption);
+    
+    // Add option for each selected preset
+    selectedPresets.forEach(presetKey => {
+        const preset = PRESETS[presetKey];
+        if (preset && preset.startUrl) {
+            const option = document.createElement('option');
+            option.value = preset.startUrl;
+            const presetName = t(getPresetTranslationKey(presetKey));
+            option.textContent = `${presetName} (${preset.startUrl})`;
+            startUrlSelector.appendChild(option);
+        }
+    });
+    
+    // Set to custom (empty) by default
+    startUrlSelector.value = '';
+    startUrlInput.value = '';
+    
+    // Add change listener if not already added
+    if (!startUrlSelector.hasAttribute('data-listener-attached')) {
+        startUrlSelector.setAttribute('data-listener-attached', 'true');
+        startUrlSelector.addEventListener('change', (e) => {
+            startUrlInput.value = e.target.value;
+        });
+    }
+}
 }
 
 function togglePreset(key) {
@@ -951,13 +1365,17 @@ const hasOneNote = selectedPresets.includes('onenote');
 const hasWord = selectedPresets.includes('word');
 const hasOneNoteOrWord = hasOneNote || hasWord;
 
-sharepointLinkGroup.style.display = hasOneNoteOrWord ? 'block' : 'none';
+if (hasOneNoteOrWord) {
+    sharepointLinkGroup.classList.remove('hidden');
+} else {
+    sharepointLinkGroup.classList.add('hidden');
+}
 
 // Update experimental warning visibility (created in renderPresets)
 const experimentalWarning = document.getElementById('experimentalWarning');
 if (experimentalWarning) {
     if (hasOneNoteOrWord) {
-        experimentalWarning.style.display = 'block';
+        experimentalWarning.classList.remove('hidden');
         const warningTitle = experimentalWarning.querySelector('strong');
         const warningText = experimentalWarning.querySelector('div');
         const warningLink = experimentalWarning.querySelector('a');
@@ -965,61 +1383,68 @@ if (experimentalWarning) {
         
         // Replace "Network Capture" with a link in the warning text
         const text = t('experimentalWarningText');
-        const linkText = '<a href="#networkCaptureHelper" class="warning-link">Network Capture</a>';
+        const linkText = '<a href="#networkCaptureHelper" class="warning-link network-capture-link">Network Capture</a>';
         warningText.innerHTML = text.replace('Network Capture', linkText);
         
+        // Add click handler to expand advanced section before scrolling
+        const networkCaptureLink = warningText.querySelector('.network-capture-link');
+        if (networkCaptureLink) {
+            networkCaptureLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                expandAdvancedSectionAndScroll('networkCaptureHelper');
+            });
+        }
+        
         warningLink.textContent = t('experimentalWarningLink');
+        // Also handle the main warning link
+        warningLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            expandAdvancedSectionAndScroll('networkCaptureHelper');
+        });
     } else {
-        experimentalWarning.style.display = 'none';
+        experimentalWarning.classList.add('hidden');
     }
 }
 
 // Show appropriate help text
 if (hasOneNote && !hasWord) {
-    sharepointHelp.style.display = 'block';
+    sharepointHelp.classList.remove('hidden');
     sharepointHelp.textContent = t('sharepointHelpOneNote');
 } else if (hasWord && !hasOneNote) {
-    sharepointHelp.style.display = 'block';
+    sharepointHelp.classList.remove('hidden');
     sharepointHelp.textContent = t('sharepointHelpWord');
 } else if (hasOneNote && hasWord) {
-    sharepointHelp.style.display = 'block';
+    sharepointHelp.classList.remove('hidden');
     sharepointHelp.textContent = t('sharepointHelpOneNote') + '\n\n' + t('sharepointHelpWord');
 } else {
-    sharepointHelp.style.display = 'none';
+    sharepointHelp.classList.add('hidden');
 }
 
 // No longer enforce "at least one main preset" - allow using only Hilfsmittel
 // Users can now select only reference tools (e.g., Duden) with a custom start URL
 
-// Update start URL to first selected main preset (if any)
-const firstMainPreset = selectedPresets.find(p => !Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
-if (firstMainPreset && PRESETS[firstMainPreset]) {
-    document.getElementById('startUrl').value = PRESETS[firstMainPreset].startUrl;
-} else if (selectedPresets.length > 0 && !firstMainPreset) {
-    // If only Hilfsmittel selected, use first tool's start URL as suggestion
-    const firstTool = selectedPresets[0];
-    if (PRESETS[firstTool]) {
-        document.getElementById('startUrl').value = PRESETS[firstTool].startUrl;
-    }
-}
+// Update start URL based on selection count
+updateStartUrlField();
 
 // Update config name
-const mainPresetsForName = selectedPresets.filter(p => !Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
-const toolPresetsForName = selectedPresets.filter(p => Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
+// Rule: If more than 1 preset/tool selected in total → use generic "FocusMode-{timestamp}"
+//       If exactly 1 preset/tool selected → use specific name
+//       If none selected → clear name
+const totalSelected = selectedPresets.length;
 
-if (mainPresetsForName.length === 1) {
-    const presetName = t('preset' + mainPresetsForName[0].charAt(0).toUpperCase() + mainPresetsForName[0].slice(1));
-    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config`;
-} else if (mainPresetsForName.length > 1) {
-    document.getElementById('configName').value = `Multi_Service_Config`;
-} else if (toolPresetsForName.length === 1) {
-    // Only one Hilfsmittel selected
-    const presetName = t('preset' + toolPresetsForName[0].charAt(0).toUpperCase() + toolPresetsForName[0].slice(1));
-    document.getElementById('configName').value = `${presetName.replace(/\s+/g, '_')}_Config`;
-} else if (toolPresetsForName.length > 1) {
-    document.getElementById('configName').value = `Reference_Tools_Config`;
+if (totalSelected > 1) {
+    // More than one service/tool selected → generic name
+    const configNameEl = document.getElementById('configName');
+    if (configNameEl) configNameEl.value = `FocusMode-${getTimestamp()}`;
+} else if (totalSelected === 1) {
+    // Exactly one service/tool selected → use its name
+    const presetName = t('preset' + selectedPresets[0].charAt(0).toUpperCase() + selectedPresets[0].slice(1));
+    const configNameEl = document.getElementById('configName');
+    if (configNameEl) configNameEl.value = `${presetName.replace(/\s+/g, '_')}_Config-${getTimestamp()}`;
 } else {
-    document.getElementById('configName').value = '';
+    // Nothing selected → clear name
+    const configNameEl = document.getElementById('configName');
+    if (configNameEl) configNameEl.value = '';
 }
 
 renderPresets();
@@ -1059,11 +1484,273 @@ if (showWarning) {
     const warningText = warningDiv.querySelector('div');
     warningTitle.textContent = t('securityLevelExperimentalTitle');
     warningText.textContent = t('securityLevelExperimentalText');
-    warningDiv.style.display = 'block';
+    warningDiv.classList.remove('hidden');
 } else if (warningDiv) {
     // Hide warning for balanced level
-    warningDiv.style.display = 'none';
+    warningDiv.classList.add('hidden');
 }
+}
+
+// ============================================================================
+// URL FILTER RULES RENDERING
+// ============================================================================
+function renderURLFilterRules() {
+// Insert into placeholder that is positioned BEFORE boolean options
+const placeholder = document.getElementById('urlFilterPlaceholder');
+if (!placeholder) {
+    console.error('❌ urlFilterPlaceholder not found!');
+    return;
+}
+
+debugLog('🌐 Rendering URL filter rules section...');
+
+// Create collapsible section for URL filter rules
+const section = document.createElement('div');
+section.classList.add('url-filter-section', 'bool-group-container');
+section.style.marginBottom = '1.5rem';
+
+// Header (collapsible) - styled like boolean option groups
+const header = document.createElement('div');
+header.classList.add('url-filter-header', 'bool-group-header');
+header.style.cursor = 'pointer';
+
+// Show placeholder text initially, will be updated when expanded
+const placeholderText = currentLang === 'de' 
+    ? 'Manuelle Regeln + automatisch generiert' 
+    : 'Manual rules + auto-generated';
+
+header.innerHTML = `
+    <strong>🌐 ${currentLang === 'de' ? 'URL-Filter-Regeln' : 'URL Filter Rules'}</strong>
+    <span>(${placeholderText})</span>
+`;
+
+// Content (initially hidden) - styled like boolean option group content
+const content = document.createElement('div');
+content.classList.add('url-filter-content', 'bool-group-content');
+content.style.padding = '1rem';
+
+// Toggle functionality with lazy loading
+let contentLoaded = false;
+header.addEventListener('click', async () => {
+    const isExpanding = !content.classList.contains('show');
+    
+    if (isExpanding && !contentLoaded) {
+        // Lazy load dict structures if not already loaded
+        if (!parsedDictStructures.loaded) {
+            debugLog('🔄 Lazy loading dict structures for URL filter rules...');
+            content.innerHTML = '<div class="loading-indicator">⏳ ' + 
+                (currentLang === 'de' ? 'Lade Filter-Regeln...' : 'Loading filter rules...') + '</div>';
+            content.classList.add('show');
+            
+            await parseXMLDictArrays();
+            parsedDictStructures.loaded = true;
+            debugLog('✅ Dict structures loaded');
+        }
+        
+        // Render content
+        debugLog('🔄 Rendering URL filter rules content...');
+        renderURLFilterContent(content);
+        contentLoaded = true;
+        
+        // Update count badge with actual numbers
+        const countSpan = header.querySelector('span');
+        const ruleCount = parsedDictStructures.urlFilterRules.length;
+        const autoGenText = currentLang === 'de' 
+            ? `+ ${getAllDomains().length} automatisch generiert` 
+            : `+ ${getAllDomains().length} auto-generated`;
+        countSpan.textContent = `(${ruleCount} ${currentLang === 'de' ? 'manuell' : 'manual'} ${autoGenText})`;
+    }
+    
+    // Toggle visibility
+    content.classList.toggle('show');
+});
+
+section.appendChild(header);
+section.appendChild(content);
+placeholder.appendChild(section);
+
+debugLog('✅ URL filter rules section shell created (lazy loading enabled)');
+}
+
+function renderURLFilterContent(container) {
+container.innerHTML = '';
+
+// Info box
+const infoBox = document.createElement('div');
+infoBox.style.cssText = `
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 4px;
+`;
+infoBox.innerHTML = currentLang === 'de'
+    ? '<strong>ℹ️ Hinweis:</strong> Manuelle Filter-Regeln werden zusätzlich zu den automatisch generierten Preset-Domains verwendet. Regex-Patterns sind fortgeschrittene Optionen für erfahrene Nutzer.'
+    : '<strong>ℹ️ Note:</strong> Manual filter rules are used in addition to auto-generated preset domains. Regex patterns are advanced options for experienced users.';
+container.appendChild(infoBox);
+
+// Rules list
+const rulesList = document.createElement('div');
+rulesList.classList.add('url-filter-rules-list');
+rulesList.id = 'urlFilterRulesList';
+
+if (parsedDictStructures.urlFilterRules.length === 0) {
+    const emptyMsg = document.createElement('div');
+    emptyMsg.style.cssText = 'padding: 2rem; text-align: center; color: #666;';
+    emptyMsg.textContent = currentLang === 'de' 
+        ? 'Keine manuellen Filter-Regeln vorhanden. Klicken Sie "+ Neue Regel", um eine hinzuzufügen.'
+        : 'No manual filter rules defined. Click "+ New Rule" to add one.';
+    rulesList.appendChild(emptyMsg);
+} else {
+    parsedDictStructures.urlFilterRules.forEach((rule, index) => {
+        const ruleCard = createURLFilterRuleCard(rule, index);
+        rulesList.appendChild(ruleCard);
+    });
+}
+
+container.appendChild(rulesList);
+
+// Add new rule button
+const addButton = document.createElement('button');
+addButton.classList.add('btn', 'btn-secondary');
+addButton.style.cssText = 'margin-top: 1rem;';
+addButton.innerHTML = `➕ ${currentLang === 'de' ? 'Neue Regel' : 'New Rule'}`;
+addButton.addEventListener('click', addNewURLFilterRule);
+container.appendChild(addButton);
+}
+
+function createURLFilterRuleCard(rule, index) {
+const card = document.createElement('div');
+card.classList.add('url-filter-rule-card');
+card.style.cssText = `
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+`;
+
+const actionColor = rule.action === 1 ? '#4caf50' : '#f44336';
+const actionLabel = rule.action === 1 
+    ? (currentLang === 'de' ? '✓ Erlauben' : '✓ Allow') 
+    : (currentLang === 'de' ? '✗ Blockieren' : '✗ Block');
+
+    card.innerHTML = `
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" 
+                       class="url-filter-active" 
+                       data-index="${index}"
+                       ${rule.active ? 'checked' : ''}>
+                <span style="font-weight: 500;">${currentLang === 'de' ? 'Aktiv' : 'Active'}</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" 
+                       class="url-filter-regex" 
+                       data-index="${index}"
+                       ${rule.regex ? 'checked' : ''}>
+                <span>Regex</span>
+            </label>
+            <input type="text" 
+                   class="url-filter-expression" 
+                   data-index="${index}"
+                   value="${(rule.expression || '').replace(/"/g, '&quot;')}"
+                   placeholder="${currentLang === 'de' ? 'URL-Pattern oder Regex...' : 'URL pattern or regex...'}"
+                   style="flex: 1; min-width: 200px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;">
+            <select class="url-filter-action" 
+                    data-index="${index}"
+                    style="padding: 0.5rem; border: none; border-radius: 4px; background: ${actionColor}; color: white; font-weight: 500;">
+                <option value="1" ${rule.action === 1 ? 'selected' : ''}>${currentLang === 'de' ? '✓ Erlauben' : '✓ Allow'}</option>
+                <option value="0" ${rule.action === 0 ? 'selected' : ''}>${currentLang === 'de' ? '✗ Blockieren' : '✗ Block'}</option>
+            </select>
+            <button class="btn-icon url-filter-delete" 
+                    data-index="${index}"
+                    style="color: #f44336; padding: 0.5rem; cursor: pointer; border: none; background: transparent; font-size: 1.2rem;"
+                    title="${currentLang === 'de' ? 'Regel löschen' : 'Delete rule'}">
+                🗑️
+            </button>
+        </div>
+    `;// Event listeners
+card.querySelector('.url-filter-active').addEventListener('change', (e) => {
+    parsedDictStructures.urlFilterRules[index].active = e.target.checked;
+    debugLog(`URLFilter rule ${index} active: ${e.target.checked}`);
+    updatePreview();
+});
+
+card.querySelector('.url-filter-regex').addEventListener('change', (e) => {
+    parsedDictStructures.urlFilterRules[index].regex = e.target.checked;
+    debugLog(`URLFilter rule ${index} regex: ${e.target.checked}`);
+    updatePreview();
+});
+
+card.querySelector('.url-filter-expression').addEventListener('input', (e) => {
+    parsedDictStructures.urlFilterRules[index].expression = e.target.value;
+    debugLog(`URLFilter rule ${index} expression: ${e.target.value}`);
+    updatePreview();
+});
+
+    card.querySelector('.url-filter-action').addEventListener('change', (e) => {
+        parsedDictStructures.urlFilterRules[index].action = parseInt(e.target.value);
+        debugLog(`URLFilter rule ${index} action: ${e.target.value}`);
+        // Update background color
+        const newColor = e.target.value === '1' ? '#4caf50' : '#f44336';
+        e.target.style.background = newColor;
+        updatePreview();
+    });card.querySelector('.url-filter-delete').addEventListener('click', () => {
+    if (confirm(currentLang === 'de' ? 'Regel wirklich löschen?' : 'Really delete this rule?')) {
+        parsedDictStructures.urlFilterRules.splice(index, 1);
+        // Re-render
+        const container = document.querySelector('.url-filter-content');
+        if (container) {
+            renderURLFilterContent(container);
+        }
+        // Update count in header
+        const countSpan = document.querySelector('.url-filter-header span');
+        if (countSpan) {
+            const ruleCount = parsedDictStructures.urlFilterRules.length;
+            const autoGenText = currentLang === 'de' 
+                ? `+ ${getAllDomains().length} automatisch generiert` 
+                : `+ ${getAllDomains().length} auto-generated`;
+            countSpan.textContent = `(${ruleCount} ${currentLang === 'de' ? 'manuell' : 'manual'} ${autoGenText})`;
+        }
+        // Update preview
+        updatePreview();
+    }
+});
+
+return card;
+}
+
+function addNewURLFilterRule() {
+const newRule = {
+    action: 1,  // Allow by default
+    active: true,
+    expression: '',
+    regex: false
+};
+
+parsedDictStructures.urlFilterRules.push(newRule);
+
+// Re-render
+const container = document.querySelector('.url-filter-content');
+if (container) {
+    renderURLFilterContent(container);
+}
+
+// Update count in header
+const countSpan = document.querySelector('.url-filter-header span');
+if (countSpan) {
+    const ruleCount = parsedDictStructures.urlFilterRules.length;
+    const autoGenText = currentLang === 'de' 
+        ? `+ ${getAllDomains().length} automatisch generiert` 
+        : `+ ${getAllDomains().length} auto-generated`;
+    countSpan.textContent = `(${ruleCount} ${currentLang === 'de' ? 'manuell' : 'manual'} ${autoGenText})`;
+}
+
+// Update preview
+updatePreview();
+
+debugLog('➕ New URL filter rule added');
 }
 
 // ============================================================================
@@ -1076,7 +1763,7 @@ if (!container) {
     return;
 }
 
-console.log('📦 Container found, clearing content...');
+debugLog('📦 Container found, clearing content...');
 container.innerHTML = '';
 
 // Info box
@@ -1084,20 +1771,20 @@ const infoBox = document.createElement('div');
 infoBox.classList.add('preset-info-box');
 infoBox.innerHTML = `<strong>ℹ️ ${t('allBooleanOptions')}</strong><br>${t('booleanOptionsInfo')}`;
 container.appendChild(infoBox);
-console.log('ℹ️ Info box added');
+debugLog('ℹ️ Info box added');
 
 // Render each group
 const groupOrder = ['browser', 'security', 'interface', 'system', 'network', 'mobile', 'other'];
-console.log('🔍 Processing groups:', groupOrder);
+debugLog('🔍 Processing groups:', groupOrder);
 
 groupOrder.forEach(groupKey => {
     const group = parsedBooleanOptions.groups[groupKey];
-    console.log(`  - Group ${groupKey}:`, group);
+    debugLog(`  - Group ${groupKey}:`, group);
     if (!group || !group.options || group.options.length === 0) {
-        console.log(`  ⚠️ Skipping ${groupKey} (no options)`);
+        debugLog(`  ⚠️ Skipping ${groupKey} (no options)`);
         return;
     }
-    console.log(`  ✅ Rendering ${groupKey} with ${group.options.length} options`);
+    debugLog(`  ✅ Rendering ${groupKey} with ${group.options.length} options`);
     
     // Group container (collapsible)
     const groupDiv = document.createElement('div');
@@ -1152,11 +1839,19 @@ groupOrder.forEach(groupKey => {
         const tooltip = document.createElement('div');
         tooltip.classList.add('bool-option-tooltip');
         
-        // Get location from JSON (English labels as in original tool)
-        const location = getOptionLocation(opt.key);
-        if (location) {
-            tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${location}`;
-            tooltip.title = location;
+        // Get English location (always shown as gray text)
+        const englishLocation = getOptionLocation(opt.key);
+        if (englishLocation) {
+            // Gray text: always English (matches SEB Config Tool)
+            tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${englishLocation}`;
+            
+            // Tooltip hover: German if language is DE, otherwise English
+            if (currentLang === 'de') {
+                const germanLocation = getLocalizedLocation(opt.key);
+                tooltip.title = germanLocation;
+            } else {
+                tooltip.title = englishLocation;
+            }
         } else {
             // Use translated hint texts for undocumented options
             const notDocText = getTranslatedText('notDocumented');
@@ -1180,6 +1875,477 @@ groupOrder.forEach(groupKey => {
     groupDiv.appendChild(groupContent);
     container.appendChild(groupDiv);
 });
+}
+
+// ============================================================================
+// DICT STRUCTURES RENDERING (Process Lists, Certificates, etc.)
+// ============================================================================
+async function renderDictStructures() {
+const container = document.getElementById('dictStructuresContainer');
+if (!container) {
+    console.error('❌ dictStructuresContainer not found!');
+    return;
+}
+
+debugLog('🎨 Rendering dict structures shells...');
+
+// Clear existing content
+container.innerHTML = '';
+
+// Main container
+const mainDiv = document.createElement('div');
+mainDiv.classList.add('dict-structures-main');
+
+// Section header
+const sectionHeader = document.createElement('div');
+sectionHeader.classList.add('dict-section-header');
+sectionHeader.innerHTML = `
+    <h3>📋 ${currentLang === 'de' ? 'Prozesslisten & Zertifikate' : 'Process Lists & Certificates'}</h3>
+    <p class="subtitle">${currentLang === 'de' 
+        ? 'Konfigurieren Sie blockierte/erlaubte Anwendungen und eingebettete Ressourcen' 
+        : 'Configure prohibited/permitted applications and embedded resources'}</p>
+`;
+mainDiv.appendChild(sectionHeader);
+
+// Info box
+const infoBox = document.createElement('div');
+infoBox.classList.add('preset-info-box');
+infoBox.innerHTML = currentLang === 'de'
+    ? '<strong>ℹ️ Hinweis:</strong> Ihre Änderungen an den Checkboxen werden automatisch in die generierte .seb-Datei übernommen.'
+    : '<strong>ℹ️ Note:</strong> Your checkbox changes will be automatically included in the generated .seb file.';
+mainDiv.appendChild(infoBox);
+
+// Always render section shells (will lazy load on first expand or search)
+// Prohibited Processes Section (shell only)
+const prohibitedSection = createProcessListSection(
+    'prohibited',
+    '🚫 Prohibited Processes',
+    'Blocked applications (will be loaded when expanded)'
+);
+mainDiv.appendChild(prohibitedSection);
+
+// Permitted Processes Section (shell only)
+const permittedSection = createProcessListSection(
+    'permitted',
+    '✅ Permitted Processes',
+    'Allowed applications (will be loaded when expanded)'
+);
+mainDiv.appendChild(permittedSection);
+
+// Certificates Section (shell only)
+const certsSection = createCertificatesSection();
+mainDiv.appendChild(certsSection);
+
+container.appendChild(mainDiv);
+debugLog('✅ Dict structures shells rendered (lazy loading enabled)');
+}
+
+// Helper function to create a process list section with categories
+function createProcessListSection(type, title, description) {
+const sectionDiv = document.createElement('div');
+sectionDiv.classList.add('dict-section');
+
+// Section header (collapsible)
+const header = document.createElement('div');
+header.classList.add('dict-section-header', 'collapsible');
+header.innerHTML = `
+    <span class="expand-icon">▶</span>
+    <strong>${title}</strong>
+    <span class="count-badge">${description}</span>
+`;
+
+// Content (initially hidden - lazy loading)
+const content = document.createElement('div');
+content.classList.add('dict-section-content');
+content.style.display = 'none';
+
+let contentLoaded = false;
+
+// Toggle functionality with lazy loading
+header.addEventListener('click', async () => {
+    const isExpanding = content.style.display === 'none';
+    
+    if (isExpanding && !contentLoaded) {
+        // Lazy load dict structures if not already loaded
+        if (!parsedDictStructures.loaded) {
+            debugLog(`🔄 Lazy loading dict structures for ${type} processes...`);
+            content.innerHTML = '<div class="loading-indicator">⏳ ' + 
+                (currentLang === 'de' ? 'Lade Prozesslisten...' : 'Loading process lists...') + '</div>';
+            content.style.display = 'block';
+            
+            await parseXMLDictArrays();
+            parsedDictStructures.loaded = true;
+            debugLog('✅ Dict structures loaded');
+        }
+        
+        // Render content
+        debugLog(`🔄 Rendering ${type} processes...`);
+        renderProcessCategories(content, type);
+        contentLoaded = true;
+        
+        // Update count badge with actual numbers
+        const countBadge = header.querySelector('.count-badge');
+        const processCount = type === 'prohibited' 
+            ? parsedDictStructures.prohibitedProcesses.length 
+            : parsedDictStructures.permittedProcesses.length;
+        countBadge.textContent = currentLang === 'de'
+            ? `${processCount} Anwendungen`
+            : `${processCount} applications`;
+    }
+    
+    // Toggle visibility
+    content.style.display = isExpanding ? 'block' : 'none';
+    header.querySelector('.expand-icon').textContent = isExpanding ? '▼' : '▶';
+});
+
+sectionDiv.appendChild(header);
+sectionDiv.appendChild(content);
+
+return sectionDiv;
+}
+
+// Render process categories with search
+function renderProcessCategories(container, type) {
+container.innerHTML = '';
+
+// Search bar
+const searchDiv = document.createElement('div');
+searchDiv.classList.add('dict-search-bar');
+searchDiv.innerHTML = `
+    <input type="text" 
+           id="search_${type}" 
+           class="dict-search-input" 
+           placeholder="🔍 Search processes by name or identifier...">
+    <span class="search-count" id="searchCount_${type}"></span>
+`;
+container.appendChild(searchDiv);
+
+// Categories container
+const categoriesDiv = document.createElement('div');
+categoriesDiv.classList.add('dict-categories');
+
+// Render each category
+const categoryOrder = ['chat', 'remote', 'recording', 'browser', 'ai', 'media', 'system', 'other'];
+categoryOrder.forEach(catKey => {
+    const category = parsedDictStructures.categories[catKey];
+    if (!category || category.processes.length === 0) return;
+    
+    const filteredProcesses = category.processes.filter(p => p.type === type);
+    if (filteredProcesses.length === 0) return;
+    
+    const categoryDiv = createCategoryAccordion(catKey, category.title, filteredProcesses, type);
+    categoriesDiv.appendChild(categoryDiv);
+});
+
+container.appendChild(categoriesDiv);
+
+// Setup search functionality
+const searchInput = document.getElementById(`search_${type}`);
+const searchCount = document.getElementById(`searchCount_${type}`);
+
+searchInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const allProcessCards = categoriesDiv.querySelectorAll('.process-card');
+    let visibleCount = 0;
+    
+    allProcessCards.forEach(card => {
+        const name = card.dataset.name.toLowerCase();
+        const identifier = card.dataset.identifier.toLowerCase();
+        const matches = name.includes(searchTerm) || identifier.includes(searchTerm);
+        
+        card.style.display = matches ? 'block' : 'none';
+        if (matches) visibleCount++;
+    });
+    
+    searchCount.textContent = searchTerm ? `${visibleCount} found` : '';
+    
+    // Show/hide empty categories and auto-open categories with matches
+    categoriesDiv.querySelectorAll('.dict-category').forEach(cat => {
+        const visibleCards = cat.querySelectorAll('.process-card[style="display: block;"], .process-card:not([style])');
+        const hasMatches = visibleCards.length > 0;
+        
+        cat.style.display = hasMatches ? 'block' : 'none';
+        
+        const catContent = cat.querySelector('.dict-category-content');
+        const catIcon = cat.querySelector('.category-icon');
+        
+        // Auto-open category if it has matches and search term is not empty
+        if (searchTerm && hasMatches && catContent && catContent.style.display === 'none') {
+            catContent.style.display = 'grid';
+            if (catIcon) catIcon.textContent = '▼';
+        } else if (!searchTerm && catContent && catContent.style.display === 'grid') {
+            // Collapse all categories when search is cleared
+            catContent.style.display = 'none';
+            if (catIcon) catIcon.textContent = '▶';
+        }
+    });
+});
+}
+
+// Create category accordion
+function createCategoryAccordion(catKey, title, processes, type) {
+const catDiv = document.createElement('div');
+catDiv.classList.add('dict-category');
+
+const catHeader = document.createElement('div');
+catHeader.classList.add('dict-category-header');
+catHeader.innerHTML = `
+    <span class="category-icon">▶</span>
+    <strong>${title}</strong>
+    <span class="category-count">(${processes.length})</span>
+`;
+
+const catContent = document.createElement('div');
+catContent.classList.add('dict-category-content');
+catContent.style.display = 'none';
+
+// Toggle category
+catHeader.addEventListener('click', () => {
+    const isExpanding = catContent.style.display === 'none';
+    catContent.style.display = isExpanding ? 'grid' : 'none';
+    catHeader.querySelector('.category-icon').textContent = isExpanding ? '▼' : '▶';
+});
+
+// Render process cards
+processes.forEach(proc => {
+    const card = createProcessCard(proc, type);
+    catContent.appendChild(card);
+});
+
+catDiv.appendChild(catHeader);
+catDiv.appendChild(catContent);
+
+return catDiv;
+}
+
+// Create individual process card
+function createProcessCard(proc, type) {
+const card = document.createElement('div');
+card.classList.add('process-card');
+card.dataset.name = proc.executable || '';
+card.dataset.identifier = proc.identifier || '';
+
+// Process icon/name
+const header = document.createElement('div');
+header.classList.add('process-header');
+
+// Process name with VirusTotal link
+const nameContainer = document.createElement('div');
+nameContainer.classList.add('process-name-container');
+
+const nameSpan = document.createElement('strong');
+nameSpan.textContent = proc.executable || 'Unknown';
+nameContainer.appendChild(nameSpan);
+
+// Info links
+if (proc.executable) {
+    // Wikipedia link
+    const wikiLink = document.createElement('a');
+    const wikiArticle = getWikipediaArticle(proc.executable);
+    wikiLink.href = `https://en.wikipedia.org/wiki/${wikiArticle}`;
+    wikiLink.target = '_blank';
+    wikiLink.rel = 'noopener noreferrer';
+    wikiLink.classList.add('info-link', 'wiki-link');
+    wikiLink.innerHTML = 'Ⓦ';
+    wikiLink.title = t('openWikipedia');
+    nameContainer.appendChild(wikiLink);
+    
+    // Google search link
+    const googleLink = document.createElement('a');
+    // Prefer identifier if available, otherwise use executable name
+    const searchTerm = proc.identifier || (proc.executable + ' process');
+    googleLink.href = `https://www.google.com/search?q=${encodeURIComponent(searchTerm)}`;
+    googleLink.target = '_blank';
+    googleLink.rel = 'noopener noreferrer';
+    googleLink.classList.add('info-link', 'google-link');
+    googleLink.innerHTML = 'Ⓖ';
+    googleLink.title = t('googleSearchProcess');
+    nameContainer.appendChild(googleLink);
+}
+
+header.appendChild(nameContainer);
+
+// Identifier
+if (proc.identifier) {
+    const identifier = document.createElement('div');
+    identifier.classList.add('process-identifier');
+    identifier.textContent = proc.identifier;
+    header.appendChild(identifier);
+}
+
+card.appendChild(header);
+
+// Description (only if not empty)
+if (proc.description) {
+    const desc = document.createElement('div');
+    desc.classList.add('process-description');
+    desc.textContent = proc.description;
+    card.appendChild(desc);
+}
+
+// Checkboxes for boolean fields
+const checkboxes = document.createElement('div');
+checkboxes.classList.add('process-checkboxes');
+
+// Active
+const activeCheck = createProcessCheckbox(proc, 'active', '✓ Active', type);
+checkboxes.appendChild(activeCheck);
+
+// Ignore in AAC
+const ignoreCheck = createProcessCheckbox(proc, 'ignoreInAAC', '👁️ Ignore in AAC', type);
+checkboxes.appendChild(ignoreCheck);
+
+// Strong Kill
+const strongCheck = createProcessCheckbox(proc, 'strongKill', '💪 Strong Kill', type);
+checkboxes.appendChild(strongCheck);
+
+// Current User
+const userCheck = createProcessCheckbox(proc, 'currentUser', '👤 Current User', type);
+checkboxes.appendChild(userCheck);
+
+card.appendChild(checkboxes);
+
+return card;
+}
+
+// Create checkbox for process field
+function createProcessCheckbox(proc, field, label, type) {
+const div = document.createElement('div');
+div.classList.add('process-checkbox-item');
+
+const checkbox = document.createElement('input');
+checkbox.type = 'checkbox';
+checkbox.id = `${type}_${proc.index}_${field}`;
+checkbox.checked = proc[field] || false;
+checkbox.addEventListener('change', (e) => {
+    // Update data structure
+    if (type === 'prohibited') {
+        parsedDictStructures.prohibitedProcesses[proc.index][field] = e.target.checked;
+    } else {
+        parsedDictStructures.permittedProcesses[proc.index][field] = e.target.checked;
+    }
+    
+    // Track change
+    const key = `${type}_${proc.index}_${field}`;
+    parsedDictStructures.userSelections[key] = e.target.checked;
+    
+    debugLog(`Updated ${proc.executable}.${field} = ${e.target.checked}`);
+});
+
+const lbl = document.createElement('label');
+lbl.htmlFor = checkbox.id;
+lbl.textContent = label;
+
+// Add tooltip with explanation
+const tooltipText = getProcessFieldTooltip(field);
+if (tooltipText) {
+    lbl.title = tooltipText;
+    lbl.style.cursor = 'help';
+}
+
+div.appendChild(checkbox);
+div.appendChild(lbl);
+
+return div;
+}
+
+// Get tooltip text for process field
+function getProcessFieldTooltip(field) {
+const tooltips = {
+    active: currentLang === 'de' 
+        ? 'Aktiv: Wenn aktiviert, wird dieser Prozess von SEB blockiert/überwacht. Deaktivieren, um die Regel zu ignorieren.'
+        : 'Active: When enabled, this process will be blocked/monitored by SEB. Disable to ignore this rule.',
+    
+    ignoreInAAC: currentLang === 'de'
+        ? 'In AAC ignorieren: Wenn aktiviert, wird dieser Prozess NICHT blockiert, wenn SEB im AAC-Modus (Automatic Assessment Configuration) läuft. AAC ist ein besonders restriktiver macOS/iOS-Modus für Prüfungen.'
+        : 'Ignore in AAC: When enabled, this process will NOT be blocked when SEB runs in AAC mode (Automatic Assessment Configuration). AAC is a highly restrictive macOS/iOS exam mode.',
+    
+    strongKill: currentLang === 'de'
+        ? 'Strong Kill: Wenn aktiviert, wird der Prozess hart beendet (SIGKILL). Wenn deaktiviert, sanftes Beenden (SIGTERM). Strong Kill sollte nur für hartnäckige Prozesse verwendet werden.'
+        : 'Strong Kill: When enabled, the process is forcefully terminated (SIGKILL). When disabled, graceful termination (SIGTERM). Use strong kill only for stubborn processes.',
+    
+    currentUser: currentLang === 'de'
+        ? 'Aktueller Benutzer: Wenn aktiviert, wird der Prozess nur für den aktuellen Benutzer blockiert. Wenn deaktiviert, systemweit für alle Benutzer.'
+        : 'Current User: When enabled, the process is only blocked for the current user. When disabled, blocked system-wide for all users.'
+};
+
+return tooltips[field] || '';
+}
+
+// Create certificates section
+function createCertificatesSection() {
+const sectionDiv = document.createElement('div');
+sectionDiv.classList.add('dict-section');
+
+const header = document.createElement('div');
+header.classList.add('dict-section-header', 'collapsible');
+header.innerHTML = `
+    <span class="expand-icon">▶</span>
+    <strong>📜 Embedded Certificates</strong>
+    <span class="count-badge">Certificates (will be loaded when expanded)</span>
+`;
+
+const content = document.createElement('div');
+content.classList.add('dict-section-content');
+content.style.display = 'none';
+
+let contentLoaded = false;
+
+header.addEventListener('click', async () => {
+    const isExpanding = content.style.display === 'none';
+    
+    if (isExpanding && !contentLoaded) {
+        // Lazy load dict structures if not already loaded
+        if (!parsedDictStructures.loaded) {
+            debugLog('🔄 Lazy loading dict structures for certificates...');
+            content.innerHTML = '<div class="loading-indicator">⏳ ' + 
+                (currentLang === 'de' ? 'Lade Zertifikate...' : 'Loading certificates...') + '</div>';
+            content.style.display = 'block';
+            
+            await parseXMLDictArrays();
+            parsedDictStructures.loaded = true;
+            debugLog('✅ Dict structures loaded');
+        }
+        
+        // Render certificate list
+        content.innerHTML = '';
+        if (parsedDictStructures.embeddedCertificates.length === 0) {
+            content.innerHTML = '<div class="preset-info-box" style="margin: 1rem;">' + 
+                (currentLang === 'de' 
+                    ? 'Keine eingebetteten Zertifikate im Template vorhanden.' 
+                    : 'No embedded certificates in template.') + 
+                '</div>';
+        } else {
+            parsedDictStructures.embeddedCertificates.forEach((cert, index) => {
+                const certCard = document.createElement('div');
+                certCard.classList.add('certificate-card');
+                certCard.innerHTML = `
+                    <strong>Certificate ${index + 1}</strong>
+                    ${cert.name ? `<div>Name: ${cert.name}</div>` : ''}
+                    ${cert.certificateDataBase64 ? '<div>📄 Certificate data embedded</div>' : ''}
+                `;
+                content.appendChild(certCard);
+            });
+        }
+        
+        // Update count badge
+        const countBadge = header.querySelector('.count-badge');
+        const certCount = parsedDictStructures.embeddedCertificates.length;
+        countBadge.textContent = currentLang === 'de'
+            ? `${certCount} Zertifikate`
+            : `${certCount} certificates`;
+        
+        contentLoaded = true;
+    }
+    
+    content.style.display = isExpanding ? 'block' : 'none';
+    header.querySelector('.expand-icon').textContent = isExpanding ? '▼' : '▶';
+});
+
+sectionDiv.appendChild(header);
+sectionDiv.appendChild(content);
+
+return sectionDiv;
 }
 
 function getSharePointRestrictionInfo() {
@@ -1369,7 +2535,8 @@ selectedPresets.forEach(presetKey => {
     }
 });
 
-const customDomains = document.getElementById('customDomains').value
+const customDomainsValue = document.getElementById('customDomains')?.value || '';
+const customDomains = customDomainsValue
     .split('\n')
     .slice(0, MAX_CUSTOM_DOMAINS)  // Limit number of lines
     .map(d => d.trim())
@@ -1501,7 +2668,8 @@ selectedPresets.forEach(presetKey => {
     }
 });
 
-const customDomains = document.getElementById('customDomains').value
+const customDomainsValue = document.getElementById('customDomains')?.value || '';
+const customDomains = customDomainsValue
     .split('\n')
     .map(d => d.trim())
     .filter(d => d && !d.startsWith('#'));
@@ -1511,7 +2679,8 @@ const domains = getAllDomains();
 const duplicatesRemoved = allDomainsBeforeDedup.length - domains.length;
 
 const container = document.getElementById('domainPreview');
-document.getElementById('domainCount').textContent = domains.length;
+const domainCountEl = document.getElementById('domainCount');
+if (domainCountEl) domainCountEl.textContent = domains.length;
 
 // Clear container safely
 container.innerHTML = '';
@@ -1629,6 +2798,19 @@ domains.forEach(domain => {
     container.appendChild(div);
 });
 
+// Add manual URL filter rules (allowed, non-regex) from advanced settings
+if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
+    parsedDictStructures.urlFilterRules.forEach(rule => {
+        if (rule.active && rule.expression && rule.action === 1 && !rule.regex) {
+            const div = document.createElement('div');
+            div.className = 'domain-item';
+            const label = t('urlFilterAllowLabel');
+            div.textContent = `✓ ${rule.expression} ${label}`;
+            container.appendChild(div);
+        }
+    });
+}
+
 // Show SharePoint restriction info box if active
 const restrictionInfo = getSharePointRestrictionInfo();
 
@@ -1696,9 +2878,19 @@ selectedPresets.forEach(presetKey => {
     }
 });
 
+// Add manual URL filter rules (blocked, non-regex) from advanced settings
+const urlFilterBlockedRules = [];
+if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
+    parsedDictStructures.urlFilterRules.forEach(rule => {
+        if (rule.active && rule.expression && rule.action === 0 && !rule.regex) {
+            urlFilterBlockedRules.push(rule.expression);
+        }
+    });
+}
+
 // Add custom blocked domains from user input
 const MAX_BLOCKED_DOMAINS = 500;  // Limit blocked domains to prevent performance issues
-const customBlockedInput = document.getElementById('blockedDomains').value;
+const customBlockedInput = document.getElementById('blockedDomains')?.value || '';
 if (customBlockedInput.trim()) {
     const customBlockedDomains = customBlockedInput
         .split('\n')
@@ -1708,7 +2900,7 @@ if (customBlockedInput.trim()) {
     blockedDomains.push(...customBlockedDomains);
 }
 
-if (blockedDomains.length > 0) {
+if (blockedDomains.length > 0 || urlFilterBlockedRules.length > 0) {
     const blockedTitleDiv = document.createElement('div');
     blockedTitleDiv.classList.add('preview-blocked-title');
     const blockedTitleStrong = document.createElement('strong');
@@ -1726,6 +2918,64 @@ if (blockedDomains.length > 0) {
         div.textContent = `✗ ${domain}`;
         container.appendChild(div);
     });
+    
+    // Add URL filter blocked rules with label
+    urlFilterBlockedRules.forEach(domain => {
+        const div = document.createElement('div');
+        div.className = 'domain-item blocked';
+        const label = t('urlFilterBlockLabel');
+        div.textContent = `✗ ${domain} ${label}`;
+        container.appendChild(div);
+    });
+}
+
+// Show regex rules from URL filter if any
+const regexAllowed = [];
+const regexBlocked = [];
+if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
+    parsedDictStructures.urlFilterRules.forEach(rule => {
+        if (rule.active && rule.expression && rule.regex) {
+            if (rule.action === 1) {
+                regexAllowed.push(rule.expression);
+            } else if (rule.action === 0) {
+                regexBlocked.push(rule.expression);
+            }
+        }
+    });
+}
+
+if (regexAllowed.length > 0) {
+    const regexTitleDiv = document.createElement('div');
+    regexTitleDiv.classList.add('preview-blocked-title');
+    const regexTitleStrong = document.createElement('strong');
+    const regexTitle = t('previewRegexAllowedTitle');
+    regexTitleStrong.textContent = regexTitle;
+    regexTitleDiv.appendChild(regexTitleStrong);
+    container.appendChild(regexTitleDiv);
+    
+    regexAllowed.forEach(pattern => {
+        const div = document.createElement('div');
+        div.className = 'domain-item';
+        div.textContent = `✓ ${pattern}`;
+        container.appendChild(div);
+    });
+}
+
+if (regexBlocked.length > 0) {
+    const regexTitleDiv = document.createElement('div');
+    regexTitleDiv.classList.add('preview-blocked-title');
+    const regexTitleStrong = document.createElement('strong');
+    const regexTitle = t('previewRegexBlockedTitle');
+    regexTitleStrong.textContent = regexTitle;
+    regexTitleDiv.appendChild(regexTitleStrong);
+    container.appendChild(regexTitleDiv);
+    
+    regexBlocked.forEach(pattern => {
+        const div = document.createElement('div');
+        div.className = 'domain-item blocked';
+        div.textContent = `✗ ${pattern}`;
+        container.appendChild(div);
+    });
 }
 }
 
@@ -1735,7 +2985,7 @@ if (blockedDomains.length > 0) {
 function generateConfigXML() {
 const securitySettings = SECURITY_LEVELS[currentSecurityLevel].settings;
 const domains = getAllDomains();
-const startUrlInput = document.getElementById('startUrl').value;
+const startUrlInput = document.getElementById('startUrl')?.value || '';
 
 // Validate start URL
 if (!isValidURL(startUrlInput)) {
@@ -1788,7 +3038,7 @@ selectedPresets.forEach(presetKey => {
 });
 
 // Add custom blocked domains (blacklist - action: 0) from user input
-const customBlockedInput = document.getElementById('blockedDomains').value;
+const customBlockedInput = document.getElementById('blockedDomains')?.value || '';
 if (customBlockedInput.trim()) {
     const MAX_BLOCKED_DOMAINS = 500;  // Limit blocked domains to prevent performance issues
     const customBlockedDomains = customBlockedInput
@@ -1811,6 +3061,21 @@ if (customBlockedInput.trim()) {
 `;
     });
 }
+
+// Add manual URL filter rules from advanced settings
+parsedDictStructures.urlFilterRules.forEach(rule => {
+    urlFilterRulesXML += `\t\t<dict>
+\t\t\t<key>action</key>
+\t\t\t<integer>${rule.action}</integer>
+\t\t\t<key>active</key>
+\t\t\t<${rule.active ? 'true' : 'false'}/>
+\t\t\t<key>expression</key>
+\t\t\t<string>${escapeXML(rule.expression || '')}</string>
+\t\t\t<key>regex</key>
+\t\t\t<${rule.regex ? 'true' : 'false'}/>
+\t\t</dict>
+`;
+});
 
 // Generate complete plist XML with version info
 const buildDateFormatted = formatBuildDate('en'); // Use international format for file
@@ -1894,11 +3159,181 @@ if (parsedBooleanOptions.options && Object.keys(parsedBooleanOptions.options).le
     });
 }
 
-const finalXML = xml + booleanOptionsXML + `
+// Add dict structures (process lists, certificates, etc.)
+let dictStructuresXML = '';
+if (parsedDictStructures.loaded) {
+    dictStructuresXML += generateDictStructuresXML();
+}
+
+return xml + booleanOptionsXML + dictStructuresXML + `
 </dict>
 </plist>`;
+}
 
-return finalXML;
+// ============================================================================
+// GENERATE DICT STRUCTURES XML (Process Lists, Certificates, etc.)
+// ============================================================================
+function generateDictStructuresXML() {
+let xml = '';
+
+// Generate prohibited processes
+if (parsedDictStructures.prohibitedProcesses.length > 0) {
+    xml += `\n\t<key>prohibitedProcesses</key>\n\t<array>`;
+    
+    parsedDictStructures.prohibitedProcesses.forEach(proc => {
+        xml += `\n\t\t<dict>`;
+        xml += `\n\t\t\t<key>active</key>`;
+        xml += `\n\t\t\t<${proc.active ? 'true' : 'false'}/>`;
+        
+        if (proc.allowedExecutables !== undefined) {
+            xml += `\n\t\t\t<key>allowedExecutables</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.allowedExecutables)}</string>`;
+        }
+        
+        xml += `\n\t\t\t<key>currentUser</key>`;
+        xml += `\n\t\t\t<${proc.currentUser ? 'true' : 'false'}/>`;
+        
+        if (proc.description !== undefined) {
+            xml += `\n\t\t\t<key>description</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.description)}</string>`;
+        }
+        
+        if (proc.executable) {
+            xml += `\n\t\t\t<key>executable</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.executable)}</string>`;
+        }
+        
+        if (proc.identifier) {
+            xml += `\n\t\t\t<key>identifier</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.identifier)}</string>`;
+        }
+        
+        xml += `\n\t\t\t<key>ignoreInAAC</key>`;
+        xml += `\n\t\t\t<${proc.ignoreInAAC ? 'true' : 'false'}/>`;
+        
+        if (proc.originalName !== undefined) {
+            xml += `\n\t\t\t<key>originalName</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.originalName)}</string>`;
+        }
+        
+        if (proc.os !== undefined) {
+            xml += `\n\t\t\t<key>os</key>`;
+            xml += `\n\t\t\t<integer>${proc.os}</integer>`;
+        }
+        
+        xml += `\n\t\t\t<key>strongKill</key>`;
+        xml += `\n\t\t\t<${proc.strongKill ? 'true' : 'false'}/>`;
+        
+        if (proc.user !== undefined) {
+            xml += `\n\t\t\t<key>user</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.user)}</string>`;
+        }
+        
+        if (proc.windowHandlingProcess !== undefined) {
+            xml += `\n\t\t\t<key>windowHandlingProcess</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.windowHandlingProcess)}</string>`;
+        }
+        
+        xml += `\n\t\t</dict>`;
+    });
+    
+    xml += `\n\t</array>`;
+}
+
+// Generate permitted processes (if any exist)
+if (parsedDictStructures.permittedProcesses.length > 0) {
+    xml += `\n\t<key>permittedProcesses</key>\n\t<array>`;
+    
+    parsedDictStructures.permittedProcesses.forEach(proc => {
+        xml += `\n\t\t<dict>`;
+        // Same structure as prohibited processes
+        xml += `\n\t\t\t<key>active</key>`;
+        xml += `\n\t\t\t<${proc.active ? 'true' : 'false'}/>`;
+        
+        if (proc.allowedExecutables !== undefined) {
+            xml += `\n\t\t\t<key>allowedExecutables</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.allowedExecutables)}</string>`;
+        }
+        
+        xml += `\n\t\t\t<key>currentUser</key>`;
+        xml += `\n\t\t\t<${proc.currentUser ? 'true' : 'false'}/>`;
+        
+        if (proc.description !== undefined) {
+            xml += `\n\t\t\t<key>description</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.description)}</string>`;
+        }
+        
+        if (proc.executable) {
+            xml += `\n\t\t\t<key>executable</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.executable)}</string>`;
+        }
+        
+        if (proc.identifier) {
+            xml += `\n\t\t\t<key>identifier</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.identifier)}</string>`;
+        }
+        
+        xml += `\n\t\t\t<key>ignoreInAAC</key>`;
+        xml += `\n\t\t\t<${proc.ignoreInAAC ? 'true' : 'false'}/>`;
+        
+        if (proc.originalName !== undefined) {
+            xml += `\n\t\t\t<key>originalName</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.originalName)}</string>`;
+        }
+        
+        if (proc.os !== undefined) {
+            xml += `\n\t\t\t<key>os</key>`;
+            xml += `\n\t\t\t<integer>${proc.os}</integer>`;
+        }
+        
+        xml += `\n\t\t\t<key>strongKill</key>`;
+        xml += `\n\t\t\t<${proc.strongKill ? 'true' : 'false'}/>`;
+        
+        if (proc.user !== undefined) {
+            xml += `\n\t\t\t<key>user</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.user)}</string>`;
+        }
+        
+        if (proc.windowHandlingProcess !== undefined) {
+            xml += `\n\t\t\t<key>windowHandlingProcess</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(proc.windowHandlingProcess)}</string>`;
+        }
+        
+        xml += `\n\t\t</dict>`;
+    });
+    
+    xml += `\n\t</array>`;
+}
+
+// Generate embedded certificates (if any exist)
+if (parsedDictStructures.embeddedCertificates.length > 0) {
+    xml += `\n\t<key>embeddedCertificates</key>\n\t<array>`;
+    
+    parsedDictStructures.embeddedCertificates.forEach(cert => {
+        xml += `\n\t\t<dict>`;
+        
+        if (cert.certificateDataBase64) {
+            xml += `\n\t\t\t<key>certificateDataBase64</key>`;
+            xml += `\n\t\t\t<data>${cert.certificateDataBase64}</data>`;
+        }
+        
+        if (cert.name) {
+            xml += `\n\t\t\t<key>name</key>`;
+            xml += `\n\t\t\t<string>${escapeXML(cert.name)}</string>`;
+        }
+        
+        if (cert.type !== undefined) {
+            xml += `\n\t\t\t<key>type</key>`;
+            xml += `\n\t\t\t<integer>${cert.type}</integer>`;
+        }
+        
+        xml += `\n\t\t</dict>`;
+    });
+    
+    xml += `\n\t</array>`;
+}
+
+return xml;
 }
 
 function escapeXML(str) {
@@ -1943,7 +3378,7 @@ if (!configXML) {
     return;
 }
 
-const rawConfigName = document.getElementById('configName').value || 'SEB_Config';
+const rawConfigName = document.getElementById('configName')?.value || 'SEB_Config';
 const configName = sanitizeFilename(rawConfigName);
 const blob = new Blob([configXML], { type: 'application/xml' });
 const url = URL.createObjectURL(blob);
@@ -2055,7 +3490,7 @@ console.log('  3. Paste into "Custom Domains" field in SEB Generator');
 console.log('\\n' + '='.repeat(60) + '\\n');
 })();`;
 
-const bookmarklet = `javascript:(function(){const domains=new Set();performance.getEntries().forEach(e=>{try{const u=new URL(e.name);if(u.hostname&&!u.hostname.match(/^(localhost|127\\\\.0\\\\.0\\\\.1|::1)$/)){domains.add(u.hostname)}}catch(err){}});const sorted=[...domains].sort();let output='SEB Domain Capture\\n'+'='.repeat(50)+'\\n\\n';output+='Total domains: '+sorted.length+'\\n\\n';output+='DOMAINS:\\n'+'-'.repeat(50)+'\\n';output+=sorted.join('\\n')+'\\n';output+='-'.repeat(50)+'\\n\\n';output+='Wildcards (recommended):\\n'+'-'.repeat(50)+'\\n';const wildcards=new Set();sorted.forEach(d=>{const parts=d.split('.');if(parts.length>2){wildcards.add('*.'+parts.slice(-2).join('.'))}else{wildcards.add(d)}});output+=[...wildcards].sort().join('\\n');const modal=document.createElement('div');modal.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:30px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.3);z-index:999999;max-width:600px;max-height:80vh;overflow:auto;font-family:monospace;';const pre=document.createElement('pre');pre.textContent=output;pre.style.cssText='background:#f5f5f5;padding:15px;border-radius:6px;overflow:auto;max-height:400px;font-size:12px;';const btnContainer=document.createElement('div');btnContainer.style.cssText='margin-top:20px;display:flex;gap:10px;';const copyBtn=document.createElement('button');copyBtn.textContent='📋 Copy';copyBtn.style.cssText='padding:12px 20px;background:#5e72e4;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;flex:1;';copyBtn.onclick=()=>{navigator.clipboard.writeText(sorted.join('\\n')).then(()=>{copyBtn.textContent='✓ Copied!';setTimeout(()=>copyBtn.textContent='📋 Copy',2000)})};const closeBtn=document.createElement('button');closeBtn.textContent='✕';closeBtn.style.cssText='padding:12px 20px;background:#e9ecef;color:#32325d;border:none;border-radius:6px;cursor:pointer;font-weight:600;';closeBtn.onclick=()=>modal.remove();btnContainer.appendChild(copyBtn);btnContainer.appendChild(closeBtn);modal.appendChild(pre);modal.appendChild(btnContainer);document.body.appendChild(modal)})();`;
+const bookmarklet = `javascript:(function(){const domains=new Set();performance.getEntries().forEach(e=>{try{const u=new URL(e.name);if(u.hostname&&!u.hostname.match(/^(localhost|127\\\\.0\\\\.0\\\\.1|::1)$/)){domains.add(u.hostname)}}catch(err){}});const sorted=[...domains].sort();let output='SEB Domain Capture\\n'+'='.repeat(50)+'\\n\\n';output+='Total domains: '+sorted.length+'\\n\\n';output+='DOMAINS:\\n'+'-'.repeat(50)+'\\n';output+=sorted.join('\\n')+'\\n';output+='-'.repeat(50)+'\\n\\n';output+='Wildcards (recommended):\\n'+'-'.repeat(50)+'\\n';const wildcards=new Set();sorted.forEach(d=>{const parts=d.split('.');if(parts.length>2){wildcards.add('*.'+parts.slice(-2).join('.'))}else{wildcards.add(d)}});output+=[...wildcards].sort().join('\\n');const modal=document.createElement('div');modal.className='domain-capture-modal';const pre=document.createElement('pre');pre.className='domain-capture-output';pre.textContent=output;const btnContainer=document.createElement('div');btnContainer.className='domain-capture-buttons';const copyBtn=document.createElement('button');copyBtn.className='domain-capture-copy-btn';copyBtn.textContent='📋 Copy';copyBtn.addEventListener('click',()=>{navigator.clipboard.writeText(sorted.join('\\n')).then(()=>{copyBtn.textContent='✓ Copied!';setTimeout(()=>copyBtn.textContent='📋 Copy',2000)})});const closeBtn=document.createElement('button');closeBtn.className='domain-capture-close-btn';closeBtn.textContent='✕';closeBtn.addEventListener('click',()=>modal.remove());btnContainer.appendChild(copyBtn);btnContainer.appendChild(closeBtn);modal.appendChild(pre);modal.appendChild(btnContainer);document.body.appendChild(modal)})();`;
 
 const instructions = currentLang === 'de' 
     ? {
@@ -2191,7 +3626,9 @@ modal.addEventListener('click', (e) => {
 function generateMoodleUrlConfig() {
 const config = {
     expressionsAllowed: [],
-    expressionsBlocked: []
+    expressionsBlocked: [],
+    regexAllowed: [],
+    regexBlocked: []
 };
 
 // Collect domains from selected services
@@ -2205,8 +3642,28 @@ selectedPresets.forEach(presetId => {
     }
 });
 
+// Add manual URL filter rules from advanced settings (if loaded)
+if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
+    parsedDictStructures.urlFilterRules.forEach(rule => {
+        // Only include active rules
+        if (rule.active && rule.expression) {
+            // Regex rules
+            if (rule.regex && rule.action === 1) {
+                config.regexAllowed.push(rule.expression);
+            } else if (rule.regex && rule.action === 0) {
+                config.regexBlocked.push(rule.expression);
+            // Wildcard rules
+            } else if (!rule.regex && rule.action === 1) {
+                config.expressionsAllowed.push(rule.expression);
+            } else if (!rule.regex && rule.action === 0) {
+                config.expressionsBlocked.push(rule.expression);
+            }
+        }
+    });
+}
+
 // Add custom domains
-const customDomainInput = document.getElementById('customDomains').value.trim();
+const customDomainInput = document.getElementById('customDomains')?.value?.trim() || '';
 if (customDomainInput) {
     const customDomains = customDomainInput.split('\n')
         .map(d => d.trim())
@@ -2215,7 +3672,7 @@ if (customDomainInput) {
 }
 
 // Add blocked domains
-const blockedDomainInput = document.getElementById('blockedDomains').value.trim();
+const blockedDomainInput = document.getElementById('blockedDomains')?.value?.trim() || '';
 if (blockedDomainInput) {
     const blockedDomains = blockedDomainInput.split('\n')
         .map(d => d.trim())
@@ -2238,37 +3695,140 @@ const sebWarning = document.getElementById('sebWarningBox');
 const nextStepsBox = document.getElementById('nextStepsBox');
 
 if (format === 'moodle') {
-    sebBtn.style.display = 'none';
-    moodleBtn.style.display = 'block';
-    sebWarning.style.display = 'none';
-    nextStepsBox.style.display = 'none';
+    sebBtn.classList.add('hidden');
+    moodleBtn.classList.remove('hidden');
+    sebWarning.classList.add('hidden');
+    nextStepsBox.classList.add('hidden');
 } else {
-    sebBtn.style.display = 'block';
-    moodleBtn.style.display = 'none';
-    sebWarning.style.display = 'flex';
-    nextStepsBox.style.display = 'block';
+    sebBtn.classList.remove('hidden');
+    moodleBtn.classList.add('hidden');
+    sebWarning.classList.remove('hidden');
+    nextStepsBox.classList.remove('hidden');
 }
 }
 
 function showMoodleModal() {
+debugLog('🔵 showMoodleModal called');
 const config = generateMoodleUrlConfig();
+debugLog('📊 Moodle config generated:', config);
 
-// Populate textareas
-document.getElementById('moodleExpressionsAllowed').value = config.expressionsAllowed.join('\n');
-document.getElementById('moodleExpressionsBlocked').value = config.expressionsBlocked.join('\n');
+// Populate expression textareas
+const expressionsAllowed = document.getElementById('moodleExpressionsAllowed');
+const expressionsBlocked = document.getElementById('moodleExpressionsBlocked');
+const expressionsAllowedSection = document.getElementById('moodleExpressionsAllowedSection');
+const expressionsBlockedSection = document.getElementById('moodleExpressionsBlockedSection');
 
-// Open "Expressions Blocked" section if it has content
-const blockedSection = document.getElementById('moodleExpressionsBlockedSection');
-if (config.expressionsBlocked.length > 0 && blockedSection) {
-    blockedSection.setAttribute('open', '');
+if (expressionsAllowed) {
+    expressionsAllowed.value = config.expressionsAllowed.join('\n');
+}
+// Open Expressions Allowed section if it has content
+if (config.expressionsAllowed.length > 0 && expressionsAllowedSection) {
+    expressionsAllowedSection.setAttribute('open', '');
+}
+
+if (expressionsBlocked) {
+    expressionsBlocked.value = config.expressionsBlocked.join('\n');
+}
+// Open Expressions Blocked section if it has content
+if (config.expressionsBlocked.length > 0 && expressionsBlockedSection) {
+    expressionsBlockedSection.setAttribute('open', '');
+}
+
+// Populate regex textareas
+const regexAllowedTextarea = document.getElementById('moodleRegexAllowed');
+const regexBlockedTextarea = document.getElementById('moodleRegexBlocked');
+
+// Regex Allowed: Show user's regex rules if available, otherwise show example
+const regexAllowedSection = document.getElementById('moodleRegexAllowedSection');
+const regexAllowedCopyBtn = document.querySelector('[data-field="moodleRegexAllowed"]');
+if (config.regexAllowed.length > 0 && regexAllowedTextarea) {
+    regexAllowedTextarea.value = config.regexAllowed.join('\n');
+    regexAllowedTextarea.classList.remove('moodle-example');
+    regexAllowedTextarea.removeAttribute('readonly');
+    // Show copy button
+    if (regexAllowedCopyBtn) {
+        regexAllowedCopyBtn.style.display = 'block';
+    }
+    // Hide/remove example note
+    const note = regexAllowedTextarea.previousElementSibling;
+    if (note && note.classList.contains('moodle-example-note')) {
+        note.style.display = 'none';
+    }
+    // Open section since it has real data
+    if (regexAllowedSection) {
+        regexAllowedSection.setAttribute('open', '');
+    }
+} else if (regexAllowedTextarea) {
+    // Show example (read-only)
+    regexAllowedTextarea.value = '^https://moodle\\.example\\.com/mod/resource/view\\.php\\?id=\\d+$';
+    regexAllowedTextarea.classList.add('moodle-example');
+    regexAllowedTextarea.setAttribute('readonly', 'readonly');
+    // Hide copy button
+    if (regexAllowedCopyBtn) {
+        regexAllowedCopyBtn.style.display = 'none';
+    }
+    // Show example note
+    const note = regexAllowedTextarea.previousElementSibling;
+    if (note && note.classList.contains('moodle-example-note')) {
+        note.style.display = 'block';
+    }
+}
+
+// Regex Blocked: Show user's regex rules if available, otherwise show example
+const regexBlockedSection = document.getElementById('moodleRegexBlockedSection');
+const regexBlockedCopyBtn = document.querySelector('[data-field="moodleRegexBlocked"]');
+if (config.regexBlocked.length > 0) {
+    if (regexBlockedTextarea) {
+        regexBlockedTextarea.value = config.regexBlocked.join('\n');
+        regexBlockedTextarea.classList.remove('moodle-example');
+        regexBlockedTextarea.removeAttribute('readonly');
+    }
+    // Show copy button
+    if (regexBlockedCopyBtn) {
+        regexBlockedCopyBtn.style.display = 'block';
+    }
+    // Hide example note
+    const note = regexBlockedTextarea.previousElementSibling;
+    if (note && note.classList.contains('moodle-example-note')) {
+        note.style.display = 'none';
+    }
+    if (regexBlockedSection) {
+        regexBlockedSection.setAttribute('open', '');
+    }
+} else {
+    // Show example (read-only)
+    if (regexBlockedTextarea) {
+        regexBlockedTextarea.value = '^https://.*\\.(facebook|twitter|instagram)\\.com/.*$';
+        regexBlockedTextarea.classList.add('moodle-example');
+        regexBlockedTextarea.setAttribute('readonly', 'readonly');
+    }
+    // Hide copy button
+    if (regexBlockedCopyBtn) {
+        regexBlockedCopyBtn.style.display = 'none';
+    }
+    // Show example note
+    const note = regexBlockedTextarea?.previousElementSibling;
+    if (note && note.classList.contains('moodle-example-note')) {
+        note.style.display = 'block';
+    }
 }
 
 // Show modal
-document.getElementById('moodleModal').style.display = 'block';
+const modal = document.getElementById('moodleModal');
+debugLog('🎭 Modal element found:', modal);
+if (modal) {
+    modal.classList.remove('hidden');
+    debugLog('✅ Modal should now be visible');
+} else {
+    console.error('❌ Modal element not found!');
+}
 }
 
 function closeMoodleModal() {
-document.getElementById('moodleModal').style.display = 'none';
+const modal = document.getElementById('moodleModal');
+if (modal) {
+    modal.classList.add('hidden');
+}
 }
 
 function copyMoodleField(fieldId) {
@@ -2288,10 +3848,12 @@ function downloadMoodleTxt() {
 const config = generateMoodleUrlConfig();
 const lang = document.documentElement.lang || 'de';
 const t = TRANSLATIONS[lang];
+const buildDate = formatBuildDate(lang);
 
 // Build content using translation keys
 let content = t.moodleTxtTitle + '\n';
-content += '='.repeat(70) + '\n\n';
+content += '='.repeat(70) + '\n';
+content += `*** SEBConfigGenerator ${APP_VERSION} - (Build: ${buildDate}) ***\n\n`;
 content += t.moodleTxtWarning + '\n\n';
 content += '='.repeat(70) + '\n\n';
 
@@ -2305,8 +3867,13 @@ content += '='.repeat(70) + '\n\n';
 // Regex Allowed
 content += t.moodleTxtRegexAllowedLabel + '\n';
 content += '-'.repeat(94) + '\n';
-content += t.moodleTxtRegexEmpty + '\n';
-content += t.moodleTxtRegexExample + '\n\n\n';
+if (config.regexAllowed.length > 0) {
+    content += config.regexAllowed.join('\n') + '\n';
+} else {
+    content += t.moodleTxtRegexEmpty + '\n';
+    content += t.moodleTxtRegexExample + '\n';
+}
+content += '\n\n';
 
 // Expressions Blocked
 content += t.moodleTxtExpressionsBlockedLabel + '\n';
@@ -2317,8 +3884,12 @@ content += '\n' + t.moodleTxtCopyMarkerEnd + '-'.repeat(70 - t.moodleTxtCopyMark
 // Regex Blocked
 content += t.moodleTxtRegexBlockedLabel + '\n';
 content += '-'.repeat(94) + '\n';
-content += t.moodleTxtRegexEmpty + '\n';
-content += t.moodleTxtRegexBlockedExample + '\n';
+if (config.regexBlocked.length > 0) {
+    content += config.regexBlocked.join('\n') + '\n';
+} else {
+    content += t.moodleTxtRegexEmpty + '\n';
+    content += t.moodleTxtRegexBlockedExample + '\n';
+}
 
 // Create and download file
 const blob = new Blob([content], { type: 'text/plain' });
@@ -2374,7 +3945,7 @@ document.getElementById('moodleModal').addEventListener('click', (e) => {
 document.getElementById('sharepointLink').addEventListener('input', function() {
     const url = this.value.trim();
     if (!url) {
-        document.getElementById('sharepointOptions').style.display = 'none';
+        document.getElementById('sharepointOptions')?.classList.add('hidden');
         return;
     }
     
@@ -2411,6 +3982,86 @@ document.querySelectorAll('.platform-btn').forEach(btn => {
 // ============================================================================
 // ADVANCED SECTION TOGGLE
 // ============================================================================
+// Helper function to expand advanced section and scroll to element
+async function expandAdvancedSectionAndScroll(elementId) {
+    const content = document.getElementById('advancedContent');
+    const toggle = document.querySelector('.advanced-toggle');
+    
+    // Expand if not already expanded
+    if (!content.classList.contains('expanded')) {
+        content.classList.add('expanded');
+        toggle.classList.add('expanded');
+        
+        // Lazy load content if needed
+        if (!parsedBooleanOptions.loaded) {
+            const container = document.getElementById('booleanOptionsContainer');
+            if (container && container.children.length === 0) {
+                // Detect and set user's platform
+                const detectedPlatform = detectUserPlatform();
+                currentPlatform = detectedPlatform;
+                debugLog(`🔍 Detected platform: ${detectedPlatform}`);
+                
+                // Update platform button to show detected platform as active
+                document.querySelectorAll('.platform-btn').forEach(btn => {
+                    if (btn.getAttribute('data-platform') === detectedPlatform) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Show loading indicator
+                container.innerHTML = '<div class="loading-indicator">⏳ ' + 
+                    (currentLang === 'de' ? 'Lade Optionen...' : 'Loading options...') + '</div>';
+                
+                // Load boolean options locations from JSON and parse options from XML template
+                debugLog('🔄 Starting to load boolean options...');
+                
+                // Load locations for detected platform (in parallel with XML parsing)
+                const [locationsResult, optionsResult] = await Promise.all([
+                    loadBooleanOptionsLocations(detectedPlatform),
+                    loadAndParseBooleanOptions()
+                ]);
+                
+                debugLog('✅ Loaded options:', parsedBooleanOptions);
+                parsedBooleanOptions.loaded = true;
+                
+                // Render boolean options first (clears container)
+                renderBooleanOptions();
+                
+                // Render dict structures (process lists, certificates) FIRST
+                debugLog('🎨 Rendering dict structures...');
+                await renderDictStructures();
+                debugLog('✅ Dict structures rendered');
+                
+                // Render URL filter rules shell AFTER dict structures (collapsed, will lazy load on expand)
+                debugLog('🌐 Rendering URL filter rules shell...');
+                renderURLFilterRules();
+                debugLog('✅ URL filter rules shell rendered');
+                
+                // Setup global search
+                setupGlobalSearch();
+                
+                // Wait a bit for rendering to complete
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+        }
+        
+        // Wait for expansion animation
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    // Scroll to target element
+    const targetElement = document.getElementById(elementId);
+    if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Highlight the element briefly
+        targetElement.style.transition = 'background-color 0.3s ease';
+        targetElement.style.backgroundColor = '#fff3cd';
+        setTimeout(() => {
+            targetElement.style.backgroundColor = '';
+        }, 2000);
+    }
+}
+
 async function toggleAdvancedSection() {
 const content = document.getElementById('advancedContent');
 const toggle = document.querySelector('.advanced-toggle');
@@ -2429,7 +4080,7 @@ if (content.classList.contains('expanded')) {
             // Detect and set user's platform
             const detectedPlatform = detectUserPlatform();
             currentPlatform = detectedPlatform;
-            console.log(`🔍 Detected platform: ${detectedPlatform}`);
+            debugLog(`🔍 Detected platform: ${detectedPlatform}`);
             
             // Update platform button to show detected platform as active
             document.querySelectorAll('.platform-btn').forEach(btn => {
@@ -2443,7 +4094,7 @@ if (content.classList.contains('expanded')) {
                 (currentLang === 'de' ? 'Lade Optionen...' : 'Loading options...') + '</div>';
             
             // Load boolean options locations from JSON and parse options from XML template
-            console.log('🔄 Starting to load boolean options...');
+            debugLog('🔄 Starting to load boolean options...');
             
             // Load locations for detected platform (in parallel with XML parsing)
             const [locationsResult, optionsResult] = await Promise.all([
@@ -2451,13 +4102,26 @@ if (content.classList.contains('expanded')) {
                 loadAndParseBooleanOptions()
             ]);
             
-            console.log('✅ Loaded options:', parsedBooleanOptions);
+            debugLog('✅ Loaded options:', parsedBooleanOptions);
             parsedBooleanOptions.loaded = true;
             
-            // Render boolean options
-            console.log('🎨 Rendering boolean options...');
+            // Render boolean options first (clears container)
+            debugLog('🎨 Rendering boolean options...');
             renderBooleanOptions();
-            console.log('✅ Rendering complete');
+            debugLog('✅ Rendering complete');
+            
+            // Render dict structures (process lists, certificates) FIRST
+            debugLog('🎨 Rendering dict structures...');
+            await renderDictStructures();
+            debugLog('✅ Dict structures rendered');
+            
+            // Render URL filter rules shell AFTER dict structures (collapsed, will lazy load on expand)
+            debugLog('🌐 Rendering URL filter rules shell...');
+            renderURLFilterRules();
+            debugLog('✅ URL filter rules shell rendered');
+            
+            // Setup global search after both are rendered
+            setupGlobalSearch();
         }
     }
 }
@@ -2481,12 +4145,12 @@ function updateDevBanner() {
     
     // Hide banner for production releases
     if (!isDevelopmentVersion) {
-        devBanner.style.setProperty('display', 'none', 'important');
+        devBanner.classList.add('hidden');
         return;
     }
     
     // Show banner for development versions
-    devBanner.style.setProperty('display', 'flex', 'important');
+    devBanner.classList.remove('hidden');
     
     // Update version from APP_VERSION constant
     const devVersionEl = document.getElementById('devVersion');
@@ -2592,14 +4256,259 @@ const initialLang = urlLang || savedLang || 'de';
 setLanguage(initialLang);
 
 // Initialize export format buttons visibility (default: .seb selected)
-document.getElementById('generateBtn').style.display = 'block';
-document.getElementById('generateMoodleBtn').style.display = 'none';
-document.getElementById('sebWarningBox').style.display = 'flex';
-document.getElementById('nextStepsBox').style.display = 'block';
+document.getElementById('generateBtn')?.classList.remove('hidden');
+document.getElementById('generateMoodleBtn')?.classList.add('hidden');
+document.getElementById('sebWarningBox')?.classList.remove('hidden');
+document.getElementById('nextStepsBox')?.classList.remove('hidden');
 
 attachEventListeners();
 updatePreview();
 }
+
+// ============================================================================
+// GLOBAL SEARCH (Boolean Options + Process Lists)
+// ============================================================================
+function setupGlobalSearch() {
+const globalSearchContainer = document.getElementById('globalSearchContainer');
+const globalSearchInput = document.getElementById('globalSearch');
+const globalSearchCount = document.getElementById('globalSearchCount');
+
+if (!globalSearchContainer || !globalSearchInput || !globalSearchCount) {
+    console.warn('⚠️ Global search elements not found');
+    return;
+}
+
+// Show global search container
+globalSearchContainer.classList.remove('hidden');
+
+// Update placeholder based on language
+globalSearchInput.placeholder = currentLang === 'de' 
+    ? '🔍 Alle Einstellungen und Prozesse durchsuchen...'
+    : '🔍 Search all settings and processes...';
+
+debugLog('🔍 Setting up global search...');
+
+globalSearchInput.addEventListener('input', async (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    
+    // Lazy load dict structures if user is searching and they're not loaded yet
+    if (searchTerm && !parsedDictStructures.loaded) {
+        debugLog('🔄 Lazy loading dict structures for global search...');
+        await parseXMLDictArrays();
+        parsedDictStructures.loaded = true;
+        debugLog('✅ Dict structures loaded for search');
+    }
+    
+    let totalMatches = 0;
+    
+    // Search in Boolean Options
+    const booleanMatches = searchInBooleanOptions(searchTerm);
+    totalMatches += booleanMatches;
+    
+    // Search in Process Lists (only if dict structures are loaded)
+    if (parsedDictStructures.loaded) {
+        const processMatches = searchInProcessLists(searchTerm);
+        totalMatches += processMatches;
+    }
+    
+    // Update count
+    if (searchTerm) {
+        globalSearchCount.textContent = currentLang === 'de'
+            ? `${totalMatches} gefunden`
+            : `${totalMatches} found`;
+    } else {
+        globalSearchCount.textContent = '';
+    }
+    
+    // Auto-expand sections with matches or collapse all when search is cleared
+    if (searchTerm && totalMatches > 0) {
+        autoExpandMatchingSections();
+    } else if (!searchTerm) {
+        collapseAllSections();
+    }
+});
+
+debugLog('✅ Global search ready');
+}
+
+// Search in Boolean Options
+function searchInBooleanOptions(searchTerm) {
+const booleanContainer = document.getElementById('booleanOptionsContainer');
+if (!booleanContainer) return 0;
+
+let matchCount = 0;
+
+// Search in all option items
+const allOptions = booleanContainer.querySelectorAll('.bool-option-item');
+allOptions.forEach(item => {
+    const labelText = item.querySelector('.bool-option-label-text')?.textContent.toLowerCase() || '';
+    const keyText = item.querySelector('.bool-option-key')?.textContent.toLowerCase() || '';
+    const tooltipText = item.querySelector('.bool-option-tooltip')?.textContent.toLowerCase() || '';
+    
+    const itemMatches = searchTerm === '' || 
+        labelText.includes(searchTerm) || 
+        keyText.includes(searchTerm) ||
+        tooltipText.includes(searchTerm);
+    
+    item.style.display = itemMatches ? 'flex' : 'none';
+    
+    if (itemMatches && searchTerm) {
+        matchCount++;
+    }
+});
+
+// Show/hide empty groups
+const groups = booleanContainer.querySelectorAll('.bool-group-container');
+groups.forEach(group => {
+    const visibleOptions = group.querySelectorAll('.bool-option-item[style="display: flex;"], .bool-option-item:not([style])');
+    const hasMatches = searchTerm === '' || visibleOptions.length > 0;
+    group.style.display = hasMatches ? 'block' : 'none';
+    
+    // Auto-expand groups with matches
+    if (searchTerm && visibleOptions.length > 0) {
+        const content = group.querySelector('.bool-group-content');
+        if (content) {
+            content.classList.add('show');
+        }
+    }
+});
+
+return matchCount;
+}
+
+// Search in Process Lists
+function searchInProcessLists(searchTerm) {
+let matches = 0;
+
+// Search in all dict sections
+const dictSections = document.querySelectorAll('.dict-section');
+dictSections.forEach(section => {
+    const content = section.querySelector('.dict-section-content');
+    const header = section.querySelector('.dict-section-header');
+    
+    // Lazy load content if not already loaded (for searching)
+    if (searchTerm && content && content.innerHTML.trim() === '') {
+        // Trigger click to load content
+        header.click();
+    }
+    
+    const searchInputs = section.querySelectorAll('.dict-search-input');
+    
+    // Synchronize local search fields with global search
+    searchInputs.forEach(input => {
+        input.value = searchTerm;
+        // Trigger input event to update local search
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    
+    // Count visible process cards
+    const visibleCards = section.querySelectorAll('.process-card:not([style*="display: none"])');
+    matches += visibleCards.length;
+});
+
+return matches;
+}
+
+// Auto-expand sections with matches
+function autoExpandMatchingSections() {
+// Expand boolean option groups with visible items
+const booleanGroups = document.querySelectorAll('.bool-group-container');
+booleanGroups.forEach(group => {
+    const visibleItems = group.querySelectorAll('.bool-option-item:not([style*="display: none"])');
+    if (visibleItems.length > 0) {
+        const content = group.querySelector('.bool-group-content');
+        if (content && !content.classList.contains('show')) {
+            content.classList.add('show');
+        }
+    }
+});
+
+// Expand dict categories with visible items
+const dictCategories = document.querySelectorAll('.dict-category');
+dictCategories.forEach(category => {
+    const visibleCards = category.querySelectorAll('.process-card:not([style*="display: none"])');
+    if (visibleCards.length > 0) {
+        const content = category.querySelector('.dict-category-content');
+        if (content && content.style.display === 'none') {
+            content.style.display = 'grid';
+            const icon = category.querySelector('.category-icon');
+            if (icon) icon.textContent = '▼';
+        }
+    }
+});
+
+// Expand main dict sections if they have content
+const dictSections = document.querySelectorAll('.dict-section');
+dictSections.forEach(section => {
+    const visibleCards = section.querySelectorAll('.process-card:not([style*="display: none"])');
+    if (visibleCards.length > 0) {
+        const content = section.querySelector('.dict-section-content');
+        const header = section.querySelector('.dict-section-header.collapsible');
+        if (content && header && content.style.display === 'none') {
+            content.style.display = 'block';
+            const icon = header.querySelector('.expand-icon');
+            if (icon) icon.textContent = '▼';
+        }
+    }
+});
+}
+
+// Collapse all sections (called when search is cleared)
+function collapseAllSections() {
+// Collapse boolean option groups
+const booleanGroups = document.querySelectorAll('.bool-group-container');
+booleanGroups.forEach(group => {
+    const content = group.querySelector('.bool-group-content');
+    if (content && content.classList.contains('show')) {
+        content.classList.remove('show');
+    }
+});
+
+// Collapse dict categories
+const dictCategories = document.querySelectorAll('.dict-category');
+dictCategories.forEach(category => {
+    const content = category.querySelector('.dict-category-content');
+    const icon = category.querySelector('.category-icon');
+    if (content && content.style.display === 'grid') {
+        content.style.display = 'none';
+        if (icon) icon.textContent = '▶';
+    }
+});
+
+// Collapse main dict sections
+const dictSections = document.querySelectorAll('.dict-section');
+dictSections.forEach(section => {
+    const content = section.querySelector('.dict-section-content');
+    const header = section.querySelector('.dict-section-header.collapsible');
+    if (content && header && content.style.display === 'block') {
+        content.style.display = 'none';
+        const icon = header.querySelector('.expand-icon');
+        if (icon) icon.textContent = '▶';
+    }
+});
+}
+
+// ============================================================================
+// TEST FUNCTIONS FOR DICT STRUCTURES (Development/Debug)
+// ============================================================================
+window.testDictParsing = async function() {
+console.log('🧪 Testing dict structure parsing...');
+const success = await parseXMLDictArrays();
+if (success) {
+    debugLog('✅ Parsing successful!');
+    debugLog('📦 Parsed data:', parsedDictStructures);
+    return parsedDictStructures;
+} else {
+    console.error('❌ Parsing failed!');
+    return null;
+}
+};
+
+window.testDictRendering = async function() {
+console.log('🧪 Testing dict structure rendering...');
+await renderDictStructures();
+debugLog('✅ Rendering complete! Check the page.');
+};
 
 // Start the application
 init();
