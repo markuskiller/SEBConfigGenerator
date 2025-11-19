@@ -1271,7 +1271,7 @@ textarea {
 
 /* Moodle Modal */
 .modal {
-    display: none;
+    display: block;
     position: fixed;
     z-index: 1000;
     left: 0;
@@ -1280,6 +1280,10 @@ textarea {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     overflow-y: auto;
+}
+
+.modal.hidden {
+    display: none;
 }
 
 .modal-content {
