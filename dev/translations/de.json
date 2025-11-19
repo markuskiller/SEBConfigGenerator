@@ -49,7 +49,7 @@
   "platformReference": "📚 Menü-Referenz für:",
   "experimentalFeature": "Experimentelle Funktion",
   "booleanOptionsWarning": "Diese Funktion befindet sich in Entwicklung. Die Menü-Referenzen werden schrittweise für alle Plattformen ergänzt. Verwenden Sie diese Optionen mit Vorsicht und testen Sie die generierte Konfiguration gründlich.",
-  "booleanOptionsInfo": "Diese Optionen werden dynamisch aus der SEB-Konfigurationsvorlage geladen. Standardwerte sind bereits gesetzt.",
+  "booleanOptionsInfo": "Diese Optionen werden dynamisch aus der SEB-Konfigurationsvorlage geladen. Standardwerte sind bereits gesetzt. Wenn Sie mit dem Cursor über die englischen Locations schweben, wird im Tooltip die deutsche Übersetzung angezeigt.",
   "browserOptions": "🌐 Browser-Einstellungen",
   "securityOptions": "🔒 Sicherheit & Zugriff",
   "interfaceOptions": "🖥️ Benutzeroberfläche",
