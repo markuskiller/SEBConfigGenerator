@@ -53,6 +53,52 @@ EOF
     fi
 done
 
+# Generate Wikipedia mapping JS from JSON
+echo ""
+echo "📚 Generating Wikipedia mapping JS from JSON..."
+
+wiki_json="$PROJECT_ROOT/templates/source/wikipedia-mapping.json"
+wiki_js="$PROJECT_ROOT/templates/generated/wikipedia-mapping.js"
+
+if [ -f "$wiki_json" ]; then
+    echo "  - Processing wikipedia-mapping.json → WIKIPEDIA_ARTICLES"
+    
+    # Use jq to flatten the nested structure (exclude _comment fields)
+    if command -v jq &> /dev/null; then
+        echo "// Auto-generated from wikipedia-mapping.json - DO NOT EDIT MANUALLY" > "$wiki_js"
+        echo "// To regenerate: Run scripts/build-platform-options.sh" >> "$wiki_js"
+        echo "const WIKIPEDIA_ARTICLES = " >> "$wiki_js"
+        jq 'del(._comment) | [to_entries[] | .value | to_entries[]] | map({(.key): .value}) | add' "$wiki_json" >> "$wiki_js"
+        echo ";" >> "$wiki_js"
+        echo "    ✅ Generated wikipedia-mapping.js"
+    else
+        echo "    ⚠️  jq not found, skipping Wikipedia mapping generation"
+        echo "    💡 Install jq: brew install jq (macOS) or apt-get install jq (Linux)"
+    fi
+fi
+
+# Generate SEB option labels translations JS from JSON
+echo ""
+echo "📝 Generating SEB option labels translations JS from JSON..."
+
+labels_json="$PROJECT_ROOT/templates/source/seb-option-labels.json"
+labels_js="$PROJECT_ROOT/templates/generated/seb-option-labels.js"
+
+if [ -f "$labels_json" ]; then
+    echo "  - Processing seb-option-labels.json → SEB_OPTION_LABELS"
+    
+    if command -v jq &> /dev/null; then
+        echo "// Auto-generated from seb-option-labels.json - DO NOT EDIT MANUALLY" > "$labels_js"
+        echo "// To regenerate: Run scripts/build-platform-options.sh" >> "$labels_js"
+        echo "const SEB_OPTION_LABELS = " >> "$labels_js"
+        jq 'del(._comment, ._note)' "$labels_json" >> "$labels_js"
+        echo ";" >> "$labels_js"
+        echo "    ✅ Generated seb-option-labels.js"
+    else
+        echo "    ⚠️  jq not found, skipping option labels generation"
+    fi
+fi
+
 echo ""
 echo "🎉 All JavaScript data files generated successfully!"
 echo ""

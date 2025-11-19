@@ -21,6 +21,8 @@
     <script src="templates/generated/seb-options-windows.js"></script>
     <script src="templates/generated/seb-options-macos.js"></script>
     <script src="templates/generated/seb-options-ipados.js"></script>
+    <script src="templates/generated/wikipedia-mapping.js"></script>
+    <script src="templates/generated/seb-option-labels.js"></script>
 </head>
 <body>
     <!-- Dev Version Banner -->
@@ -73,11 +75,16 @@
                 <h2><span data-i18n="step2">2. Konfigurationseinstellungen</span></h2>
                 <div class="form-group">
                     <label for="startUrl" data-i18n="startUrl">Start-URL</label>
-                    <input type="url" id="startUrl" placeholder="https://www.onenote.com/notebooks">
+                    <div id="startUrlSelectorContainer" class="start-url-selector-container">
+                        <select id="startUrlSelector" class="start-url-selector">
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <input type="url" id="startUrl" placeholder="https://sites.google.com/view/your-secret-page-xyz123">
                 </div>
                 <div class="form-group">
                     <label for="configName" data-i18n="configName">Konfigurationsname</label>
-                    <input type="text" id="configName" placeholder="Meine_Schule_OneNote">
+                    <input type="text" id="configName" placeholder="FocusMode-2025-11-18_13-50">
                 </div>
                 
                 <!-- SharePoint Link Configuration (shown only for OneNote/Word) -->
@@ -138,7 +145,7 @@
                     <div class="advanced-content-inner">
                         <!-- Boolean Options (All True/False Options from XML) -->
                         <div class="section">
-                            <h2><span data-i18n="allBooleanOptions">Alle True-/False-Optionen</span></h2>
+                            <h2><span data-i18n="allBooleanOptions">Erweiterte Optionen (für fortgeschrittene Anwender)</span></h2>
                             
                             <!-- Experimental Warning -->
                             <div class="boolean-warning">
@@ -166,7 +173,22 @@
                                 </div>
                             </div>
                             
+                            <!-- Global Search for all Boolean Options & Process Lists -->
+                            <div id="globalSearchContainer" class="global-search-container hidden">
+                                <input type="text" 
+                                       id="globalSearch" 
+                                       class="global-search-input" 
+                                       placeholder="🔍 Search all settings and processes...">
+                                <span class="global-search-count" id="globalSearchCount"></span>
+                            </div>
+                            
                             <div id="booleanOptionsContainer"></div>
+                            
+                            <!-- URL Filter Rules (inserted here by JS) -->
+                            <div id="urlFilterPlaceholder"></div>
+                            
+                            <!-- Dict Structures (Process Lists, Certificates, etc.) -->
+                            <div id="dictStructuresContainer"></div>
                         </div>
                         
                         <!-- Security Level -->
@@ -291,7 +313,7 @@
     </div>
 
     <!-- Moodle Configuration Modal -->
-    <div id="moodleModal" class="modal">
+    <div id="moodleModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 data-i18n="moodleModalTitle">Moodle Quiz-Konfiguration</h2>
@@ -316,11 +338,14 @@
                 </details>
 
                 <!-- Regex Allowed -->
-                <details class="moodle-section">
+                <details class="moodle-section" id="moodleRegexAllowedSection">
                     <summary><strong data-i18n="moodleRegexAllowed">Regex allowed</strong> <span class="moodle-hint" data-i18n="moodleRegexHint">(meist leer)</span></summary>
                     <div class="moodle-field">
                         <p class="moodle-example-note" data-i18n="moodleRegexExampleNote">⚠️ Beispiel (nicht kopieren): Für spezifische URL-Muster wie Moodle-Ressourcen</p>
                         <textarea id="moodleRegexAllowed" readonly class="moodle-example">^https://moodle\.example\.com/mod/resource/view\.php\?id=\d+$</textarea>
+                        <button class="btn btn-copy moodle-copy-regex" data-field="moodleRegexAllowed" style="display: none;">
+                            📋 <span data-i18n="copyBtn">Kopieren</span>
+                        </button>
                     </div>
                 </details>
 
@@ -336,11 +361,14 @@
                 </details>
 
                 <!-- Regex Blocked -->
-                <details class="moodle-section">
+                <details class="moodle-section" id="moodleRegexBlockedSection">
                     <summary><strong data-i18n="moodleRegexBlocked">Regex blocked</strong> <span class="moodle-hint" data-i18n="moodleRegexHint">(meist leer)</span></summary>
                     <div class="moodle-field">
                         <p class="moodle-example-note" data-i18n="moodleRegexExampleNote">⚠️ Beispiel (nicht kopieren): Zum Blockieren spezifischer URL-Muster</p>
                         <textarea id="moodleRegexBlocked" readonly class="moodle-example">^https://.*\.(facebook|twitter|instagram)\.com/.*$</textarea>
+                        <button class="btn btn-copy moodle-copy-regex" data-field="moodleRegexBlocked" style="display: none;">
+                            📋 <span data-i18n="copyBtn">Kopieren</span>
+                        </button>
                     </div>
                 </details>
 
