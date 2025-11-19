@@ -4,10 +4,10 @@
     "source": "macOS SEB Configuration Tool",
     "sebVersion": "TBD",
     "sebBuild": "TBD",
-    "lastUpdated": "2025-11-11",
-    "format": "Menu → Section → Option (English labels as in original tool)",
+    "lastUpdated": "2025-11-18",
+    "format": "Tab → Section → Option (English labels as in original tool)",
     "note": "Menu labels remain in English (as in SEB Config Tool). Only hint texts are translated.",
-    "contributors": "To be filled with screenshots from macOS SEB Config Tool"
+    "contributors": "Extracted from screenshots of macOS SEB Config Tool"
   },
   "_translations": {
     "de": {
@@ -20,8 +20,593 @@
     }
   },
   "options": {
-    "_placeholder": {
-      "note": "This file will be populated with macOS-specific menu locations from screenshots"
+    "allowUserToQuitSEB": {
+      "macos": "General → Allow user to quit SEB",
+      "windowsDifferent": null
+    },
+    "allowPreferencesWindow": {
+      "macos": "Configuration → Allow to open Preferences window on client",
+      "windowsDifferent": null
+    },
+    "removeDefaultValues": {
+      "macos": "Configuration → Remove default values",
+      "windowsDifferent": null
+    },
+    "allowQRCodeConfig": {
+      "macos": "Configuration → iOS Settings → Allow QR code config",
+      "windowsDifferent": null
+    },
+    "showSettingsInApp": {
+      "macos": "Configuration → iOS Settings → Show settings in app",
+      "windowsDifferent": null
+    },
+    "showEditConfigFileQuickAction": {
+      "macos": "Configuration → iOS Settings → Show 'Edit Config File' Quick Action",
+      "windowsDifferent": null
+    },
+    "enableBrowserWindowToolbar": {
+      "macos": "User Interface → Toolbar/Menu Bar/Status Bar → Enable browser window toolbar",
+      "windowsDifferent": null
+    },
+    "hideToolbarAsDefault": {
+      "macos": "User Interface → Toolbar/Menu Bar/Status Bar → Hide toolbar as default",
+      "windowsDifferent": null
+    },
+    "showMenuBar": {
+      "macos": "User Interface → Toolbar/Menu Bar/Status Bar → Show menu bar",
+      "windowsDifferent": null
+    },
+    "showTaskBar": {
+      "macos": "User Interface → SEB dock/taskbar → Show SEB dock",
+      "windowsDifferent": null
+    },
+    "enableScrollLock": {
+      "macos": "User Interface → SEB dock/taskbar → Enable scroll lock (iOS)",
+      "windowsDifferent": null
+    },
+    "showScrollLockButton": {
+      "macos": "User Interface → SEB dock/taskbar → Show scroll lock button (iOS)",
+      "windowsDifferent": null
+    },
+    "showSideMenu": {
+      "macos": "User Interface → SEB dock/taskbar → Show side menu (Win)",
+      "windowsDifferent": null
+    },
+    "showBackToStartButton": {
+      "macos": "User Interface → SEB dock/taskbar → Show Back to Start button",
+      "windowsDifferent": null
+    },
+    "showNavigationButtons": {
+      "macos": "User Interface → SEB dock/taskbar → Show navigation buttons (iOS)",
+      "windowsDifferent": null
+    },
+    "showAddressBarAdditionalWindows": {
+      "macos": "User Interface → SEB dock/taskbar → Show address bar for additional windows (Win)",
+      "windowsDifferent": null
+    },
+    "showAddressBarMainWindow": {
+      "macos": "User Interface → SEB dock/taskbar → Show address bar for main window (Win)",
+      "windowsDifferent": null
+    },
+    "showReloadButton": {
+      "macos": "User Interface → SEB dock/taskbar → Show reload button",
+      "windowsDifferent": null
+    },
+    "showScanQRCodeButton": {
+      "macos": "User Interface → SEB dock/taskbar → Show scan QR code button (iOS)",
+      "windowsDifferent": null
+    },
+    "showTime": {
+      "macos": "User Interface → SEB dock/taskbar → Show time",
+      "windowsDifferent": null
+    },
+    "showKeyboardLayout": {
+      "macos": "User Interface → SEB dock/taskbar → Show keyboard layout (Win)",
+      "windowsDifferent": null
+    },
+    "showQuitButton": {
+      "macos": "User Interface → SEB dock/taskbar → Show quit button",
+      "windowsDifferent": null
+    },
+    "showWiFiControl": {
+      "macos": "User Interface → SEB dock/taskbar → Show Wi-Fi control (Win)",
+      "windowsDifferent": null
+    },
+    "enablePageZoom": {
+      "macos": "User Interface → Enable zoom → Enable page zoom",
+      "windowsDifferent": null
+    },
+    "enableTextZoom": {
+      "macos": "User Interface → Enable zoom → Enable text zoom",
+      "windowsDifferent": null
+    },
+    "allowSpellCheck": {
+      "macos": "User Interface → Spell Checker → Allow spell checking (Win)",
+      "windowsDifferent": null
+    },
+    "allowDictionaryLookup": {
+      "macos": "User Interface → Spell Checker → Allow dictionary look up",
+      "windowsDifferent": null
+    },
+    "blockPopUpWindows": {
+      "macos": "Browser → Links requesting to be opened in a new browser window ... → block when directing to a different server",
+      "windowsDifferent": null
+    },
+    "allowTextSearch": {
+      "macos": "Browser → Browser Features → Allow text search",
+      "windowsDifferent": null
+    },
+    "tabFocusesLinks": {
+      "macos": "Browser → Browser Features → Tab focuses links",
+      "windowsDifferent": null
+    },
+    "blockPopupWindows": {
+      "macos": "Browser → Browser Features → Block pop-up windows",
+      "windowsDifferent": null
+    },
+    "enableJavaScript": {
+      "macos": "Browser → Browser Features → Enable JavaScript",
+      "windowsDifferent": null
+    },
+    "reloadPageAfterConnectionError": {
+      "macos": "Browser → Browser Features → Reload page after connection error",
+      "windowsDifferent": null
+    },
+    "enableRightMouseButton": {
+      "macos": "Browser → Browser Features → Enable right mouse button",
+      "windowsDifferent": null
+    },
+    "enableWebInspector": {
+      "macos": "Browser → Browser Features → Enable Web Inspector (developer tools)",
+      "windowsDifferent": null
+    },
+    "enablePlugIns": {
+      "macos": "Browser → Browser Features → Enable plug-ins",
+      "windowsDifferent": null
+    },
+    "enablePDFReaderToolbar": {
+      "macos": "Browser → Browser Features → Enable toolbar of PDF reader (Win)",
+      "windowsDifferent": null
+    },
+    "clearCacheWin": {
+      "macos": "Browser → Browser Features → Clear cache(Win)",
+      "windowsDifferent": null
+    },
+    "allowNavigatingBack": {
+      "macos": "Browser → Restrictions in Exam Window → Allow navigation",
+      "windowsDifferent": null
+    },
+    "browserWindowAllowReload": {
+      "macos": "Browser → Restrictions in Exam Window → Allow reload",
+      "windowsDifferent": null
+    },
+    "showReloadWarning": {
+      "macos": "Browser → Restrictions in Exam Window → Show reload warning",
+      "windowsDifferent": null
+    },
+    "allowNavigatingAdditionalWindows": {
+      "macos": "Browser → Restrictions in Additional Windows → Allow navigation",
+      "windowsDifferent": null
+    },
+    "allowReloadAdditionalWindows": {
+      "macos": "Browser → Restrictions in Additional Windows → Allow reload",
+      "windowsDifferent": null
+    },
+    "showReloadWarningAdditionalWindows": {
+      "macos": "Browser → Restrictions in Additional Windows → Show reload warning",
+      "windowsDifferent": null
+    },
+    "mediaAutoplay": {
+      "macos": "Browser → Media Playback/Capture → Media autoplay",
+      "windowsDifferent": null
+    },
+    "videoAutoplay": {
+      "macos": "Browser → Media Playback/Capture → Video autoplay",
+      "windowsDifferent": null
+    },
+    "audioAutoplay": {
+      "macos": "Browser → Media Playback/Capture → Audio autoplay",
+      "windowsDifferent": null
+    },
+    "allowCameraCapture": {
+      "macos": "Browser → Media Playback/Capture → Allow camera capture",
+      "windowsDifferent": null
+    },
+    "allowMicrophoneCapture": {
+      "macos": "Browser → Media Playback/Capture → Allow microphone capture",
+      "windowsDifferent": null
+    },
+    "allowInlinePlaybackIPad": {
+      "macos": "Browser → Media Playback/Capture → Allow inline playback on iPad",
+      "windowsDifferent": null
+    },
+    "allowInlinePlaybackIPhone": {
+      "macos": "Browser → Media Playback/Capture → Allow inline playback on iPhone",
+      "windowsDifferent": null
+    },
+    "allowPictureInPictureVideo": {
+      "macos": "Browser → Media Playback/Capture → Allow picture in picture video (iOS)",
+      "windowsDifferent": null
+    },
+    "allowScreenCapture": {
+      "macos": "Browser → Media Playback/Capture → Allow screen capture",
+      "windowsDifferent": null
+    },
+    "disableClassicWebViewDeprecationWarning": {
+      "macos": "Browser → Select Browser Engine Policy → Disable classic WebView deprecation warning",
+      "windowsDifferent": null
+    },
+    "allowDownloadUploads": {
+      "macos": "Down/Uploads → Allow downloading and uploading files (deprecated, start using separate settings below!)",
+      "windowsDifferent": null
+    },
+    "allowDownloads": {
+      "macos": "Down/Uploads → Allow downloading files",
+      "windowsDifferent": null
+    },
+    "useTemporaryDownloadUploadDirectory": {
+      "macos": "Down/Uploads → Use temporary down/upload directory",
+      "windowsDifferent": null
+    },
+    "openFilesAfterDownloading": {
+      "macos": "Down/Uploads → Open files after downloading",
+      "windowsDifferent": null
+    },
+    "allowCustomDownloadUploadLocation": {
+      "macos": "Down/Uploads → Allow user to select custom down/upload directory (Win)",
+      "windowsDifferent": null
+    },
+    "downloadPDFFiles": {
+      "macos": "Down/Uploads → Download and open PDF files instead of displaying them inline",
+      "windowsDifferent": null
+    },
+    "allowPDFPlugIn": {
+      "macos": "Down/Uploads → Allow using Acrobat Reader PDF plugin (insecure)",
+      "windowsDifferent": null
+    },
+    "allowUploads": {
+      "macos": "Down/Uploads → Allow uploading files",
+      "windowsDifferent": null
+    },
+    "allowUploadingPhotosAndFiles": {
+      "macos": "Down/Uploads → Allow uploading photos and files (iOS)",
+      "windowsDifferent": null
+    },
+    "downloadAndOpenSebConfig": {
+      "macos": "Down/Uploads → Download and open SEB config files",
+      "windowsDifferent": null
+    },
+    "copyBrowserExamKeyToClipboard": {
+      "macos": "Exam → Browser & Config Keys → Copy Browser Exam Key to clipboard when quitting",
+      "windowsDifferent": null
+    },
+    "copyConfigKeyToClipboard": {
+      "macos": "Exam → Browser & Config Keys → Copy Config Key to clipboard when quitting",
+      "windowsDifferent": null
+    },
+    "sendBrowserConfigKeysInHTTPHeader": {
+      "macos": "Exam → Browser & Config Keys → Send Browser & Config Keys in HTTP Header",
+      "windowsDifferent": null
+    },
+    "quitURLConfirm": {
+      "macos": "Exam → Link to quit SEB after exam → Ask user to confirm quitting",
+      "windowsDifferent": null
+    },
+    "restartExamUseStartURL": {
+      "macos": "Exam → Link to quit SEB after exam → Restart instead of quitting",
+      "windowsDifferent": null
+    },
+    "useStartURL": {
+      "macos": "Exam → Back to Start Button → Use Start URL (see General pane)",
+      "windowsDifferent": null
+    },
+    "protectBackToStartButton": {
+      "macos": "Exam → Back to Start Button → Protect Back to Start Button with the quit/unlock password",
+      "windowsDifferent": null
+    },
+    "allowReconfiguring": {
+      "macos": "Exam → Reconfiguring Secure/Exam Session → Allow reconfiguring secure/exam session",
+      "windowsDifferent": null
+    },
+    "clearSessionOnStart": {
+      "macos": "Exam → Session Cookies → Clear on session start",
+      "windowsDifferent": null
+    },
+    "clearSessionOnEnd": {
+      "macos": "Exam → Session Cookies → Clear on session end",
+      "windowsDifferent": null
+    },
+    "allowQueryParameter": {
+      "macos": "Exam → Query String Parameter → Allow Query Parameter",
+      "windowsDifferent": null
+    },
+    "allowDeepLinkingForExams": {
+      "macos": "Exam → Exam Deep Linking → Allow Deep Linking for Exams",
+      "windowsDifferent": null
+    },
+    "automaticallyQuitProhibitedApplications": {
+      "macos": "Applications → Automatically quit prohibited applications",
+      "windowsDifferent": null
+    },
+    "allowAppSwitching": {
+      "macos": "Applications → Allow app switching (open book/debug mode)",
+      "windowsDifferent": null
+    },
+    "activateURLFiltering": {
+      "macos": "Network → Filter → Activate URL filtering",
+      "windowsDifferent": null
+    },
+    "filterEmbeddedContent": {
+      "macos": "Network → Filter → Filter also embedded content",
+      "windowsDifferent": null
+    },
+    "teachSEBAllowedBlockedURLs": {
+      "macos": "Network → Filter → Teach SEB allowed/blocked URLs",
+      "windowsDifferent": null
+    },
+    "pinEmbeddedCertificates": {
+      "macos": "Network → Certificates → Pin embedded certificates",
+      "windowsDifferent": null
+    },
+    "excludeSimpleHostnames": {
+      "macos": "Network → Proxies → Exclude simple hostnames",
+      "windowsDifferent": null
+    },
+    "usePassiveFTPMode": {
+      "macos": "Network → Proxies → Use Passive FTP Mode (PASV)",
+      "windowsDifferent": null
+    },
+    "allowVirtualMachine": {
+      "macos": "Security → Allow to run inside virtual machine",
+      "windowsDifferent": null
+    },
+    "allowScreenCaptureRecording": {
+      "macos": "Security → Allow screen capture/recording",
+      "windowsDifferent": "Browser → Media Playback/Capture → Allow screen capture"
+    },
+    "allowWindowCapture": {
+      "macos": "Security → Allow window capture (screen shots)",
+      "windowsDifferent": null
+    },
+    "blockScreenShots": {
+      "macos": "Security → Block screen shots (Legacy)",
+      "windowsDifferent": null
+    },
+    "allowNetworkScreenSharing": {
+      "macos": "Security → Allow network screen sharing",
+      "windowsDifferent": null
+    },
+    "enforceBlockingScreenSharing": {
+      "macos": "Security → Enforce blocking screen sharing on Mac",
+      "windowsDifferent": null
+    },
+    "usePrivateClipboard": {
+      "macos": "Security → Use private clipboard",
+      "windowsDifferent": null
+    },
+    "enforcePrivateClipboard": {
+      "macos": "Security → Enforce private clipboard on Mac",
+      "windowsDifferent": null
+    },
+    "enableLogging": {
+      "macos": "Security → Logging → Enable logging",
+      "windowsDifferent": null
+    },
+    "useStandardDirectory": {
+      "macos": "Security → Logging → Use standard directory",
+      "windowsDifferent": null
+    },
+    "preferAssessmentMode": {
+      "macos": "Security → OS Specific Settings → macOS → Prefer Assessment Mode (AAC)",
+      "windowsDifferent": null
+    },
+    "disableAppSwitcherOnStart": {
+      "macos": "Security → OS Specific Settings → macOS → Disable app switcher when starting",
+      "windowsDifferent": null
+    },
+    "forceAppFolderInstall": {
+      "macos": "Security → OS Specific Settings → macOS → Force installation in /Applications folder",
+      "windowsDifferent": null
+    },
+    "allowUserApplicationsFolder": {
+      "macos": "Security → OS Specific Settings → macOS → Allow also user's ~/Applications folder",
+      "windowsDifferent": null
+    },
+    "allowSiri": {
+      "macos": "Security → OS Specific Settings → macOS → Allow to use Siri",
+      "windowsDifferent": null
+    },
+    "allowDictation": {
+      "macos": "Security → OS Specific Settings → macOS → Allow to use dictation",
+      "windowsDifferent": null
+    },
+    "detectStoppedProcess": {
+      "macos": "Security → OS Specific Settings → macOS → Detect when SEB process was stopped",
+      "windowsDifferent": null
+    },
+    "allowDisplayMirroring": {
+      "macos": "Security → OS Specific Settings → macOS → Allow display mirroring (affects also AirPlay Display)",
+      "windowsDifferent": null
+    },
+    "useBuiltinDisplay": {
+      "macos": "Security → OS Specific Settings → macOS → Use built-in display",
+      "windowsDifferent": null
+    },
+    "enforceBuiltinDisplay": {
+      "macos": "Security → OS Specific Settings → macOS → Enforce built-in display",
+      "windowsDifferent": null
+    },
+    "allowDesktopMacs": {
+      "macos": "Security → OS Specific Settings → macOS → Allow desktop Macs",
+      "windowsDifferent": null
+    },
+    "ignoreDisplayValidationErrors": {
+      "macos": "Security → OS Specific Settings → macOS → Ignore errors when validating displays",
+      "windowsDifferent": null
+    },
+    "checkFullMacOSVersionNumber": {
+      "macos": "Security → OS Specific Settings → macOS → Check full macOS version number",
+      "windowsDifferent": null
+    },
+    "useAssessmentMode": {
+      "macos": "Security → OS Specific Settings → iOS → Use Assessment Mode (AAC/ASAM) if available",
+      "windowsDifferent": null
+    },
+    "useModernAACAPI": {
+      "macos": "Security → OS Specific Settings → iOS → Use modern AAC API",
+      "windowsDifferent": null
+    },
+    "allowSingleAppMode": {
+      "macos": "Security → OS Specific Settings → iOS → Allow Single App Mode",
+      "windowsDifferent": null
+    },
+    "guidedAccessCompatibility": {
+      "macos": "Security → OS Specific Settings → iOS → Guided Access Compatibility",
+      "windowsDifferent": null
+    },
+    "allowIOSScreenCapture": {
+      "macos": "Security → OS Specific Settings → iOS → Allow iOS screen capture",
+      "windowsDifferent": null
+    },
+    "preventAutoLock": {
+      "macos": "Security → OS Specific Settings → iOS → Prevent auto-lock",
+      "windowsDifferent": null
+    },
+    "lockScreenAfterSleepMode": {
+      "macos": "Security → OS Specific Settings → iOS → Lock screen after sleep mode",
+      "windowsDifferent": null
+    },
+    "ignoreSEBService": {
+      "macos": "Security → OS Specific Settings → System Lockdown → SEB Service (Win) → Ignore SEB Service",
+      "windowsDifferent": null
+    },
+    "allowWindowsUpdate": {
+      "macos": "Security → OS Specific Settings → System Lockdown → SEB Service (Win) → Allow Windows Update to run while SEB is running",
+      "windowsDifferent": null
+    },
+    "allowChromeNotifications": {
+      "macos": "Security → OS Specific Settings → System Lockdown → SEB Service (Win) → Allow notifications from Chrome browsers",
+      "windowsDifferent": null
+    },
+    "enableSwitchUser": {
+      "macos": "Security → OS Specific Settings → Registry → Options in the Windows Security Screen invoked by Ctrl-Alt-Del → While running SEB → Enable Switch User",
+      "windowsDifferent": null
+    },
+    "enableLockThisComputer": {
+      "macos": "Security → OS Specific Settings → Registry → Options in the Windows Security Screen invoked by Ctrl-Alt-Del → While running SEB → Enable Lock this computer",
+      "windowsDifferent": null
+    },
+    "enableChangeAPassword": {
+      "macos": "Security → OS Specific Settings → Registry → Options in the Windows Security Screen invoked by Ctrl-Alt-Del → While running SEB → Enable Change a password",
+      "windowsDifferent": null
+    },
+    "enableStartTaskManager": {
+      "macos": "Security → OS Specific Settings → Registry → Options in the Windows Security Screen invoked by Ctrl-Alt-Del → While running SEB → Enable Start Task Manager",
+      "windowsDifferent": null
+    },
+    "enableLogOff": {
+      "macos": "Security → OS Specific Settings → Registry → Options in the Windows Security Screen invoked by Ctrl-Alt-Del → While running SEB → Enable Log off",
+      "windowsDifferent": null
+    },
+    "enableShutDown": {
+      "macos": "Security → OS Specific Settings → Registry → Options in the Windows Security Screen invoked by Ctrl-Alt-Del → While running SEB → Enable Shut down",
+      "windowsDifferent": null
+    },
+    "enableEaseOfAccess": {
+      "macos": "Security → OS Specific Settings → Registry → Options in the Windows Security Screen invoked by Ctrl-Alt-Del → While running SEB → Enable Ease of Access",
+      "windowsDifferent": null
+    },
+    "enableNetworkConnectionSelector": {
+      "macos": "Security → OS Specific Settings → Registry → Options in the Windows Security Screen invoked by Ctrl-Alt-Del → While running SEB → Enable network connection selector",
+      "windowsDifferent": null
+    },
+    "setVMwareConfiguration": {
+      "macos": "Security → OS Specific Settings → Registry → Options in the Windows Security Screen invoked by Ctrl-Alt-Del → While running SEB → Set VMware configuration",
+      "windowsDifferent": null
+    },
+    "enableVMwareClientShade": {
+      "macos": "Security → OS Specific Settings → Registry → Options in the Windows Security Screen invoked by Ctrl-Alt-Del → While running SEB → Set VMware configuration → Enable VMware Client Shade",
+      "windowsDifferent": null
+    },
+    "enableEsc": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Special Keys (Win) → Enable Esc",
+      "windowsDifferent": null
+    },
+    "enableCtrlEsc": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Special Keys (Win) → Enable Ctrl-Esc",
+      "windowsDifferent": null
+    },
+    "enableAltEsc": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Special Keys (Win) → Enable Alt-Esc",
+      "windowsDifferent": null
+    },
+    "enableAltTab": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Special Keys (Win) → Enable Alt-Tab",
+      "windowsDifferent": null
+    },
+    "enableAltF4": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Special Keys (Win) → Enable Alt-F4",
+      "windowsDifferent": null
+    },
+    "enableRightMouse": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Special Keys (Win) → Enable Right Mouse",
+      "windowsDifferent": null
+    },
+    "enablePrintScreen": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Special Keys (Win) → Enable Print Screen",
+      "windowsDifferent": null
+    },
+    "enableAltMousewheel": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Special Keys (Win) → Enable Alt-Mousewheel",
+      "windowsDifferent": null
+    },
+    "enableF1": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Function Keys (Win) → Enable F1",
+      "windowsDifferent": null
+    },
+    "enableF2": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Function Keys (Win) → Enable F2",
+      "windowsDifferent": null
+    },
+    "enableF3": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Function Keys (Win) → Enable F3",
+      "windowsDifferent": null
+    },
+    "enableF4": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Function Keys (Win) → Enable F4",
+      "windowsDifferent": null
+    },
+    "enableF5": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Function Keys (Win) → Enable F5",
+      "windowsDifferent": null
+    },
+    "enableF6": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Function Keys (Win) → Enable F6",
+      "windowsDifferent": null
+    },
+    "enableF7": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Function Keys (Win) → Enable F7",
+      "windowsDifferent": null
+    },
+    "enableF8": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Function Keys (Win) → Enable F8",
+      "windowsDifferent": null
+    },
+    "enableF9": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Function Keys (Win) → Enable F9",
+      "windowsDifferent": null
+    },
+    "enableF10": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Function Keys (Win) → Enable F10",
+      "windowsDifferent": null
+    },
+    "enableF11": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Function Keys (Win) → Enable F11",
+      "windowsDifferent": null
+    },
+    "enableF12": {
+      "macos": "Security → OS Specific Settings → Hooked Keys → Function Keys (Win) → Enable F12",
+      "windowsDifferent": null
     }
   }
 }

@@ -1,0 +1,5 @@
+{
+  "id": "maths",
+  "name": "Mathematik / Mathematics",
+  "toolPresets": ["geogebra", "desmos"]
+}
