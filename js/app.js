@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.22.0a4
-// Build: 2025-11-19 22:18
+// Version: v0.22.0rc1
+// Build: 2025-11-19 22:34
 
 // ============================================================================
 
@@ -775,8 +775,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.22.0a4';
-const BUILD_DATE = new Date('2025-11-19T22:18:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.22.0rc1';
+const BUILD_DATE = new Date('2025-11-19T22:34:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -3848,10 +3848,12 @@ function downloadMoodleTxt() {
 const config = generateMoodleUrlConfig();
 const lang = document.documentElement.lang || 'de';
 const t = TRANSLATIONS[lang];
+const buildDate = formatBuildDate(lang);
 
 // Build content using translation keys
 let content = t.moodleTxtTitle + '\n';
-content += '='.repeat(70) + '\n\n';
+content += '='.repeat(70) + '\n';
+content += `*** SEBConfigGenerator ${APP_VERSION} - (Build: ${buildDate}) ***\n\n`;
 content += t.moodleTxtWarning + '\n\n';
 content += '='.repeat(70) + '\n\n';
 
