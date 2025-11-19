@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.22.0a1
-// Build: 2025-11-19 21:52
+// Version: v0.22.0a2
+// Build: 2025-11-19 22:08
 
 // ============================================================================
 
@@ -775,8 +775,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.22.0a1';
-const BUILD_DATE = new Date('2025-11-19T21:52:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.22.0a2';
+const BUILD_DATE = new Date('2025-11-19T22:08:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1427,25 +1427,22 @@ if (hasOneNote && !hasWord) {
 updateStartUrlField();
 
 // Update config name
-const mainPresetsForName = selectedPresets.filter(p => !Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
-const toolPresetsForName = selectedPresets.filter(p => Object.values(PRESET_GROUPS.allowedTools).flat().includes(p));
+// Rule: If more than 1 preset/tool selected in total → use generic "FocusMode-{timestamp}"
+//       If exactly 1 preset/tool selected → use specific name
+//       If none selected → clear name
+const totalSelected = selectedPresets.length;
 
-if (mainPresetsForName.length === 1) {
-    const presetName = t('preset' + mainPresetsForName[0].charAt(0).toUpperCase() + mainPresetsForName[0].slice(1));
-    const configNameEl = document.getElementById('configName');
-    if (configNameEl) configNameEl.value = `${presetName.replace(/\s+/g, '_')}_Config-${getTimestamp()}`;
-} else if (mainPresetsForName.length > 1) {
+if (totalSelected > 1) {
+    // More than one service/tool selected → generic name
     const configNameEl = document.getElementById('configName');
     if (configNameEl) configNameEl.value = `FocusMode-${getTimestamp()}`;
-} else if (toolPresetsForName.length === 1) {
-    // Only one Hilfsmittel selected
-    const presetName = t('preset' + toolPresetsForName[0].charAt(0).toUpperCase() + toolPresetsForName[0].slice(1));
+} else if (totalSelected === 1) {
+    // Exactly one service/tool selected → use its name
+    const presetName = t('preset' + selectedPresets[0].charAt(0).toUpperCase() + selectedPresets[0].slice(1));
     const configNameEl = document.getElementById('configName');
     if (configNameEl) configNameEl.value = `${presetName.replace(/\s+/g, '_')}_Config-${getTimestamp()}`;
-} else if (toolPresetsForName.length > 1) {
-    const configNameEl = document.getElementById('configName');
-    if (configNameEl) configNameEl.value = `FocusMode-${getTimestamp()}`;
 } else {
+    // Nothing selected → clear name
     const configNameEl = document.getElementById('configName');
     if (configNameEl) configNameEl.value = '';
 }
