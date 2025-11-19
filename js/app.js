@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
 // Version: v0.22.1
-// Build: 2025-11-19 22:50
+// Build: 2025-11-19 23:00
 
 // ============================================================================
 
@@ -775,8 +775,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'update README';
-const BUILD_DATE = new Date('2025-11-19T22:50:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.22.1';
+const BUILD_DATE = new Date('2025-11-19T23:00:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
