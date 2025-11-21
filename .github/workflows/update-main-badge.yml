@@ -1,0 +1,53 @@
+name: Update Main Badge
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-badge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Extract version from js/app.js
+        id: get_version
+        run: |
+          VERSION=$(grep "const APP_VERSION" js/app.js | sed "s/.*'\(v[^']*\)'.*/\1/")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Found version: $VERSION"
+
+      - name: Update Stable badge in README.md
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          sed -i "s|Cloudflare%20Stable-v[^-]*-|Cloudflare%20Stable-$VERSION-|g" README.md
+          echo "Updated badge to: $VERSION"
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet README.md; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected:"
+            git diff README.md
+          fi
+
+      - name: Commit and push if changed
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "chore: Update Stable badge to ${{ steps.get_version.outputs.version }}"
+          git push
