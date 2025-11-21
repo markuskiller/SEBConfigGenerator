@@ -819,7 +819,7 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.22.2rc1 - SharePoint link parsing improvements + info boxes';
+const APP_VERSION = 'v0.22.2rc1';
 const BUILD_DATE = new Date('2025-11-21T23:43:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
