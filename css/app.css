@@ -548,13 +548,18 @@ textarea {
     border-radius: 4px;
     font-size: 0.9em;
     color: #856404;
-    display: none;
+    white-space: pre-line; /* Allow \n\n line breaks */
 }
 
 /* SharePoint options container */
-.sharepoint-options-container {
+/* SharePoint options container - only hide when .hidden class is present */
+#sharepointOptions.sharepoint-options-container {
     margin-top: 15px;
-    display: none;
+}
+
+/* Form group container for SharePoint link input */
+#sharepointLinkGroup.sharepoint-options-container {
+    margin-top: 15px;
 }
 
 /* Boolean options warning */

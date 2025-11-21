@@ -1,5 +1,5 @@
 # Cloudflare Pages Security Headers
-# Version: v0.22.2a1
+# Version: v0.22.2rc1 - SharePoint link parsing improvements + info boxes
 # 
 # This file configures HTTP security headers for Cloudflare Pages deployment.
 # Documentation: https://developers.cloudflare.com/pages/configuration/headers/
