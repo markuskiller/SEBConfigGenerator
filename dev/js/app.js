@@ -1,6 +1,6 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.22.2rc1 - SharePoint link parsing improvements + info boxes
+// Version: v0.22.2rc1
 // Build: 2025-11-21 23:43
 
 // ============================================================================
