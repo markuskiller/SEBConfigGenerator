@@ -88,13 +88,16 @@
                 </div>
                 
                 <!-- SharePoint Link Configuration (shown only for OneNote/Word) -->
-                <div class="form-group sharepoint-options-container" id="sharepointLinkGroup">
+                <div class="form-group sharepoint-options-container hidden" id="sharepointLinkGroup">
                     <label for="sharepointLink" data-i18n="sharepointLinkLabel">SharePoint-Link (Optional - für erweiterte Filterung)</label>
                     <input type="url" id="sharepointLink" data-i18n-placeholder="sharepointLinkPlaceholder" placeholder="https://schule.sharepoint.com/sites/...">
-                    <div id="sharepointHelp" class="sharepoint-help">
+                    <div class="info-box" id="sharepointBestPractice">
+                        <span data-i18n="sharepointLinkBestPractice">💡 Die besten Ergebnisse werden mit direkten Links zu einer OneNote-Seite / einem OneNote-Abschnitt erreicht, wenn der Link aus der OneNote-Desktop-App (Rechtsklick auf Abschnitt oder Seite) eingefügt wird. Hinweis: Einschränkungen auf Abschnitts- oder Seitenebene sind nur sinnvoll, wenn kein Schreibzugriff erforderlich ist (reine Lese-/Recherche-Aufgaben) oder wenn der Link auf einen kollaborativen Bereich zeigt. Für die meisten Anwendungsfälle ist Einschränkung auf OneNote-Notizbuch ausreichend.</span>
+                    </div>
+                    <div id="sharepointHelp" class="sharepoint-help hidden">
                         <!-- Help text will be inserted here dynamically -->
                     </div>
-                    <div id="sharepointOptions" class="sharepoint-options-container">
+                    <div id="sharepointOptions" class="sharepoint-options-container hidden">
                         <!-- SharePoint options will be rendered here dynamically -->
                     </div>
                 </div>
@@ -343,7 +346,7 @@
                     <div class="moodle-field">
                         <p class="moodle-example-note" data-i18n="moodleRegexExampleNote">⚠️ Beispiel (nicht kopieren): Für spezifische URL-Muster wie Moodle-Ressourcen</p>
                         <textarea id="moodleRegexAllowed" readonly class="moodle-example">^https://moodle\.example\.com/mod/resource/view\.php\?id=\d+$</textarea>
-                        <button class="btn btn-copy moodle-copy-regex" data-field="moodleRegexAllowed" style="display: none;">
+                        <button class="btn btn-copy moodle-copy-regex hidden" data-field="moodleRegexAllowed">
                             📋 <span data-i18n="copyBtn">Kopieren</span>
                         </button>
                     </div>
@@ -366,7 +369,7 @@
                     <div class="moodle-field">
                         <p class="moodle-example-note" data-i18n="moodleRegexExampleNote">⚠️ Beispiel (nicht kopieren): Zum Blockieren spezifischer URL-Muster</p>
                         <textarea id="moodleRegexBlocked" readonly class="moodle-example">^https://.*\.(facebook|twitter|instagram)\.com/.*$</textarea>
-                        <button class="btn btn-copy moodle-copy-regex" data-field="moodleRegexBlocked" style="display: none;">
+                        <button class="btn btn-copy moodle-copy-regex hidden" data-field="moodleRegexBlocked">
                             📋 <span data-i18n="copyBtn">Kopieren</span>
                         </button>
                     </div>

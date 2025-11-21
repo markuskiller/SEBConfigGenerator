@@ -58,25 +58,15 @@ done
 
 TRANSLATIONS_JS="$TRANSLATIONS_JS};"
 
-# Write the generated file (we need to format the JSON properly)
-# Build a proper JSON object first, then convert to JS
-TRANSLATIONS_JSON="{"
-first_json=true
+# Build a proper JSON object using jq (avoids shell escaping issues)
+# Create a temporary file to hold the combined JSON
+TEMP_JSON=$(mktemp)
 
-for json_file in "$TRANSLATIONS_DIR"/*.json; do
-    [ -f "$json_file" ] || continue
-    lang_code=$(basename "$json_file" .json)
-    
-    if [ "$first_json" = true ]; then
-        first_json=false
-    else
-        TRANSLATIONS_JSON="$TRANSLATIONS_JSON,"
-    fi
-    
-    TRANSLATIONS_JSON="$TRANSLATIONS_JSON\"$lang_code\": $(cat "$json_file")"
-done
-
-TRANSLATIONS_JSON="$TRANSLATIONS_JSON}"
+# Use jq to properly combine JSON files
+jq -n \
+    --slurpfile de "$TRANSLATIONS_DIR/de.json" \
+    --slurpfile en "$TRANSLATIONS_DIR/en.json" \
+    '{de: $de[0], en: $en[0]}' > "$TEMP_JSON"
 
 # Format and write the file
 cat > "$GENERATED_DIR/translations.js" << EOF
@@ -89,8 +79,11 @@ cat > "$GENERATED_DIR/translations.js" << EOF
 // and run: bash scripts/build-translations.sh
 // This file is included directly in index.html before app.js
 
-const TRANSLATIONS = $(echo "$TRANSLATIONS_JSON" | jq .);
+const TRANSLATIONS = $(cat "$TEMP_JSON" | jq .);
 EOF
+
+# Clean up temp file
+rm -f "$TEMP_JSON"
 
 echo -e "\n${GREEN}✅ Generated: templates/generated/translations.js${NC}\n"
 
@@ -127,11 +120,20 @@ for lang in "${languages[@]}"; do
     lang_keys=$(jq -r 'keys[]' "$TRANSLATIONS_DIR/$lang.json" | sort)
     lang_count=$(echo "$lang_keys" | wc -l | tr -d ' ')
     
+    # Use temporary files instead of process substitution (for sh compatibility)
+    TEMP_REF=$(mktemp)
+    TEMP_LANG=$(mktemp)
+    echo "$reference_keys" > "$TEMP_REF"
+    echo "$lang_keys" > "$TEMP_LANG"
+    
     # Find missing keys
-    missing=$(comm -23 <(echo "$reference_keys") <(echo "$lang_keys"))
+    missing=$(comm -23 "$TEMP_REF" "$TEMP_LANG")
     
     # Find extra keys
-    extra=$(comm -13 <(echo "$reference_keys") <(echo "$lang_keys"))
+    extra=$(comm -13 "$TEMP_REF" "$TEMP_LANG")
+    
+    # Clean up temp files
+    rm -f "$TEMP_REF" "$TEMP_LANG"
     
     if [ -n "$missing" ]; then
         echo "  ⚠️  $lang.json is missing keys:"

@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.22.1
-// Build: 2025-11-19 23:05
+// Version: v0.22.2
+// Build: 2025-11-21 23:53
 
 // ============================================================================
 
@@ -129,15 +129,17 @@ try {
         fileId: null
     };
     
-    // OneNote links often contain two parts separated by space: web URL and onenote: protocol
+    // OneNote links often contain two parts separated by space or newline: web URL and onenote: protocol
     // Example: "https://.../_layouts/Doc.aspx?... onenote:https://.../Notebook/Section.one#PageName&section-id={...}&page-id={...}"
     let webUrl = url;
     let oneNoteProtocolUrl = null;
     
-    if (url.includes(' onenote:')) {
-        const parts = url.split(' onenote:');
-        webUrl = parts[0].trim();
-        oneNoteProtocolUrl = 'https:' + parts[1].trim(); // Re-add https: prefix
+    // Check for onenote: protocol (can be separated by space, newline, or directly concatenated)
+    const oneNoteMatch = url.match(/[\s\n]*onenote:(https?:\/\/[^\s]*)/);
+    if (oneNoteMatch) {
+        const splitIndex = url.indexOf('onenote:');
+        webUrl = url.substring(0, splitIndex).trim();
+        oneNoteProtocolUrl = oneNoteMatch[1].trim();
     }
     
     const parsed = new URL(webUrl);
@@ -200,44 +202,86 @@ try {
         }
         
         // Fallback: try to extract from web URL if onenote: protocol wasn't available
-        if (!result.notebook) {
+        // Note: Only use simple path-based extraction if we don't have wd= parameter
+        // (wd= parameter parsing below is more accurate for browser links)
+        if (!result.notebook && !webUrl.includes('wd=')) {
             const notebookMatch = webUrl.match(/\/([^\/]+)-Notizbuch/i);
             if (notebookMatch) {
                 result.notebook = decodeURIComponent(notebookMatch[1] + '-Notizbuch');
             }
         }
         
-        if (!result.section) {
+        if (!result.section && !webUrl.includes('wd=')) {
             const sectionMatch = webUrl.match(/\/([^\/]+\.one)/i);
             if (sectionMatch) {
                 result.section = decodeURIComponent(sectionMatch[1]);
             }
         }
         
-        // Extract section-id and page-id from wd=target(...) parameter (web URL format)
-        // Format: wd=target(SectionPath.one|{SECTION-ID}/PageName|{PAGE-ID}/)
-        if (!result.sectionId || !result.pageId) {
-            const wdMatch = webUrl.match(/[&?]wd=([^&]+)/);
-            if (wdMatch) {
-                const wdDecoded = decodeURIComponent(wdMatch[1]);
+        // Parse wd=target(...) parameter (browser format)
+        // Format: wd=target(Path/Notebook.one|{SECTION-ID}/PageName|{PAGE-ID}/)
+        // Example: target(_Inhaltsbibliothek/Language+Hub+(Years+3-4\).one|937ffc30-10f8-7546-9e1d-becca08633e1/Unit+4+(Conditionals\)|2585ef37-ded7-174e-a582-6725c384f2e7/)
+        const wdMatch = webUrl.match(/[&?]wd=([^&]+)/);
+        if (wdMatch) {
+            const wdDecoded = decodeURIComponent(wdMatch[1]);
+            
+            // Extract notebook and section from path before .one
+            // Pattern: target(path/Notebook.one|...)
+            const notebookSectionMatch = wdDecoded.match(/target\(([^|]+\.one)\|/i);
+            if (notebookSectionMatch) {
+                const fullPath = notebookSectionMatch[1];
+                // Get the .one filename (section)
+                // Note: Need to handle escaped characters like \) in the filename
+                // Match everything after the last / or \ until .one (including escaped chars)
+                const sectionFileMatch = fullPath.match(/([^\/]+\.one)$/i);
+                if (sectionFileMatch && !result.section) {
+                    // Clean up: replace + with spaces, remove backslash escapes
+                    let sectionName = sectionFileMatch[1].replace(/\+/g, ' ').replace(/\\(.)/g, '$1');
+                    result.section = decodeURIComponent(sectionName);
+                }
                 
-                // Extract section ID: .one|{GUID}/
-                if (!result.sectionId) {
-                    const sectionIdMatch = wdDecoded.match(/\.one\|([A-F0-9-]+)\//i);
-                    if (sectionIdMatch) {
-                        result.sectionId = sectionIdMatch[1];
+                // Try to extract notebook from path (usually contains -Notizbuch or similar)
+                if (!result.notebook) {
+                    const pathParts = fullPath.split(/[\/\\]/);
+                    for (const part of pathParts) {
+                        if (part.includes('Notizbuch') || part.includes('Notebook')) {
+                            result.notebook = decodeURIComponent(part.replace(/\+/g, ' '));
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Extract section ID: .one|{GUID}/ or .one|guid/
+            if (!result.sectionId) {
+                const sectionIdMatch = wdDecoded.match(/\.one\|([a-f0-9-]+)\//i);
+                if (sectionIdMatch) {
+                    result.sectionId = sectionIdMatch[1].toLowerCase();
+                }
+            }
+            
+            // Extract page name and ID
+            // Pattern after section: /PageName|{PAGE-ID}/ or /PageName\)|page-id/
+            const afterSectionMatch = wdDecoded.match(/\.one\|[a-f0-9-]+\/([^\/]+)/i);
+            if (afterSectionMatch) {
+                const pageInfo = afterSectionMatch[1];
+                
+                // Extract page name (before | but handle escaped \))
+                if (!result.pageName) {
+                    // Match everything before the last pipe (|)
+                    const pageNameMatch = pageInfo.match(/^(.+)\|[a-f0-9-]+$/i);
+                    if (pageNameMatch) {
+                        // Clean up: replace + with spaces, remove backslash escapes
+                        let pageName = pageNameMatch[1].replace(/\+/g, ' ').replace(/\\(.)/g, '$1');
+                        result.pageName = decodeURIComponent(pageName);
                     }
                 }
                 
-                // Extract page ID: Must come AFTER the section ID pattern
-                // Look for: /PageName|{GUID}/ that comes after .one|{SECTION-ID}/
+                // Extract page ID
                 if (!result.pageId) {
-                    const afterSection = wdDecoded.match(/\.one\|[A-F0-9-]+\/(.+)/i);
-                    if (afterSection) {
-                        const pageIdMatch = afterSection[1].match(/\|([A-F0-9-]+)\//i);
-                        if (pageIdMatch) {
-                            result.pageId = pageIdMatch[1];
-                        }
+                    const pageIdMatch = pageInfo.match(/\|([a-f0-9-]+)$/i);
+                    if (pageIdMatch) {
+                        result.pageId = pageIdMatch[1].toLowerCase();
                     }
                 }
             }
@@ -775,8 +819,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.22.1';
-const BUILD_DATE = new Date('2025-11-19T23:05:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.22.2';
+const BUILD_DATE = new Date('2025-11-21T23:53:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1158,9 +1202,16 @@ updateSecurityLevelWarning();
 
 function renderSharePointOptions(serviceType, parsedLink) {
 const container = document.getElementById('sharepointOptions');
+
 if (!parsedLink || !parsedLink.isSharePoint) {
-    container.classList.add('hidden');
-    container.innerHTML = '';
+    if (container) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+    }
+    return;
+}
+
+if (!container) {
     return;
 }
 
@@ -1365,10 +1416,12 @@ const hasOneNote = selectedPresets.includes('onenote');
 const hasWord = selectedPresets.includes('word');
 const hasOneNoteOrWord = hasOneNote || hasWord;
 
-if (hasOneNoteOrWord) {
-    sharepointLinkGroup.classList.remove('hidden');
-} else {
-    sharepointLinkGroup.classList.add('hidden');
+if (sharepointLinkGroup) {
+    if (hasOneNoteOrWord) {
+        sharepointLinkGroup.classList.remove('hidden');
+    } else {
+        sharepointLinkGroup.classList.add('hidden');
+    }
 }
 
 // Update experimental warning visibility (created in renderPresets)
@@ -1407,17 +1460,19 @@ if (experimentalWarning) {
 }
 
 // Show appropriate help text
-if (hasOneNote && !hasWord) {
-    sharepointHelp.classList.remove('hidden');
-    sharepointHelp.textContent = t('sharepointHelpOneNote');
-} else if (hasWord && !hasOneNote) {
-    sharepointHelp.classList.remove('hidden');
-    sharepointHelp.textContent = t('sharepointHelpWord');
-} else if (hasOneNote && hasWord) {
-    sharepointHelp.classList.remove('hidden');
-    sharepointHelp.textContent = t('sharepointHelpOneNote') + '\n\n' + t('sharepointHelpWord');
-} else {
-    sharepointHelp.classList.add('hidden');
+if (sharepointHelp) {
+    if (hasOneNote && !hasWord) {
+        sharepointHelp.classList.remove('hidden');
+        sharepointHelp.textContent = t('sharepointHelpOneNote');
+    } else if (hasWord && !hasOneNote) {
+        sharepointHelp.classList.remove('hidden');
+        sharepointHelp.textContent = t('sharepointHelpWord');
+    } else if (hasOneNote && hasWord) {
+        sharepointHelp.classList.remove('hidden');
+        sharepointHelp.textContent = t('sharepointHelpOneNote') + '\n\n' + t('sharepointHelpWord');
+    } else {
+        sharepointHelp.classList.add('hidden');
+    }
 }
 
 // No longer enforce "at least one main preset" - allow using only Hilfsmittel
@@ -3632,15 +3687,113 @@ const config = {
 };
 
 // Collect domains from selected services
+let presetDomains = [];
 selectedPresets.forEach(presetId => {
     const preset = PRESETS[presetId];
     if (preset && preset.domains) {
-        config.expressionsAllowed.push(...preset.domains);
+        presetDomains.push(...preset.domains);
     }
     if (preset && preset.blockedDomains) {
         config.expressionsBlocked.push(...preset.blockedDomains);
     }
 });
+
+// Check SharePoint restrictions and determine the most restrictive level
+let sharepointRestrictionLevel = 0; // 0=none, 1=school, 2=site, 3=notebook/folder, 4=page/file
+let specificSharePointDomain = null;
+
+['onenote', 'word'].forEach(serviceType => {
+    const serviceConfig = sharepointConfig[serviceType];
+    if (serviceConfig.parsedLink && serviceConfig.parsedLink.isSharePoint && serviceConfig.parsedLink.domain) {
+        const r = serviceConfig.restrictions;
+        
+        // Determine restriction level (most specific wins)
+        if (r.page || r.file) {
+            sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 4);
+            specificSharePointDomain = serviceConfig.parsedLink.domain;
+        } else if (r.section || r.notebook || r.folder) {
+            sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 3);
+            specificSharePointDomain = serviceConfig.parsedLink.domain;
+        } else if (r.teamsSite) {
+            sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 2);
+            specificSharePointDomain = serviceConfig.parsedLink.domain;
+        } else if (r.schoolSharepoint) {
+            sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 1);
+            specificSharePointDomain = serviceConfig.parsedLink.domain;
+        }
+    }
+});
+
+// Apply domain filtering based on SharePoint restriction level
+let filteredPresetDomains = presetDomains;
+
+if (sharepointRestrictionLevel >= 1) {
+    // Level 1+: Remove SharePoint-related wildcards
+    const sharePointWildcardsToRemove = [
+        '*.sharepoint.com',
+        '*.sharepointonline.com'
+    ];
+    
+    filteredPresetDomains = filteredPresetDomains.filter(d => 
+        !sharePointWildcardsToRemove.includes(d.toLowerCase())
+    );
+    
+    if (sharepointRestrictionLevel >= 2) {
+        // Level 2+: Remove tenant-specific wildcards
+        filteredPresetDomains = filteredPresetDomains.filter(d => {
+            const lowerD = d.toLowerCase();
+            return !(lowerD.startsWith('*.') && (lowerD.includes('.sharepoint.com') || lowerD.includes('.sharepointonline.com')));
+        });
+    }
+    
+    // Add back specific SharePoint URLs based on restriction level
+    ['onenote', 'word'].forEach(serviceType => {
+        const serviceConfig = sharepointConfig[serviceType];
+        if (!serviceConfig.parsedLink || !serviceConfig.parsedLink.isSharePoint) return;
+        
+        const { parsedLink, restrictions } = serviceConfig;
+        
+        // Build the specific URL based on the most restrictive level
+        let specificUrl = `https://${parsedLink.domain}`;
+        
+        // Add Teams site if available
+        if (parsedLink.teamsSite && (restrictions.teamsSite || restrictions.notebook || restrictions.section || restrictions.page || restrictions.folder || restrictions.file)) {
+            specificUrl += `/sites/${parsedLink.teamsSite}`;
+        }
+        
+        if (serviceType === 'onenote') {
+            if (restrictions.page && parsedLink.pageId) {
+                // Most specific: Page level - use page ID
+                specificUrl += `/*wd=*${parsedLink.pageId}*`;
+            } else if (restrictions.section && parsedLink.sectionId) {
+                // Section level - use section ID
+                specificUrl += `/*${parsedLink.sectionId}*`;
+            } else if (restrictions.notebook && parsedLink.notebook) {
+                // Notebook level - use SiteAssets path
+                specificUrl += `/SiteAssets/${encodeURIComponent(parsedLink.notebook)}/*`;
+            } else {
+                // School or Teams site level only
+                specificUrl += '/*';
+            }
+        } else if (serviceType === 'word') {
+            if (restrictions.file && parsedLink.fileId) {
+                // File level - use sourcedoc parameter
+                specificUrl += `/*sourcedoc={${parsedLink.fileId}}*`;
+            } else if (restrictions.folder && parsedLink.folder) {
+                // Folder level
+                specificUrl += `/${encodeURIComponent(parsedLink.folder)}/*`;
+            } else {
+                // School or Teams site level only
+                specificUrl += '/*';
+            }
+        }
+        
+        filteredPresetDomains.push(specificUrl);
+    });
+}
+
+// Add filtered preset domains to config
+config.expressionsAllowed.push(...filteredPresetDomains);
 
 // Add manual URL filter rules from advanced settings (if loaded)
 if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
@@ -3943,7 +4096,32 @@ document.getElementById('moodleModal').addEventListener('click', (e) => {
 
 // SharePoint link parsing
 document.getElementById('sharepointLink').addEventListener('input', function() {
-    const url = this.value.trim();
+    let url = this.value.trim();
+    
+    // Extract SharePoint URL(s) from potential debug output or other text
+    // Handle both single URL and dual URL (web + onenote:) formats
+    if (url.includes('sharepoint.com')) {
+        // Check if it contains onenote: protocol (macOS format)
+        if (url.includes('onenote:')) {
+            // Extract both parts: web URL and onenote: URL
+            const webMatch = url.match(/(https:\/\/[^\s]+sharepoint\.com[^\s]*?)(?=\s|onenote:|$)/);
+            const oneNoteMatch = url.match(/onenote:(https:\/\/[^\s]+)/);
+            if (webMatch && oneNoteMatch) {
+                url = webMatch[1] + ' onenote:' + oneNoteMatch[1];
+            } else if (webMatch) {
+                url = webMatch[1];
+            }
+        } else {
+            // Single URL (browser format) - extract just the SharePoint URL
+            const urlMatch = url.match(/(https:\/\/[^\s"]+sharepoint\.com[^\s"]*)/);
+            if (urlMatch) {
+                url = urlMatch[1];
+            }
+        }
+    }
+    
+    debugLog('[SharePoint Input] URL:', url);
+    
     if (!url) {
         document.getElementById('sharepointOptions')?.classList.add('hidden');
         return;
