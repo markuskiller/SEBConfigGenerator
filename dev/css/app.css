@@ -1932,3 +1932,35 @@ textarea {
     background: transparent;
     font-size: 1.2rem;
 }
+
+/* Empty message styles */
+.empty-message {
+    padding: 1rem;
+    color: #666;
+    font-style: italic;
+}
+
+.empty-message-center {
+    padding: 2rem;
+    text-align: center;
+    color: #666;
+}
+
+/* URL Filter Info Box */
+.url-filter-info-box {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 4px;
+}
+
+/* Utility: Margin top */
+.mt-1 {
+    margin-top: 1rem;
+}
+
+/* Certificate info box with margin */
+.preset-info-box.with-margin {
+    margin: 1rem;
+}
