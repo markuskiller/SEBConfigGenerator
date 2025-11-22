@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.22.3a2
-// Build: 2025-11-22 00:18
+// Version: v0.22.3a3
+// Build: 2025-11-22 12:41
 
 // ============================================================================
 
@@ -58,17 +58,13 @@ if (DEBUG_MODE) {
 //
 // DO NOT define PRESETS, SUBJECTS, or PRESET_GROUPS here - they come from templates!
 
-const SECURITY_LEVELS = {
-relaxed: {
-    settings: {allowSwitchToApplications:false,allowQuit:true,browserViewMode:0,enableBrowserWindowToolbar:true,showMenuBar:false}
-},
-balanced: {
-    settings: {allowSwitchToApplications:false,allowQuit:true,browserViewMode:0,enableBrowserWindowToolbar:true,showMenuBar:false}
-},
-strict: {
-    settings: {allowSwitchToApplications:false,allowQuit:false,browserViewMode:1,enableBrowserWindowToolbar:false,showMenuBar:false}
-}
-};
+// ============================================================================
+// SECURITY LEVELS CONFIGURATION
+// ============================================================================
+// SECURITY_LEVELS is loaded from external file:
+// - templates/generated/security-levels.js
+// Generated from: templates/source/security-levels.json
+// To modify security levels, edit the JSON file and run: bash scripts/build-security-levels.sh
 
 // ============================================================================
 // WIKIPEDIA ARTICLE MAPPING
@@ -819,8 +815,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.22.3a2';
-const BUILD_DATE = new Date('2025-11-22T00:18:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.22.3a3';
+const BUILD_DATE = new Date('2025-11-22T12:41:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');

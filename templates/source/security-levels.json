@@ -1,0 +1,29 @@
+{
+  "relaxed": {
+    "settings": {
+      "allowSwitchToApplications": false,
+      "allowQuit": true,
+      "browserViewMode": 0,
+      "enableBrowserWindowToolbar": true,
+      "showMenuBar": false
+    }
+  },
+  "balanced": {
+    "settings": {
+      "allowSwitchToApplications": false,
+      "allowQuit": true,
+      "browserViewMode": 0,
+      "enableBrowserWindowToolbar": true,
+      "showMenuBar": false
+    }
+  },
+  "strict": {
+    "settings": {
+      "allowSwitchToApplications": false,
+      "allowQuit": false,
+      "browserViewMode": 1,
+      "enableBrowserWindowToolbar": false,
+      "showMenuBar": false
+    }
+  }
+}
