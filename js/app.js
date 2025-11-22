@@ -840,6 +840,17 @@ let selectedPresets = []; // Start with no preset selected - user must choose
 let currentSecurityLevel = 'balanced';
 let currentSelectedSubject = ''; // Track selected subject for allowed tools
 
+// Boolean options favorites (stored in localStorage)
+let booleanOptionsFavorites = new Set();
+try {
+    const stored = localStorage.getItem('sebConfigFavorites');
+    if (stored) {
+        booleanOptionsFavorites = new Set(JSON.parse(stored));
+    }
+} catch (e) {
+    console.warn('Could not load favorites from localStorage:', e);
+}
+
 // SharePoint link state
 let sharepointConfig = {
 onenote: { parsedLink: null, restrictions: {} },
@@ -930,6 +941,7 @@ if (parsedBooleanOptions.loaded) {
 // Re-render dynamic content
 renderPresets();
 renderSecurityLevels();
+renderSecurityLevelDetails();
 updateStartUrlField(); // Update start URL dropdown labels
 
 // Save language preference
@@ -1181,6 +1193,7 @@ function renderSecurityLevels() {
 const container = document.getElementById('securityLevel');
 container.innerHTML = '';
 
+// Predefined levels
 ['relaxed', 'balanced', 'strict'].forEach(key => {
     const div = document.createElement('div');
     div.className = `security-option ${key === currentSecurityLevel ? 'active' : ''}`;
@@ -1191,6 +1204,19 @@ container.innerHTML = '';
     div.addEventListener('click', () => selectSecurityLevel(key));
     container.appendChild(div);
 });
+
+// Custom level indicator (if active)
+if (currentSecurityLevel === 'custom') {
+    const div = document.createElement('div');
+    div.className = 'security-option active';
+    div.style.borderColor = '#9C27B0';
+    div.innerHTML = `
+        <h4>${t('securityLevelCustom')}</h4>
+        <p>${t('securityLevelCustomDescription')}</p>
+    `;
+    div.style.cursor = 'default';
+    container.appendChild(div);
+}
 
 // Show/update experimental warning for relaxed and strict levels
 updateSecurityLevelWarning();
@@ -1504,7 +1530,242 @@ updatePreview();
 
 function selectSecurityLevel(key) {
 currentSecurityLevel = key;
+
+// Apply security level settings to userSelections
+if (key !== 'custom' && SECURITY_LEVELS[key]) {
+    const levelSettings = SECURITY_LEVELS[key].settings;
+    Object.keys(levelSettings).forEach(optKey => {
+        if (parsedBooleanOptions.userSelections.hasOwnProperty(optKey)) {
+            parsedBooleanOptions.userSelections[optKey] = levelSettings[optKey];
+        }
+    });
+}
+
 renderSecurityLevels();
+renderSecurityLevelDetails();
+renderBooleanOptions(); // Re-render to show updated checkboxes
+}
+
+// Detect if current settings match a predefined security level
+function detectSecurityLevel() {
+    const securityLevelKeys = Object.keys(SECURITY_LEVELS);
+    
+    for (const levelKey of securityLevelKeys) {
+        const levelSettings = SECURITY_LEVELS[levelKey].settings;
+        let matches = true;
+        
+        for (const [key, value] of Object.entries(levelSettings)) {
+            if (parsedBooleanOptions.userSelections[key] !== value) {
+                matches = false;
+                break;
+            }
+        }
+        
+        if (matches) {
+            return levelKey;
+        }
+    }
+    
+    return 'custom';
+}
+
+// Called when any security-level-relevant option changes
+function onSecurityRelevantOptionChange() {
+    const detectedLevel = detectSecurityLevel();
+    if (detectedLevel !== currentSecurityLevel) {
+        currentSecurityLevel = detectedLevel;
+        renderSecurityLevels();
+        renderSecurityLevelDetails();
+    }
+}
+
+// Generic function to create a boolean option tile (reusable)
+function createBooleanOptionTile(optionKey, showFavoriteButton = true) {
+    const optionDiv = document.createElement('div');
+    optionDiv.classList.add('bool-option-item');
+    optionDiv.dataset.optionKey = optionKey;
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `bool_${optionKey}`;
+    checkbox.checked = parsedBooleanOptions.userSelections[optionKey] || false;
+    checkbox.classList.add('bool-option-checkbox');
+    checkbox.addEventListener('change', (e) => {
+        parsedBooleanOptions.userSelections[optionKey] = e.target.checked;
+        
+        // Check if this is a security-relevant option
+        const isSecurityRelevant = Object.keys(SECURITY_LEVELS).some(level =>
+            SECURITY_LEVELS[level].settings.hasOwnProperty(optionKey)
+        );
+        
+        if (isSecurityRelevant) {
+            onSecurityRelevantOptionChange();
+        }
+        
+        // Update all instances of this tile
+        updateAllTilesForOption(optionKey);
+    });
+    
+    const label = document.createElement('label');
+    label.htmlFor = `bool_${optionKey}`;
+    label.classList.add('bool-option-label');
+    
+    const labelText = document.createElement('div');
+    labelText.classList.add('bool-option-label-text');
+    labelText.textContent = generateOptionLabel(optionKey);
+    
+    const keyName = document.createElement('div');
+    keyName.classList.add('bool-option-key');
+    keyName.textContent = optionKey;
+    
+    label.appendChild(labelText);
+    label.appendChild(keyName);
+    
+    optionDiv.appendChild(checkbox);
+    optionDiv.appendChild(label);
+    
+    // Add favorite button if requested
+    if (showFavoriteButton) {
+        const favoriteBtn = document.createElement('button');
+        favoriteBtn.classList.add('bool-option-favorite');
+        favoriteBtn.innerHTML = booleanOptionsFavorites.has(optionKey) ? '⭐' : '☆';
+        favoriteBtn.title = currentLang === 'de' ? 'Zu Favoriten hinzufügen/entfernen' : 'Add/remove from favorites';
+        favoriteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleFavorite(optionKey);
+        });
+        optionDiv.appendChild(favoriteBtn);
+    }
+    
+    return optionDiv;
+}
+
+// Update all tiles displaying a specific option
+function updateAllTilesForOption(optionKey) {
+    const allTiles = document.querySelectorAll(`[data-option-key="${optionKey}"]`);
+    const isChecked = parsedBooleanOptions.userSelections[optionKey];
+    
+    allTiles.forEach(tile => {
+        const checkbox = tile.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+            checkbox.checked = isChecked;
+        }
+    });
+}
+
+// Toggle favorite status
+function toggleFavorite(optionKey) {
+    if (booleanOptionsFavorites.has(optionKey)) {
+        booleanOptionsFavorites.delete(optionKey);
+    } else {
+        booleanOptionsFavorites.add(optionKey);
+    }
+    
+    // Save to localStorage
+    try {
+        localStorage.setItem('sebConfigFavorites', JSON.stringify([...booleanOptionsFavorites]));
+    } catch (e) {
+        console.warn('Could not save favorites to localStorage:', e);
+    }
+    
+    // Re-render to update star icons
+    renderBooleanOptions();
+    renderSecurityLevelDetails();
+}
+
+// Render favorites group
+function renderFavoritesGroup(container) {
+    const groupDiv = document.createElement('div');
+    groupDiv.classList.add('bool-group-container');
+    groupDiv.style.borderLeft = '3px solid #FFB300';
+    
+    const groupHeader = document.createElement('div');
+    groupHeader.classList.add('bool-group-header');
+    groupHeader.innerHTML = `
+        <strong>${t('favoritesGroup')}</strong>
+        <span>(${booleanOptionsFavorites.size} ${currentLang === 'de' ? 'Optionen' : 'options'})</span>
+    `;
+    
+    const groupContent = document.createElement('div');
+    groupContent.classList.add('bool-group-content', 'show'); // Always expanded
+    
+    // Don't allow closing favorites group
+    groupHeader.style.cursor = 'default';
+    
+    if (booleanOptionsFavorites.size === 0) {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.style.cssText = 'padding: 1rem; color: #666; font-style: italic;';
+        emptyMsg.textContent = t('noFavorites');
+        groupContent.appendChild(emptyMsg);
+    } else {
+        const optionsGrid = document.createElement('div');
+        optionsGrid.classList.add('bool-options-grid');
+        
+        [...booleanOptionsFavorites].forEach(key => {
+            const tile = createBooleanOptionTile(key, true);
+            optionsGrid.appendChild(tile);
+        });
+        
+        groupContent.appendChild(optionsGrid);
+    }
+    
+    groupDiv.appendChild(groupHeader);
+    groupDiv.appendChild(groupContent);
+    container.appendChild(groupDiv);
+}
+
+function renderSecurityLevelDetails() {
+    const container = document.getElementById('securityLevelDetailsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Get security-relevant option keys
+    const securityRelevantKeys = new Set();
+    Object.values(SECURITY_LEVELS).forEach(level => {
+        Object.keys(level.settings).forEach(key => securityRelevantKeys.add(key));
+    });
+    
+    if (securityRelevantKeys.size === 0) return;
+    
+    // Create collapsible group header
+    const groupHeader = document.createElement('div');
+    groupHeader.classList.add('bool-group-header');
+    groupHeader.innerHTML = `
+        <strong>${t('securityLevelAffectedOptions')}</strong>
+        <span>(${securityRelevantKeys.size} ${currentLang === 'de' ? 'Optionen' : 'options'})</span>
+    `;
+    
+    // Create collapsible content
+    const groupContent = document.createElement('div');
+    groupContent.classList.add('bool-group-content');
+    // Start collapsed
+    
+    // Toggle functionality
+    groupHeader.addEventListener('click', () => {
+        groupContent.classList.toggle('show');
+    });
+    
+    // Info box
+    const infoBox = document.createElement('div');
+    infoBox.classList.add('preset-info-box');
+    infoBox.style.marginBottom = '1rem';
+    infoBox.innerHTML = `<strong>ℹ️</strong> ${t('securityLevelAffectedOptionsInfo')}`;
+    groupContent.appendChild(infoBox);
+    
+    // Create options grid using shared tiles
+    const optionsGrid = document.createElement('div');
+    optionsGrid.classList.add('bool-options-grid');
+    
+    [...securityRelevantKeys].forEach(key => {
+        const tile = createBooleanOptionTile(key, true);
+        optionsGrid.appendChild(tile);
+    });
+    
+    groupContent.appendChild(optionsGrid);
+    
+    container.appendChild(groupHeader);
+    container.appendChild(groupContent);
 }
 
 function updateSecurityLevelWarning() {
@@ -1824,6 +2085,11 @@ infoBox.innerHTML = `<strong>ℹ️ ${t('allBooleanOptions')}</strong><br>${t('b
 container.appendChild(infoBox);
 debugLog('ℹ️ Info box added');
 
+// Render Favorites Group (always expanded, at top)
+if (booleanOptionsFavorites.size > 0) {
+    renderFavoritesGroup(container);
+}
+
 // Render each group
 const groupOrder = ['browser', 'security', 'interface', 'system', 'network', 'mobile', 'other'];
 debugLog('🔍 Processing groups:', groupOrder);
@@ -1858,67 +2124,45 @@ groupOrder.forEach(groupKey => {
         groupContent.classList.toggle('show');
     });
     
-    // Render options in grid
+    // Render options in grid using shared tiles
     const optionsGrid = document.createElement('div');
     optionsGrid.classList.add('bool-options-grid');
     
     group.options.forEach(opt => {
-        const optionDiv = document.createElement('div');
-        optionDiv.classList.add('bool-option-item');
+        const tile = createBooleanOptionTile(opt.key, true);
         
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `bool_${opt.key}`;
-        checkbox.checked = parsedBooleanOptions.userSelections[opt.key];
-        checkbox.classList.add('bool-option-checkbox');
-        checkbox.addEventListener('change', (e) => {
-            parsedBooleanOptions.userSelections[opt.key] = e.target.checked;
-        });
-        
-        const label = document.createElement('label');
-        label.htmlFor = `bool_${opt.key}`;
-        label.classList.add('bool-option-label');
-        
-        const labelText = document.createElement('div');
-        labelText.classList.add('bool-option-label-text');
-        labelText.textContent = generateOptionLabel(opt.key);
-        
-        const keyName = document.createElement('div');
-        keyName.classList.add('bool-option-key');
-        keyName.textContent = opt.key;
-        
-        const tooltip = document.createElement('div');
-        tooltip.classList.add('bool-option-tooltip');
-        
-        // Get English location (always shown as gray text)
-        const englishLocation = getOptionLocation(opt.key);
-        if (englishLocation) {
-            // Gray text: always English (matches SEB Config Tool)
-            tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${englishLocation}`;
+        // Add location tooltip to label
+        const label = tile.querySelector('.bool-option-label');
+        if (label && !label.querySelector('.bool-option-tooltip')) {
+            const tooltip = document.createElement('div');
+            tooltip.classList.add('bool-option-tooltip');
             
-            // Tooltip hover: German if language is DE, otherwise English
-            if (currentLang === 'de') {
-                const germanLocation = getLocalizedLocation(opt.key);
-                tooltip.title = germanLocation;
+            // Get English location (always shown as gray text)
+            const englishLocation = getOptionLocation(opt.key);
+            if (englishLocation) {
+                // Gray text: always English (matches SEB Config Tool)
+                tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${englishLocation}`;
+                
+                // Tooltip hover: German if language is DE, otherwise English
+                if (currentLang === 'de') {
+                    const germanLocation = getLocalizedLocation(opt.key);
+                    tooltip.title = germanLocation;
+                } else {
+                    tooltip.title = englishLocation;
+                }
             } else {
-                tooltip.title = englishLocation;
+                // Use translated hint texts for undocumented options
+                const notDocText = getTranslatedText('notDocumented');
+                const notDocHint = getTranslatedText('notDocumentedHint');
+                tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${notDocText}`;
+                tooltip.title = notDocHint;
+                tooltip.classList.add('undocumented');
             }
-        } else {
-            // Use translated hint texts for undocumented options
-            const notDocText = getTranslatedText('notDocumented');
-            const notDocHint = getTranslatedText('notDocumentedHint');
-            tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${notDocText}`;
-            tooltip.title = notDocHint;
-            tooltip.classList.add('undocumented');
+            
+            label.appendChild(tooltip);
         }
         
-        label.appendChild(labelText);
-        label.appendChild(keyName);
-        label.appendChild(tooltip);
-        
-        optionDiv.appendChild(checkbox);
-        optionDiv.appendChild(label);
-        optionsGrid.appendChild(optionDiv);
+        optionsGrid.appendChild(tile);
     });
     
     groupContent.appendChild(optionsGrid);
