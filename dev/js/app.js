@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.23.0b4
-// Build: 2025-11-22 23:52
+// Version: v0.23.0b5
+// Build: 2025-11-22 23:59
 
 // ============================================================================
 
@@ -1080,8 +1080,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.23.0b4';
-const BUILD_DATE = new Date('2025-11-22T23:52:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.23.0b5';
+const BUILD_DATE = new Date('2025-11-22T23:59:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -2350,29 +2350,38 @@ const card = document.createElement('div');
 card.classList.add('url-filter-rule-card');
 
 const actionClass = rule.action === 1 ? 'allow' : 'block';
+// Generate unique IDs for form elements
+const activeId = `url-filter-active-${index}`;
+const regexId = `url-filter-regex-${index}`;
+const expressionId = `url-filter-expression-${index}`;
+const actionId = `url-filter-action-${index}`;
 
     card.innerHTML = `
         <div class="url-filter-controls">
-            <label class="url-filter-label">
+            <label class="url-filter-label" for="${activeId}">
                 <input type="checkbox" 
+                       id="${activeId}"
                        class="url-filter-active" 
                        data-index="${index}"
                        ${rule.active ? 'checked' : ''}>
                 <span>${currentLang === 'de' ? 'Aktiv' : 'Active'}</span>
             </label>
-            <label class="url-filter-label">
+            <label class="url-filter-label" for="${regexId}">
                 <input type="checkbox" 
+                       id="${regexId}"
                        class="url-filter-regex" 
                        data-index="${index}"
                        ${rule.regex ? 'checked' : ''}>
                 <span>Regex</span>
             </label>
             <input type="text" 
+                   id="${expressionId}"
                    class="url-filter-expression" 
                    data-index="${index}"
                    value="${(rule.expression || '').replace(/"/g, '&quot;')}"
                    placeholder="${currentLang === 'de' ? 'URL-Pattern oder Regex...' : 'URL pattern or regex...'}">
-            <select class="url-filter-action ${actionClass}" 
+            <select id="${actionId}"
+                    class="url-filter-action ${actionClass}" 
                     data-index="${index}">
                 <option value="1" ${rule.action === 1 ? 'selected' : ''}>${currentLang === 'de' ? '✓ Erlauben' : '✓ Allow'}</option>
                 <option value="0" ${rule.action === 0 ? 'selected' : ''}>${currentLang === 'de' ? '✗ Blockieren' : '✗ Block'}</option>
