@@ -4,8 +4,8 @@
       "allowSwitchToApplications": false,
       "allowQuit": true,
       "browserViewMode": 0,
-      "enableBrowserWindowToolbar": true,
-      "showMenuBar": false
+      "enableBrowserWindowToolbar": false,
+      "showMenuBar": true
     }
   },
   "balanced": {
@@ -13,8 +13,8 @@
       "allowSwitchToApplications": false,
       "allowQuit": true,
       "browserViewMode": 0,
-      "enableBrowserWindowToolbar": true,
-      "showMenuBar": false
+      "enableBrowserWindowToolbar": false,
+      "showMenuBar": true
     }
   },
   "strict": {
