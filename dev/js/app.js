@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.23.0b1
-// Build: 2025-11-22 23:22
+// Version: v0.23.0b2
+// Build: 2025-11-22 23:43
 
 // ============================================================================
 
@@ -347,7 +347,7 @@ function initializeConfigDOM() {
 function getConfigValue(key) {
     if (!configState.loaded) return undefined;
     
-    const children = configState.rootDict.children;
+    const { children } = configState.rootDict;
     for (let i = 0; i < children.length; i++) {
         if (children[i].tagName === 'key' && children[i].textContent.trim() === key) {
             const nextElement = children[i].nextElementSibling;
@@ -405,7 +405,7 @@ function setConfigValue(key, value) {
         return false;
     }
     
-    const children = configState.rootDict.children;
+    const { children } = configState.rootDict;
     for (let i = 0; i < children.length; i++) {
         if (children[i].tagName === 'key' && children[i].textContent.trim() === key) {
             const nextElement = children[i].nextElementSibling;
@@ -445,7 +445,7 @@ function getAllConfigBooleanKeys() {
     if (!configState.loaded) return [];
     
     const keys = [];
-    const children = configState.rootDict.children;
+    const { children } = configState.rootDict;
     
     // Value types we want to export (simple types, not complex structures)
     const simpleValueTypes = new Set(['true', 'false', 'integer', 'string', 'real', 'date', 'data']);
@@ -483,7 +483,7 @@ function getAllComplexStructures() {
     if (!configState.loaded) return {};
     
     const structures = {};
-    const children = configState.rootDict.children;
+    const { children } = configState.rootDict;
     
     for (let i = 0; i < children.length; i++) {
         if (children[i].tagName === 'key') {
@@ -553,10 +553,8 @@ try {
     debugLog('📥 Loading XML template from embedded data...');
     
     // Initialize config DOM if not done yet
-    if (!configState.loaded) {
-        if (!initializeConfigDOM()) {
-            return false;
-        }
+    if (!configState.loaded && !initializeConfigDOM()) {
+        return false;
     }
     
     // Check if exampleConfigXML is available (loaded from xml-data.js)
@@ -697,7 +695,7 @@ try {
     const xmlDoc = parser.parseFromString(exampleConfigXML, 'application/xml');
     
     // Helper function to parse a dict element
-    function parseDict(dictElement) {
+    const parseDict = (dictElement) => {
         const dict = {};
         let currentKey = null;
         
@@ -721,10 +719,10 @@ try {
             }
         }
         return dict;
-    }
+    };
     
     // Helper function to categorize a process
-    function categorizeProcess(executable, identifier, description) {
+    const categorizeProcess = (executable, identifier, description) => {
         const name = (executable || '').toLowerCase();
         const id = (identifier || '').toLowerCase();
         const desc = (description || '').toLowerCase();
@@ -1042,7 +1040,7 @@ debugLog(`✅ Switched to ${platform} platform`);
 function generateOptionLabel(key) {
     // Priority 1: Check translations.optionLabels for direct key mapping
     if (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) {
-        const optionLabels = TRANSLATIONS[currentLang].optionLabels;
+        const { optionLabels } = TRANSLATIONS[currentLang];
         if (optionLabels && optionLabels[key]) {
             return optionLabels[key];
         }
@@ -1060,12 +1058,10 @@ function generateOptionLabel(key) {
     // If we have a full translated label, extract the main part (before parentheses)
     if (fullLabel) {
         // Remove content in parentheses and trailing platform indicators
-        let cleanLabel = fullLabel
+        return fullLabel
             .replace(/\s*\([^)]*\)\s*$/g, '')  // Remove trailing parentheses like "(Win)" or "(insecure)"
             .replace(/\s+(Win|Mac|iOS|iPadOS)$/g, '')  // Remove trailing platform names
             .trim();
-        
-        return cleanLabel;
     }
     
     // Priority 3: Fallback - Generate label from key
@@ -1084,8 +1080,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.23.0b1';
-const BUILD_DATE = new Date('2025-11-22T23:22:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.23.0b2';
+const BUILD_DATE = new Date('2025-11-22T23:43:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -3840,8 +3836,8 @@ if (!exportRootDict) {
 // ============================================================================
 
 // Helper function to set/update a key in the export DOM
-function setExportValue(key, value, type = 'string') {
-    const children = exportRootDict.children;
+const setExportValue = (key, value, type = 'string') => {
+    const { children } = exportRootDict;
     let keyFound = false;
     
     for (let i = 0; i < children.length; i++) {

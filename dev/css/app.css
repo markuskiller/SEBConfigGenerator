@@ -693,6 +693,10 @@ textarea {
     background: #f5f7fb;
 }
 
+.bool-group-container.security-level-details {
+    margin-top: 1rem;
+}
+
 /* Boolean Options - Group Header */
 .bool-group-header {
     background: linear-gradient(135deg, #e8edf5 0%, #f5f7fb 100%);
