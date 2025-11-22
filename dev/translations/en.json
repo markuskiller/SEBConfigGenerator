@@ -200,5 +200,36 @@
   "urlFilterAllowLabel": "(URL filter: allow, active, non-regex)",
   "urlFilterBlockLabel": "(URL filter: block, active, non-regex)",
   "previewRegexAllowedTitle": "🔤 Allowed Regex Patterns (URL Filter)",
-  "previewRegexBlockedTitle": "🔤 Blocked Regex Patterns (URL Filter)"
+  "previewRegexBlockedTitle": "🔤 Blocked Regex Patterns (URL Filter)",
+  "browserCapture": {
+    "title": "🌐 Browser-Based Domain Capture",
+    "method1Title": "Method 1: Console Script (Recommended)",
+    "method1Steps": [
+      "⚠️ IMPORTANT: First clear browser cache (Ctrl+Shift+Delete / Cmd+Shift+Delete)",
+      "1. Open your service (e.g., OneNote) in a new tab",
+      "2. Use the service fully (login, work normally)",
+      "3. Press F12 to open DevTools",
+      "4. Go to the \"Console\" tab",
+      "5. Copy the script below and paste it",
+      "6. Press Enter",
+      "7. Shows only NEW domains (not already in preset)",
+      "8. Select the domains and copy them manually",
+      "9. Paste them into the \"Custom Domains\" field"
+    ],
+    "method2Title": "Method 2: Bookmarklet",
+    "method2Steps": [
+      "1. Create a new bookmark",
+      "2. Copy the bookmarklet code below",
+      "3. Paste it as the bookmark URL",
+      "4. Open your service and click the bookmark",
+      "5. A dialog will show all domains"
+    ],
+    "consoleLabel": "Console Script:",
+    "bookmarkletLabel": "Bookmarklet Code:",
+    "copyScript": "📋 Copy Script",
+    "copyBookmarklet": "📋 Copy Bookmarklet",
+    "fullGuide": "📖 Full Guide",
+    "close": "Close",
+    "copied": "Copied!"
+  }
 }

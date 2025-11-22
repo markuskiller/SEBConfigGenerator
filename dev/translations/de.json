@@ -196,5 +196,36 @@
   "urlFilterAllowLabel": "(URL-Filter: erlauben, aktiv, nicht-regex)",
   "urlFilterBlockLabel": "(URL-Filter: blockieren, aktiv, nicht-regex)",
   "previewRegexAllowedTitle": "🔤 Erlaubte Regex-Patterns (URL-Filter)",
-  "previewRegexBlockedTitle": "🔤 Blockierte Regex-Patterns (URL-Filter)"
+  "previewRegexBlockedTitle": "🔤 Blockierte Regex-Patterns (URL-Filter)",
+  "browserCapture": {
+    "title": "🌐 Browser-basierte Domain-Erfassung",
+    "method1Title": "Methode 1: Console Script (Empfohlen)",
+    "method1Steps": [
+      "⚠️ WICHTIG: Zuerst Browser-Cache leeren (Strg+Shift+Entf / Cmd+Shift+Entf)",
+      "1. Öffnen Sie den Dienst (z.B. OneNote) in einem neuen Tab",
+      "2. Nutzen Sie den Dienst vollständig (einloggen, arbeiten)",
+      "3. Drücken Sie F12 um DevTools zu öffnen",
+      "4. Gehen Sie zum Tab \"Konsole\"",
+      "5. Kopieren Sie das Skript unten und fügen Sie es ein",
+      "6. Drücken Sie Enter",
+      "7. Zeigt nur NEUE Domains (nicht bereits in Preset)",
+      "8. Wählen Sie die Domains aus und kopieren Sie sie manuell",
+      "9. Fügen Sie sie ins Feld \"Benutzerdefinierte Domains\" ein"
+    ],
+    "method2Title": "Methode 2: Bookmarklet",
+    "method2Steps": [
+      "1. Erstellen Sie ein neues Lesezeichen",
+      "2. Kopieren Sie den Bookmarklet-Code unten",
+      "3. Fügen Sie ihn als URL des Lesezeichens ein",
+      "4. Öffnen Sie Ihren Dienst und klicken Sie das Lesezeichen",
+      "5. Ein Dialog zeigt alle Domains"
+    ],
+    "consoleLabel": "Console Script:",
+    "bookmarkletLabel": "Bookmarklet Code:",
+    "copyScript": "📋 Script kopieren",
+    "copyBookmarklet": "📋 Bookmarklet kopieren",
+    "fullGuide": "📖 Vollständige Anleitung",
+    "close": "Schließen",
+    "copied": "Kopiert!"
+  }
 }
