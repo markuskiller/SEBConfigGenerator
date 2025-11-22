@@ -775,6 +775,8 @@ textarea {
     cursor: pointer;
     font-size: 0.9em;
     line-height: 1.4;
+    flex: 1;
+    padding-right: 32px; /* Space for favorite star button */
 }
 
 /* Boolean Options - Label Text (Display Name) */
