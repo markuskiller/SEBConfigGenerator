@@ -1890,14 +1890,17 @@ function onSecurityRelevantOptionChange() {
 
 // Generic function to create a boolean option tile (reusable)
 // Uses configState DOM as single source of truth
-function createBooleanOptionTile(optionKey, showFavoriteButton = true) {
+function createBooleanOptionTile(optionKey, showFavoriteButton = true, context = '') {
     const optionDiv = document.createElement('div');
     optionDiv.classList.add('bool-option-item');
     optionDiv.dataset.optionKey = optionKey;
     
+    // Generate unique ID based on context to avoid duplicates
+    const uniqueId = context ? `bool_${context}_${optionKey}` : `bool_${optionKey}`;
+    
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.id = `bool_${optionKey}`;
+    checkbox.id = uniqueId;
     // Read from DOM (Single Source of Truth)
     checkbox.checked = getConfigBooleanValue(optionKey) || false;
     checkbox.classList.add('bool-option-checkbox');
@@ -1919,7 +1922,7 @@ function createBooleanOptionTile(optionKey, showFavoriteButton = true) {
     });
     
     const label = document.createElement('label');
-    label.htmlFor = `bool_${optionKey}`;
+    label.htmlFor = uniqueId;
     label.classList.add('bool-option-label');
     
     const labelText = document.createElement('div');
@@ -2046,7 +2049,7 @@ function renderFavoritesGroup(container) {
         optionsGrid.classList.add('bool-options-grid');
         
         [...booleanOptionsFavorites].forEach(key => {
-            const tile = createBooleanOptionTile(key, true);
+            const tile = createBooleanOptionTile(key, true, 'favorites');
             optionsGrid.appendChild(tile);
         });
         
@@ -2089,7 +2092,7 @@ function renderFavoritesInMainUI() {
     
     [...booleanOptionsFavorites].forEach(key => {
         // Create tile with location tooltip
-        const tile = createBooleanOptionTile(key, true);
+        const tile = createBooleanOptionTile(key, true, 'favorites-main');
         
         // Add location tooltip to label (same as in Boolean Options)
         const label = tile.querySelector('.bool-option-label');
@@ -2172,7 +2175,7 @@ function renderSecurityLevelDetails() {
     optionsGrid.classList.add('bool-options-grid');
     
     [...securityRelevantKeys].forEach(key => {
-        const tile = createBooleanOptionTile(key, true);
+        const tile = createBooleanOptionTile(key, true, 'security-level');
         optionsGrid.appendChild(tile);
     });
     
@@ -2572,7 +2575,7 @@ groupOrder.forEach(groupKey => {
     optionsGrid.classList.add('bool-options-grid');
     
     group.options.forEach(opt => {
-        const tile = createBooleanOptionTile(opt.key, true);
+        const tile = createBooleanOptionTile(opt.key, true, `group-${group.name}`);
         
         // Add location tooltip to label
         const label = tile.querySelector('.bool-option-label');
