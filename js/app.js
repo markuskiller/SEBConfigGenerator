@@ -2041,7 +2041,7 @@ function renderFavoritesGroup(container) {
     
     if (booleanOptionsFavorites.size === 0) {
         const emptyMsg = document.createElement('div');
-        emptyMsg.style.cssText = 'padding: 1rem; color: #666; font-style: italic;';
+        emptyMsg.classList.add('empty-message');
         emptyMsg.textContent = t('noFavorites');
         groupContent.appendChild(emptyMsg);
     } else {
@@ -2306,13 +2306,7 @@ container.innerHTML = '';
 
 // Info box
 const infoBox = document.createElement('div');
-infoBox.style.cssText = `
-    background: #e3f2fd;
-    border-left: 4px solid #2196f3;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border-radius: 4px;
-`;
+infoBox.classList.add('url-filter-info-box');
 infoBox.innerHTML = currentLang === 'de'
     ? '<strong>ℹ️ Hinweis:</strong> Manuelle Filter-Regeln werden zusätzlich zu den automatisch generierten Preset-Domains verwendet. Regex-Patterns sind fortgeschrittene Optionen für erfahrene Nutzer.'
     : '<strong>ℹ️ Note:</strong> Manual filter rules are used in addition to auto-generated preset domains. Regex patterns are advanced options for experienced users.';
@@ -2325,7 +2319,7 @@ rulesList.id = 'urlFilterRulesList';
 
 if (parsedDictStructures.urlFilterRules.length === 0) {
     const emptyMsg = document.createElement('div');
-    emptyMsg.style.cssText = 'padding: 2rem; text-align: center; color: #666;';
+    emptyMsg.classList.add('empty-message-center');
     emptyMsg.textContent = currentLang === 'de' 
         ? 'Keine manuellen Filter-Regeln vorhanden. Klicken Sie "+ Neue Regel", um eine hinzuzufügen.'
         : 'No manual filter rules defined. Click "+ New Rule" to add one.';
@@ -2341,8 +2335,7 @@ container.appendChild(rulesList);
 
 // Add new rule button
 const addButton = document.createElement('button');
-addButton.classList.add('btn', 'btn-secondary');
-addButton.style.cssText = 'margin-top: 1rem;';
+addButton.classList.add('btn', 'btn-secondary', 'mt-1');
 addButton.innerHTML = `➕ ${currentLang === 'de' ? 'Neue Regel' : 'New Rule'}`;
 addButton.addEventListener('click', addNewURLFilterRule);
 container.appendChild(addButton);
@@ -3051,7 +3044,7 @@ header.addEventListener('click', async () => {
         // Render certificate list
         content.innerHTML = '';
         if (parsedDictStructures.embeddedCertificates.length === 0) {
-            content.innerHTML = '<div class="preset-info-box" style="margin: 1rem;">' + 
+            content.innerHTML = '<div class="preset-info-box with-margin">' + 
                 (currentLang === 'de' 
                     ? 'Keine eingebetteten Zertifikate im Template vorhanden.' 
                     : 'No embedded certificates in template.') + 
