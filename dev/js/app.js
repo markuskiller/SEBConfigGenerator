@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.22.3a3
-// Build: 2025-11-22 12:41
+// Version: v0.22.3a4
+// Build: 2025-11-22 12:58
 
 // ============================================================================
 
@@ -315,13 +315,13 @@ async function loadAndParseBooleanOptions() {
 try {
     debugLog('📥 Loading XML template from embedded data...');
     
-    // Check if EXAMPLE_CONFIG_XML is available (loaded from xml-data.js)
-    if (typeof EXAMPLE_CONFIG_XML === 'undefined') {
-        console.error('❌ EXAMPLE_CONFIG_XML not found! Make sure xml-data.js is loaded.');
+    // Check if exampleConfigXML is available (loaded from xml-data.js)
+    if (typeof exampleConfigXML === 'undefined') {
+        console.error('❌ exampleConfigXML not found! Make sure xml-data.js is loaded.');
         return false;
     }
     
-    const xmlText = EXAMPLE_CONFIG_XML;
+    const xmlText = exampleConfigXML;
     debugLog('📝 XML text length:', xmlText.length);
     debugLog('📝 First 200 chars:', xmlText.substring(0, 200));
     
@@ -447,14 +447,14 @@ try {
     debugLog('📦 Parsing dict array structures from XML...');
     
     // Check if XML is available
-    if (typeof EXAMPLE_CONFIG_XML === 'undefined') {
-        console.error('❌ EXAMPLE_CONFIG_XML not found!');
+    if (typeof exampleConfigXML === 'undefined') {
+        console.error('❌ exampleConfigXML not found!');
         return false;
     }
     
     // Parse XML
     const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(EXAMPLE_CONFIG_XML, 'application/xml');
+    const xmlDoc = parser.parseFromString(exampleConfigXML, 'application/xml');
     
     // Helper function to parse a dict element
     function parseDict(dictElement) {
@@ -815,8 +815,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.22.3a3';
-const BUILD_DATE = new Date('2025-11-22T12:41:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.22.3a4';
+const BUILD_DATE = new Date('2025-11-22T12:58:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
