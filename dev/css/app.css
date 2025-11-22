@@ -470,7 +470,8 @@ textarea {
 }
 
 .advanced-content.expanded {
-    max-height: 10000px;
+    max-height: none;
+    overflow: visible;
     transition: max-height 0.6s ease-in;
 }
 
