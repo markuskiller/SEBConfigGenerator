@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.22.3rc1
-// Build: 2025-11-22 21:07
+// Version: v0.23.0b1
+// Build: 2025-11-22 23:22
 
 // ============================================================================
 
@@ -533,9 +533,10 @@ function syncUICheckboxesFromDOM() {
             const value = getConfigValue(domKey);
             checkbox.checked = value === true;
             
-            // Add event listener to write changes back to DOM
+            // Add event listener to write changes back to DOM and update all tiles
             checkbox.addEventListener('change', (e) => {
                 setConfigBooleanValue(domKey, e.target.checked);
+                updateAllTilesForOption(domKey); // Sync with all tiles (including "Meine Favoriten")
                 debugLog(`✏️ UI Checkbox ${checkboxId} -> DOM ${domKey}:`, e.target.checked);
             });
         }
@@ -1039,23 +1040,52 @@ debugLog(`✅ Switched to ${platform} platform`);
 
 // Generate human-readable label from key name
 function generateOptionLabel(key) {
-// Remove common prefixes
-let label = key.replace(/^(allow|enable|show|display|disable|hide|block|force|create|detect|mobile|browser|new|exam|inside|config)/, '');
-
-// Insert spaces before capital letters
-label = label.replace(/([A-Z])/g, ' $1').trim();
-
-// Capitalize first letter
-label = label.charAt(0).toUpperCase() + label.slice(1);
-
-return label || key;
+    // Priority 1: Check translations.optionLabels for direct key mapping
+    if (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) {
+        const optionLabels = TRANSLATIONS[currentLang].optionLabels;
+        if (optionLabels && optionLabels[key]) {
+            return optionLabels[key];
+        }
+    }
+    
+    // Priority 2: Check SEB_OPTION_LABELS (legacy, contains long menu paths)
+    let fullLabel = null;
+    if (typeof SEB_OPTION_LABELS !== 'undefined' && SEB_OPTION_LABELS[currentLang]) {
+        const labels = SEB_OPTION_LABELS[currentLang];
+        if (labels[key]) {
+            fullLabel = labels[key];
+        }
+    }
+    
+    // If we have a full translated label, extract the main part (before parentheses)
+    if (fullLabel) {
+        // Remove content in parentheses and trailing platform indicators
+        let cleanLabel = fullLabel
+            .replace(/\s*\([^)]*\)\s*$/g, '')  // Remove trailing parentheses like "(Win)" or "(insecure)"
+            .replace(/\s+(Win|Mac|iOS|iPadOS)$/g, '')  // Remove trailing platform names
+            .trim();
+        
+        return cleanLabel;
+    }
+    
+    // Priority 3: Fallback - Generate label from key
+    // Remove common prefixes
+    let label = key.replace(/^(allow|enable|show|display|disable|hide|block|force|create|detect|mobile|browser|new|exam|inside|config)/, '');
+    
+    // Insert spaces before capital letters
+    label = label.replace(/([A-Z])/g, ' $1').trim();
+    
+    // Capitalize first letter
+    label = label.charAt(0).toUpperCase() + label.slice(1);
+    
+    return label || key;
 }
 
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.22.3rc1';
-const BUILD_DATE = new Date('2025-11-22T21:07:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.23.0b1';
+const BUILD_DATE = new Date('2025-11-22T23:22:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1080,14 +1110,30 @@ let currentSecurityLevel = 'balanced';
 let currentSelectedSubject = ''; // Track selected subject for allowed tools
 
 // Boolean options favorites (stored in localStorage)
-let booleanOptionsFavorites = new Set();
+// One default favorite that persists across reloads
+const DEFAULT_FAVORITE = 'browserWindowAllowAddressBar';
+let booleanOptionsFavorites = new Set([DEFAULT_FAVORITE]);
 try {
     const stored = localStorage.getItem('sebConfigFavorites');
     if (stored) {
-        booleanOptionsFavorites = new Set(JSON.parse(stored));
+        const customFavorites = new Set(JSON.parse(stored));
+        // Merge default with custom favorites
+        booleanOptionsFavorites = new Set([DEFAULT_FAVORITE, ...customFavorites]);
     }
 } catch (e) {
     console.warn('Could not load favorites from localStorage:', e);
+}
+
+// Translation toggle for Advanced Options (Boolean Options)
+// true = show translated labels, false = show original English labels
+let showTranslatedLabels = true;
+try {
+    const stored = localStorage.getItem('sebConfigShowTranslations');
+    if (stored !== null) {
+        showTranslatedLabels = JSON.parse(stored);
+    }
+} catch (e) {
+    console.warn('Could not load translation preference:', e);
 }
 
 // SharePoint link state
@@ -1195,6 +1241,7 @@ if (parsedBooleanOptions.loaded) {
 renderPresets();
 renderSecurityLevels();
 renderSecurityLevelDetails();
+renderFavoritesInMainUI(); // Update favorites in main UI
 updateStartUrlField(); // Update start URL dropdown labels
 
 // Save language preference
@@ -1881,7 +1928,10 @@ function createBooleanOptionTile(optionKey, showFavoriteButton = true) {
     
     const labelText = document.createElement('div');
     labelText.classList.add('bool-option-label-text');
-    labelText.textContent = generateOptionLabel(optionKey);
+    // showFavoriteButton = true → Advanced Options (with star button) → use translation toggle
+    // showFavoriteButton = false → Favorites section (no star button) → always translate
+    const useTranslation = showFavoriteButton ? showTranslatedLabels : true;
+    labelText.textContent = useTranslation ? generateOptionLabel(optionKey) : optionKey;
     
     const keyName = document.createElement('div');
     keyName.classList.add('bool-option-key');
@@ -1910,17 +1960,36 @@ function createBooleanOptionTile(optionKey, showFavoriteButton = true) {
 }
 
 // Update all tiles displaying a specific option
-// Reads from DOM (Single Source of Truth)
+// Reads from DOM (Single Source of Truth) and syncs all UI elements
 function updateAllTilesForOption(optionKey) {
-    const allTiles = document.querySelectorAll(`[data-option-key="${optionKey}"]`);
     const isChecked = getConfigBooleanValue(optionKey);
     
+    // Update all tiles with this option
+    const allTiles = document.querySelectorAll(`[data-option-key="${optionKey}"]`);
     allTiles.forEach(tile => {
         const checkbox = tile.querySelector('input[type="checkbox"]');
         if (checkbox) {
             checkbox.checked = isChecked;
         }
     });
+    
+    // Update static checkboxes in "Zusätzliche Optionen" section
+    // Map: domKey → checkboxId
+    const domKeyToCheckboxId = {
+        'allowDownloads': 'allowDownloads',
+        'allowSpellCheck': 'allowSpellCheck',
+        'showReloadButton': 'showReloadButton',
+        'allowBrowsingBackForward': 'allowBackForward'
+    };
+    
+    // Find matching static checkbox for this domKey
+    const checkboxId = domKeyToCheckboxId[optionKey];
+    if (checkboxId) {
+        const staticCheckbox = document.getElementById(checkboxId);
+        if (staticCheckbox) {
+            staticCheckbox.checked = isChecked;
+        }
+    }
 }
 
 // Toggle favorite status
@@ -1938,9 +2007,16 @@ function toggleFavorite(optionKey) {
         console.warn('Could not save favorites to localStorage:', e);
     }
     
-    // Re-render to update star icons
-    renderBooleanOptions();
-    renderSecurityLevelDetails();
+    // Update star icons for all tiles with this option key (in all locations)
+    document.querySelectorAll(`[data-option-key="${optionKey}"]`).forEach(tile => {
+        const starBtn = tile.querySelector('.bool-option-favorite');
+        if (starBtn) {
+            starBtn.innerHTML = booleanOptionsFavorites.has(optionKey) ? '⭐' : '☆';
+        }
+    });
+    
+    // Re-render favorites in main UI (outside Boolean Options)
+    renderFavoritesInMainUI();
 }
 
 // Render favorites group
@@ -1957,10 +2033,12 @@ function renderFavoritesGroup(container) {
     `;
     
     const groupContent = document.createElement('div');
-    groupContent.classList.add('bool-group-content', 'show'); // Always expanded
+    groupContent.classList.add('bool-group-content'); // Start collapsed, user can open manually
     
-    // Don't allow closing favorites group
-    groupHeader.style.cursor = 'default';
+    // Allow toggling favorites group
+    groupHeader.addEventListener('click', () => {
+        groupContent.classList.toggle('show');
+    });
     
     if (booleanOptionsFavorites.size === 0) {
         const emptyMsg = document.createElement('div');
@@ -1982,6 +2060,76 @@ function renderFavoritesGroup(container) {
     groupDiv.appendChild(groupHeader);
     groupDiv.appendChild(groupContent);
     container.appendChild(groupDiv);
+}
+
+// Render custom favorites in main UI ("Meine Favoriten" section)
+function renderFavoritesInMainUI() {
+    const container = document.getElementById('myFavoritesContainer');
+    if (!container) {
+        console.error('❌ myFavoritesContainer not found!');
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    // Only show section if there are custom favorites
+    if (booleanOptionsFavorites.size === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    
+    // Title
+    const titleDiv = document.createElement('div');
+    titleDiv.classList.add('form-group-label');
+    titleDiv.textContent = currentLang === 'de' ? 'Meine Favoriten' : 'My Favorites';
+    container.appendChild(titleDiv);
+    
+    // Render favorites as tiles (identical to Boolean Options tiles with location tooltips)
+    const tilesGrid = document.createElement('div');
+    tilesGrid.classList.add('bool-options-grid');
+    tilesGrid.style.marginTop = '0.5rem';
+    
+    [...booleanOptionsFavorites].forEach(key => {
+        // Create tile with location tooltip
+        const tile = createBooleanOptionTile(key, true);
+        
+        // Add location tooltip to label (same as in Boolean Options)
+        const label = tile.querySelector('.bool-option-label');
+        if (label && !label.querySelector('.bool-option-tooltip')) {
+            const tooltip = document.createElement('div');
+            tooltip.classList.add('bool-option-tooltip');
+            
+            // Get English location (always shown as gray text)
+            const englishLocation = getOptionLocation(key);
+            if (englishLocation) {
+                // Gray text: always English (matches SEB Config Tool)
+                tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${englishLocation}`;
+                
+                // Tooltip hover: German if language is DE, otherwise English
+                if (currentLang === 'de') {
+                    const germanLocation = getLocalizedLocation(key);
+                    tooltip.title = germanLocation;
+                } else {
+                    tooltip.title = englishLocation;
+                }
+            } else {
+                // Use translated hint texts for undocumented options
+                const notDocText = getTranslatedText('notDocumented');
+                const notDocHint = getTranslatedText('notDocumentedHint');
+                tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${notDocText}`;
+                tooltip.title = notDocHint;
+                tooltip.classList.add('undocumented');
+            }
+            
+            label.appendChild(tooltip);
+        }
+        
+        tilesGrid.appendChild(tile);
+    });
+    
+    container.appendChild(tilesGrid);
 }
 
 function renderSecurityLevelDetails() {
@@ -2355,10 +2503,38 @@ infoBox.innerHTML = `<strong>ℹ️ ${t('allBooleanOptions')}</strong><br>${t('b
 container.appendChild(infoBox);
 debugLog('ℹ️ Info box added');
 
-// Render Favorites Group (always expanded, at top)
-if (booleanOptionsFavorites.size > 0) {
-    renderFavoritesGroup(container);
-}
+// Translation toggle button
+const toggleContainer = document.createElement('div');
+toggleContainer.style.marginTop = '0.5rem';
+toggleContainer.style.marginBottom = '1rem';
+toggleContainer.style.display = 'flex';
+toggleContainer.style.alignItems = 'center';
+toggleContainer.style.gap = '0.5rem';
+
+const toggleLabel = document.createElement('label');
+toggleLabel.style.fontSize = '0.9rem';
+toggleLabel.style.cursor = 'pointer';
+toggleLabel.innerHTML = `
+    <input type="checkbox" id="translationToggle" ${showTranslatedLabels ? 'checked' : ''}>
+    ${currentLang === 'de' ? 'Übersetzte Bezeichnungen anzeigen' : 'Show translated labels'}
+`;
+
+const toggleCheckbox = toggleLabel.querySelector('#translationToggle');
+toggleCheckbox.addEventListener('change', (e) => {
+    showTranslatedLabels = e.target.checked;
+    try {
+        localStorage.setItem('sebConfigShowTranslations', JSON.stringify(showTranslatedLabels));
+    } catch (err) {
+        console.warn('Could not save translation preference:', err);
+    }
+    renderBooleanOptions(); // Re-render with new setting
+});
+
+toggleContainer.appendChild(toggleLabel);
+container.appendChild(toggleContainer);
+
+// Note: Favorites are now rendered in their own container outside Boolean Options
+// See renderFavoritesInMainUI()
 
 // Render each group
 const groupOrder = ['browser', 'security', 'interface', 'system', 'network', 'mobile', 'other'];
@@ -4682,6 +4858,9 @@ if (!configState.loaded) {
 
 // Sync UI checkboxes with DOM values
 syncUICheckboxesFromDOM();
+
+// Render favorites in main UI
+renderFavoritesInMainUI();
 
 // Initialize export format buttons visibility (default: .seb selected)
 document.getElementById('generateBtn')?.classList.remove('hidden');
