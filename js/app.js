@@ -315,13 +315,13 @@ async function loadAndParseBooleanOptions() {
 try {
     debugLog('📥 Loading XML template from embedded data...');
     
-    // Check if EXAMPLE_CONFIG_XML is available (loaded from xml-data.js)
-    if (typeof EXAMPLE_CONFIG_XML === 'undefined') {
-        console.error('❌ EXAMPLE_CONFIG_XML not found! Make sure xml-data.js is loaded.');
+    // Check if exampleConfigXML is available (loaded from xml-data.js)
+    if (typeof exampleConfigXML === 'undefined') {
+        console.error('❌ exampleConfigXML not found! Make sure xml-data.js is loaded.');
         return false;
     }
     
-    const xmlText = EXAMPLE_CONFIG_XML;
+    const xmlText = exampleConfigXML;
     debugLog('📝 XML text length:', xmlText.length);
     debugLog('📝 First 200 chars:', xmlText.substring(0, 200));
     
@@ -447,14 +447,14 @@ try {
     debugLog('📦 Parsing dict array structures from XML...');
     
     // Check if XML is available
-    if (typeof EXAMPLE_CONFIG_XML === 'undefined') {
-        console.error('❌ EXAMPLE_CONFIG_XML not found!');
+    if (typeof exampleConfigXML === 'undefined') {
+        console.error('❌ exampleConfigXML not found!');
         return false;
     }
     
     // Parse XML
     const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(EXAMPLE_CONFIG_XML, 'application/xml');
+    const xmlDoc = parser.parseFromString(exampleConfigXML, 'application/xml');
     
     // Helper function to parse a dict element
     function parseDict(dictElement) {

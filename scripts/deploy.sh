@@ -89,23 +89,12 @@ print_success "Git status checked"
 print_step "Step 2: Rebuilding generated files..."
 echo ""
 
-# Build service presets and templates
-print_step "  → Running build-service-presets.sh..."
-if bash scripts/build-service-presets.sh; then
-    print_success "  Service presets and templates built"
+# Build all templates using master build script
+print_step "  → Running build-all-templates.sh..."
+if bash scripts/build-all-templates.sh; then
+    print_success "  All templates built successfully"
 else
-    print_error "  Failed to build service presets"
-    exit 1
-fi
-
-echo ""
-
-# Build translations
-print_step "  → Running build-translations.sh..."
-if bash scripts/build-translations.sh; then
-    print_success "  Translations built"
-else
-    print_error "  Failed to build translations"
+    print_error "  Failed to build templates"
     exit 1
 fi
 
