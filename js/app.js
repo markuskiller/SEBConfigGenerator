@@ -2348,29 +2348,19 @@ container.appendChild(addButton);
 function createURLFilterRuleCard(rule, index) {
 const card = document.createElement('div');
 card.classList.add('url-filter-rule-card');
-card.style.cssText = `
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-`;
 
-const actionColor = rule.action === 1 ? '#4caf50' : '#f44336';
-const actionLabel = rule.action === 1 
-    ? (currentLang === 'de' ? '✓ Erlauben' : '✓ Allow') 
-    : (currentLang === 'de' ? '✗ Blockieren' : '✗ Block');
+const actionClass = rule.action === 1 ? 'allow' : 'block';
 
     card.innerHTML = `
-        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-            <label style="display: flex; align-items: center; gap: 0.5rem;">
+        <div class="url-filter-controls">
+            <label class="url-filter-label">
                 <input type="checkbox" 
                        class="url-filter-active" 
                        data-index="${index}"
                        ${rule.active ? 'checked' : ''}>
-                <span style="font-weight: 500;">${currentLang === 'de' ? 'Aktiv' : 'Active'}</span>
+                <span>${currentLang === 'de' ? 'Aktiv' : 'Active'}</span>
             </label>
-            <label style="display: flex; align-items: center; gap: 0.5rem;">
+            <label class="url-filter-label">
                 <input type="checkbox" 
                        class="url-filter-regex" 
                        data-index="${index}"
@@ -2381,17 +2371,14 @@ const actionLabel = rule.action === 1
                    class="url-filter-expression" 
                    data-index="${index}"
                    value="${(rule.expression || '').replace(/"/g, '&quot;')}"
-                   placeholder="${currentLang === 'de' ? 'URL-Pattern oder Regex...' : 'URL pattern or regex...'}"
-                   style="flex: 1; min-width: 200px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;">
-            <select class="url-filter-action" 
-                    data-index="${index}"
-                    style="padding: 0.5rem; border: none; border-radius: 4px; background: ${actionColor}; color: white; font-weight: 500;">
+                   placeholder="${currentLang === 'de' ? 'URL-Pattern oder Regex...' : 'URL pattern or regex...'}">
+            <select class="url-filter-action ${actionClass}" 
+                    data-index="${index}">
                 <option value="1" ${rule.action === 1 ? 'selected' : ''}>${currentLang === 'de' ? '✓ Erlauben' : '✓ Allow'}</option>
                 <option value="0" ${rule.action === 0 ? 'selected' : ''}>${currentLang === 'de' ? '✗ Blockieren' : '✗ Block'}</option>
             </select>
             <button class="btn-icon url-filter-delete" 
                     data-index="${index}"
-                    style="color: #f44336; padding: 0.5rem; cursor: pointer; border: none; background: transparent; font-size: 1.2rem;"
                     title="${currentLang === 'de' ? 'Regel löschen' : 'Delete rule'}">
                 🗑️
             </button>
@@ -2418,9 +2405,14 @@ card.querySelector('.url-filter-expression').addEventListener('input', (e) => {
     card.querySelector('.url-filter-action').addEventListener('change', (e) => {
         parsedDictStructures.urlFilterRules[index].action = parseInt(e.target.value);
         debugLog(`URLFilter rule ${index} action: ${e.target.value}`);
-        // Update background color
-        const newColor = e.target.value === '1' ? '#4caf50' : '#f44336';
-        e.target.style.background = newColor;
+        // Update CSS class for color
+        if (e.target.value === '1') {
+            e.target.classList.remove('block');
+            e.target.classList.add('allow');
+        } else {
+            e.target.classList.remove('allow');
+            e.target.classList.add('block');
+        }
         updatePreview();
     });card.querySelector('.url-filter-delete').addEventListener('click', () => {
     if (confirm(currentLang === 'de' ? 'Regel wirklich löschen?' : 'Really delete this rule?')) {
