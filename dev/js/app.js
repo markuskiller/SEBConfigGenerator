@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.22.3a4
-// Build: 2025-11-22 12:58
+// Version: v0.22.3rc1
+// Build: 2025-11-22 21:07
 
 // ============================================================================
 
@@ -309,11 +309,254 @@ try {
 }
 
 // ============================================================================
-// XML PARSER FOR BOOLEAN OPTIONS
+// CONFIG STATE MANAGEMENT - XML DOM Operations (Single Source of Truth)
+// ============================================================================
+
+// Initialize XML DOM from template
+function initializeConfigDOM() {
+    if (typeof exampleConfigXML === 'undefined') {
+        console.error('❌ exampleConfigXML not found! Make sure xml-data.js is loaded.');
+        return false;
+    }
+    
+    const parser = new DOMParser();
+    configState.xmlDoc = parser.parseFromString(exampleConfigXML, 'application/xml');
+    
+    // Check for parsing errors
+    const parseError = configState.xmlDoc.getElementsByTagName('parsererror');
+    if (parseError.length > 0) {
+        console.error('❌ XML parsing error:', parseError[0].textContent);
+        return false;
+    }
+    
+    // Get root dict element
+    const plistElement = configState.xmlDoc.documentElement;
+    configState.rootDict = plistElement.querySelector(':scope > dict');
+    
+    if (!configState.rootDict) {
+        console.error('❌ No root <dict> found in XML');
+        return false;
+    }
+    
+    configState.loaded = true;
+    debugLog('✅ Config DOM initialized');
+    return true;
+}
+
+// Get value from DOM (supports all simple types: boolean, integer, string, real, date, data)
+function getConfigValue(key) {
+    if (!configState.loaded) return undefined;
+    
+    const children = configState.rootDict.children;
+    for (let i = 0; i < children.length; i++) {
+        if (children[i].tagName === 'key' && children[i].textContent.trim() === key) {
+            const nextElement = children[i].nextElementSibling;
+            if (!nextElement) return undefined;
+            
+            switch (nextElement.tagName) {
+                case 'true':
+                    return true;
+                case 'false':
+                    return false;
+                case 'integer':
+                    return parseInt(nextElement.textContent, 10);
+                case 'real':
+                    return parseFloat(nextElement.textContent);
+                case 'string':
+                case 'date':
+                case 'data':
+                    return nextElement.textContent;
+                default:
+                    return undefined;
+            }
+        }
+    }
+    return undefined;
+}
+
+// Get boolean value from DOM (convenience wrapper)
+function getConfigBooleanValue(key) {
+    const value = getConfigValue(key);
+    return typeof value === 'boolean' ? value : undefined;
+}
+
+// Set value in DOM with automatic type detection
+function setConfigValue(key, value) {
+    if (!configState.loaded) return false;
+    
+    // Determine XML type from value
+    let xmlType;
+    let xmlValue;
+    
+    if (typeof value === 'boolean') {
+        xmlType = value ? 'true' : 'false';
+        xmlValue = null; // Self-closing tag
+    } else if (typeof value === 'number' && Number.isInteger(value)) {
+        xmlType = 'integer';
+        xmlValue = String(value);
+    } else if (typeof value === 'number') {
+        xmlType = 'real';
+        xmlValue = String(value);
+    } else if (typeof value === 'string') {
+        xmlType = 'string';
+        xmlValue = value;
+    } else {
+        console.error(`Unsupported value type for ${key}:`, typeof value);
+        return false;
+    }
+    
+    const children = configState.rootDict.children;
+    for (let i = 0; i < children.length; i++) {
+        if (children[i].tagName === 'key' && children[i].textContent.trim() === key) {
+            const nextElement = children[i].nextElementSibling;
+            if (nextElement) {
+                // Replace with new element
+                const newElement = configState.xmlDoc.createElement(xmlType);
+                if (xmlValue !== null) {
+                    newElement.textContent = xmlValue;
+                }
+                configState.rootDict.replaceChild(newElement, nextElement);
+                debugLog(`✅ Set ${key} = ${value} (${xmlType})`);
+                return true;
+            }
+        }
+    }
+    
+    // Key not found - add it
+    const keyElement = configState.xmlDoc.createElement('key');
+    keyElement.textContent = key;
+    const valueElement = configState.xmlDoc.createElement(xmlType);
+    if (xmlValue !== null) {
+        valueElement.textContent = xmlValue;
+    }
+    configState.rootDict.appendChild(keyElement);
+    configState.rootDict.appendChild(valueElement);
+    debugLog(`✅ Added ${key} = ${value} (${xmlType})`);
+    return true;
+}
+
+// Set value of a boolean option in DOM (convenience wrapper)
+function setConfigBooleanValue(key, value) {
+    return setConfigValue(key, Boolean(value));
+}
+
+// Get all config keys from DOM (boolean, integer, string - excludes arrays and dicts)
+function getAllConfigBooleanKeys() {
+    if (!configState.loaded) return [];
+    
+    const keys = [];
+    const children = configState.rootDict.children;
+    
+    // Value types we want to export (simple types, not complex structures)
+    const simpleValueTypes = new Set(['true', 'false', 'integer', 'string', 'real', 'date', 'data']);
+    
+    for (let i = 0; i < children.length; i++) {
+        if (children[i].tagName === 'key') {
+            const keyName = children[i].textContent.trim();
+            const nextElement = children[i].nextElementSibling;
+            
+            // Include all simple value types (not arrays or dicts)
+            if (nextElement && simpleValueTypes.has(nextElement.tagName)) {
+                keys.push(keyName);
+            }
+        }
+    }
+    
+    return keys;
+}
+
+// Serialize a DOM element (array or dict) to XML string recursively
+function serializeDOMElement(element, indent = '\t') {
+    if (!element) return '';
+    
+    const serializer = new XMLSerializer();
+    let xml = serializer.serializeToString(element);
+    
+    // Format with proper indentation
+    xml = xml.replace(/></g, '>\n' + indent + '<');
+    
+    return xml;
+}
+
+// Get all complex structures (arrays and dicts) from DOM
+function getAllComplexStructures() {
+    if (!configState.loaded) return {};
+    
+    const structures = {};
+    const children = configState.rootDict.children;
+    
+    for (let i = 0; i < children.length; i++) {
+        if (children[i].tagName === 'key') {
+            const keyName = children[i].textContent.trim();
+            const nextElement = children[i].nextElementSibling;
+            
+            // Only include arrays and dicts
+            if (nextElement && (nextElement.tagName === 'array' || nextElement.tagName === 'dict')) {
+                structures[keyName] = nextElement;
+            }
+        }
+    }
+    
+    return structures;
+}
+
+// Export config as XML string
+function exportConfigXML() {
+    if (!configState.loaded) {
+        console.error('❌ Config not loaded');
+        return null;
+    }
+    
+    const serializer = new XMLSerializer();
+    return serializer.serializeToString(configState.xmlDoc);
+}
+
+// Sync UI Checkboxes with DOM (Single Source of Truth)
+function syncUICheckboxesFromDOM() {
+    if (!configState.loaded) {
+        console.warn('⚠️ DOM not loaded yet, cannot sync checkboxes');
+        return;
+    }
+    
+    // Map of checkbox IDs to their corresponding DOM keys
+    const checkboxMappings = {
+        'allowDownloads': 'allowDownloads',
+        'allowSpellCheck': 'allowSpellCheck',
+        'showReloadButton': 'showReloadButton',
+        'allowBackForward': 'allowBrowsingBackForward'
+    };
+    
+    // Initialize checkboxes from DOM
+    Object.entries(checkboxMappings).forEach(([checkboxId, domKey]) => {
+        const checkbox = document.getElementById(checkboxId);
+        if (checkbox) {
+            const value = getConfigValue(domKey);
+            checkbox.checked = value === true;
+            
+            // Add event listener to write changes back to DOM
+            checkbox.addEventListener('change', (e) => {
+                setConfigBooleanValue(domKey, e.target.checked);
+                debugLog(`✏️ UI Checkbox ${checkboxId} -> DOM ${domKey}:`, e.target.checked);
+            });
+        }
+    });
+    
+    debugLog('✅ UI Checkboxes synced with DOM');
+}
+
+// ============================================================================
+// XML PARSER FOR BOOLEAN OPTIONS (LEGACY - being migrated to configState)
 // ============================================================================
 async function loadAndParseBooleanOptions() {
 try {
     debugLog('📥 Loading XML template from embedded data...');
+    
+    // Initialize config DOM if not done yet
+    if (!configState.loaded) {
+        if (!initializeConfigDOM()) {
+            return false;
+        }
+    }
     
     // Check if exampleConfigXML is available (loaded from xml-data.js)
     if (typeof exampleConfigXML === 'undefined') {
@@ -419,13 +662,9 @@ try {
         groups[group].options.push(opt);
     });
     
-    // Store parsed data
+    // Store parsed data (only groups for UI rendering)
     parsedBooleanOptions.groups = groups;
-    parsedBooleanOptions.options = {};
-    options.forEach(opt => {
-        parsedBooleanOptions.options[opt.key] = opt.defaultValue;
-        parsedBooleanOptions.userSelections[opt.key] = opt.defaultValue; // Initialize with defaults
-    });
+    // Note: Option values are stored in configState.xmlDoc (DOM), not here
     
     debugLog(`✅ Parsed ${options.length} boolean options from XML`);
     debugLog('📊 Groups distribution:');
@@ -815,8 +1054,8 @@ return label || key;
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.22.3a4';
-const BUILD_DATE = new Date('2025-11-22T12:58:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.22.3rc1';
+const BUILD_DATE = new Date('2025-11-22T21:07:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -840,18 +1079,43 @@ let selectedPresets = []; // Start with no preset selected - user must choose
 let currentSecurityLevel = 'balanced';
 let currentSelectedSubject = ''; // Track selected subject for allowed tools
 
+// Boolean options favorites (stored in localStorage)
+let booleanOptionsFavorites = new Set();
+try {
+    const stored = localStorage.getItem('sebConfigFavorites');
+    if (stored) {
+        booleanOptionsFavorites = new Set(JSON.parse(stored));
+    }
+} catch (e) {
+    console.warn('Could not load favorites from localStorage:', e);
+}
+
 // SharePoint link state
 let sharepointConfig = {
 onenote: { parsedLink: null, restrictions: {} },
 word: { parsedLink: null, restrictions: {} }
 };
 
-// Boolean options parsed from XML template (lazy loaded on demand)
+// ============================================================================
+// CONFIG STATE - XML DOM as Single Source of Truth
+// ============================================================================
+let configState = {
+    xmlDoc: null,           // Parsed XML DOM (Single Source of Truth)
+    rootDict: null,         // Root <dict> element for quick access
+    loaded: false,          // Track if XML has been parsed
+    
+    // Metadata (not in XML, separate layer)
+    metadata: {
+        booleanOptions: new Map(),  // key -> { group, location, ... }
+        dictStructures: new Map()   // For process lists, etc.
+    }
+};
+
+// Legacy structures (will be replaced by configState)
+// TODO: Remove after full migration
 let parsedBooleanOptions = {
-loaded: false, // Track if options have been loaded
-groups: {},
-options: {},
-userSelections: {} // Track user's checkbox selections
+    loaded: false, // Track if options have been loaded
+    groups: {}     // Group structure for UI rendering (values stored in DOM)
 };
 
 // Dict structures parsed from XML template (lazy loaded on demand)
@@ -930,6 +1194,7 @@ if (parsedBooleanOptions.loaded) {
 // Re-render dynamic content
 renderPresets();
 renderSecurityLevels();
+renderSecurityLevelDetails();
 updateStartUrlField(); // Update start URL dropdown labels
 
 // Save language preference
@@ -1181,6 +1446,7 @@ function renderSecurityLevels() {
 const container = document.getElementById('securityLevel');
 container.innerHTML = '';
 
+// Predefined levels
 ['relaxed', 'balanced', 'strict'].forEach(key => {
     const div = document.createElement('div');
     div.className = `security-option ${key === currentSecurityLevel ? 'active' : ''}`;
@@ -1191,6 +1457,19 @@ container.innerHTML = '';
     div.addEventListener('click', () => selectSecurityLevel(key));
     container.appendChild(div);
 });
+
+// Custom level indicator (if active)
+if (currentSecurityLevel === 'custom') {
+    const div = document.createElement('div');
+    div.className = 'security-option active';
+    div.style.borderColor = '#9C27B0';
+    div.innerHTML = `
+        <h4>${t('securityLevelCustom')}</h4>
+        <p>${t('securityLevelCustomDescription')}</p>
+    `;
+    div.style.cursor = 'default';
+    container.appendChild(div);
+}
 
 // Show/update experimental warning for relaxed and strict levels
 updateSecurityLevelWarning();
@@ -1503,8 +1782,260 @@ updatePreview();
 }
 
 function selectSecurityLevel(key) {
+// Warn user about strict level consequences
+if (key === 'strict') {
+    const confirmStrict = confirm(
+        `${t('securityStrictWarningTitle')}\n\n${t('securityStrictWarningText')}\n\n${t('securityStrictWarningConfirm')}`
+    );
+    
+    if (!confirmStrict) {
+        // User cancelled - stay on current level
+        return;
+    }
+}
+
 currentSecurityLevel = key;
+
+// Apply security level settings to DOM (Single Source of Truth)
+if (key !== 'custom' && SECURITY_LEVELS[key]) {
+    const levelSettings = SECURITY_LEVELS[key].settings;
+    Object.keys(levelSettings).forEach(optKey => {
+        // Use setConfigValue to handle integers (like browserViewMode) correctly
+        setConfigValue(optKey, levelSettings[optKey]);
+    });
+}
+
 renderSecurityLevels();
+renderSecurityLevelDetails();
+renderBooleanOptions(); // Re-render to show updated checkboxes
+}
+
+// Detect if current settings match a predefined security level
+// Reads from DOM (Single Source of Truth)
+function detectSecurityLevel() {
+    const securityLevelKeys = Object.keys(SECURITY_LEVELS);
+    
+    for (const levelKey of securityLevelKeys) {
+        const levelSettings = SECURITY_LEVELS[levelKey].settings;
+        let matches = true;
+        
+        for (const [key, value] of Object.entries(levelSettings)) {
+            // Use generic getConfigValue to handle both booleans and integers
+            if (getConfigValue(key) !== value) {
+                matches = false;
+                break;
+            }
+        }
+        
+        if (matches) {
+            return levelKey;
+        }
+    }
+    
+    return 'custom';
+}
+
+// Called when any security-level-relevant option changes
+function onSecurityRelevantOptionChange() {
+    const detectedLevel = detectSecurityLevel();
+    if (detectedLevel !== currentSecurityLevel) {
+        currentSecurityLevel = detectedLevel;
+        renderSecurityLevels();
+        renderSecurityLevelDetails();
+    }
+}
+
+// Generic function to create a boolean option tile (reusable)
+// Uses configState DOM as single source of truth
+function createBooleanOptionTile(optionKey, showFavoriteButton = true) {
+    const optionDiv = document.createElement('div');
+    optionDiv.classList.add('bool-option-item');
+    optionDiv.dataset.optionKey = optionKey;
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `bool_${optionKey}`;
+    // Read from DOM (Single Source of Truth)
+    checkbox.checked = getConfigBooleanValue(optionKey) || false;
+    checkbox.classList.add('bool-option-checkbox');
+    checkbox.addEventListener('change', (e) => {
+        // Write to DOM (Single Source of Truth)
+        setConfigBooleanValue(optionKey, e.target.checked);
+        
+        // Check if this is a security-relevant option
+        const isSecurityRelevant = Object.keys(SECURITY_LEVELS).some(level =>
+            SECURITY_LEVELS[level].settings.hasOwnProperty(optionKey)
+        );
+        
+        if (isSecurityRelevant) {
+            onSecurityRelevantOptionChange();
+        }
+        
+        // Update all instances of this tile
+        updateAllTilesForOption(optionKey);
+    });
+    
+    const label = document.createElement('label');
+    label.htmlFor = `bool_${optionKey}`;
+    label.classList.add('bool-option-label');
+    
+    const labelText = document.createElement('div');
+    labelText.classList.add('bool-option-label-text');
+    labelText.textContent = generateOptionLabel(optionKey);
+    
+    const keyName = document.createElement('div');
+    keyName.classList.add('bool-option-key');
+    keyName.textContent = optionKey;
+    
+    label.appendChild(labelText);
+    label.appendChild(keyName);
+    
+    optionDiv.appendChild(checkbox);
+    optionDiv.appendChild(label);
+    
+    // Add favorite button if requested
+    if (showFavoriteButton) {
+        const favoriteBtn = document.createElement('button');
+        favoriteBtn.classList.add('bool-option-favorite');
+        favoriteBtn.innerHTML = booleanOptionsFavorites.has(optionKey) ? '⭐' : '☆';
+        favoriteBtn.title = currentLang === 'de' ? 'Zu Favoriten hinzufügen/entfernen' : 'Add/remove from favorites';
+        favoriteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleFavorite(optionKey);
+        });
+        optionDiv.appendChild(favoriteBtn);
+    }
+    
+    return optionDiv;
+}
+
+// Update all tiles displaying a specific option
+// Reads from DOM (Single Source of Truth)
+function updateAllTilesForOption(optionKey) {
+    const allTiles = document.querySelectorAll(`[data-option-key="${optionKey}"]`);
+    const isChecked = getConfigBooleanValue(optionKey);
+    
+    allTiles.forEach(tile => {
+        const checkbox = tile.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+            checkbox.checked = isChecked;
+        }
+    });
+}
+
+// Toggle favorite status
+function toggleFavorite(optionKey) {
+    if (booleanOptionsFavorites.has(optionKey)) {
+        booleanOptionsFavorites.delete(optionKey);
+    } else {
+        booleanOptionsFavorites.add(optionKey);
+    }
+    
+    // Save to localStorage
+    try {
+        localStorage.setItem('sebConfigFavorites', JSON.stringify([...booleanOptionsFavorites]));
+    } catch (e) {
+        console.warn('Could not save favorites to localStorage:', e);
+    }
+    
+    // Re-render to update star icons
+    renderBooleanOptions();
+    renderSecurityLevelDetails();
+}
+
+// Render favorites group
+function renderFavoritesGroup(container) {
+    const groupDiv = document.createElement('div');
+    groupDiv.classList.add('bool-group-container');
+    groupDiv.style.borderLeft = '3px solid #FFB300';
+    
+    const groupHeader = document.createElement('div');
+    groupHeader.classList.add('bool-group-header');
+    groupHeader.innerHTML = `
+        <strong>${t('favoritesGroup')}</strong>
+        <span>(${booleanOptionsFavorites.size} ${currentLang === 'de' ? 'Optionen' : 'options'})</span>
+    `;
+    
+    const groupContent = document.createElement('div');
+    groupContent.classList.add('bool-group-content', 'show'); // Always expanded
+    
+    // Don't allow closing favorites group
+    groupHeader.style.cursor = 'default';
+    
+    if (booleanOptionsFavorites.size === 0) {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.style.cssText = 'padding: 1rem; color: #666; font-style: italic;';
+        emptyMsg.textContent = t('noFavorites');
+        groupContent.appendChild(emptyMsg);
+    } else {
+        const optionsGrid = document.createElement('div');
+        optionsGrid.classList.add('bool-options-grid');
+        
+        [...booleanOptionsFavorites].forEach(key => {
+            const tile = createBooleanOptionTile(key, true);
+            optionsGrid.appendChild(tile);
+        });
+        
+        groupContent.appendChild(optionsGrid);
+    }
+    
+    groupDiv.appendChild(groupHeader);
+    groupDiv.appendChild(groupContent);
+    container.appendChild(groupDiv);
+}
+
+function renderSecurityLevelDetails() {
+    const container = document.getElementById('securityLevelDetailsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Get security-relevant option keys
+    const securityRelevantKeys = new Set();
+    Object.values(SECURITY_LEVELS).forEach(level => {
+        Object.keys(level.settings).forEach(key => securityRelevantKeys.add(key));
+    });
+    
+    if (securityRelevantKeys.size === 0) return;
+    
+    // Create collapsible group header
+    const groupHeader = document.createElement('div');
+    groupHeader.classList.add('bool-group-header');
+    groupHeader.innerHTML = `
+        <strong>${t('securityLevelAffectedOptions')}</strong>
+        <span>(${securityRelevantKeys.size} ${currentLang === 'de' ? 'Optionen' : 'options'})</span>
+    `;
+    
+    // Create collapsible content
+    const groupContent = document.createElement('div');
+    groupContent.classList.add('bool-group-content');
+    // Start collapsed
+    
+    // Toggle functionality
+    groupHeader.addEventListener('click', () => {
+        groupContent.classList.toggle('show');
+    });
+    
+    // Info box
+    const infoBox = document.createElement('div');
+    infoBox.classList.add('preset-info-box');
+    infoBox.style.marginBottom = '1rem';
+    infoBox.innerHTML = `<strong>ℹ️</strong> ${t('securityLevelAffectedOptionsInfo')}`;
+    groupContent.appendChild(infoBox);
+    
+    // Create options grid using shared tiles
+    const optionsGrid = document.createElement('div');
+    optionsGrid.classList.add('bool-options-grid');
+    
+    [...securityRelevantKeys].forEach(key => {
+        const tile = createBooleanOptionTile(key, true);
+        optionsGrid.appendChild(tile);
+    });
+    
+    groupContent.appendChild(optionsGrid);
+    
+    container.appendChild(groupHeader);
+    container.appendChild(groupContent);
 }
 
 function updateSecurityLevelWarning() {
@@ -1824,6 +2355,11 @@ infoBox.innerHTML = `<strong>ℹ️ ${t('allBooleanOptions')}</strong><br>${t('b
 container.appendChild(infoBox);
 debugLog('ℹ️ Info box added');
 
+// Render Favorites Group (always expanded, at top)
+if (booleanOptionsFavorites.size > 0) {
+    renderFavoritesGroup(container);
+}
+
 // Render each group
 const groupOrder = ['browser', 'security', 'interface', 'system', 'network', 'mobile', 'other'];
 debugLog('🔍 Processing groups:', groupOrder);
@@ -1858,67 +2394,45 @@ groupOrder.forEach(groupKey => {
         groupContent.classList.toggle('show');
     });
     
-    // Render options in grid
+    // Render options in grid using shared tiles
     const optionsGrid = document.createElement('div');
     optionsGrid.classList.add('bool-options-grid');
     
     group.options.forEach(opt => {
-        const optionDiv = document.createElement('div');
-        optionDiv.classList.add('bool-option-item');
+        const tile = createBooleanOptionTile(opt.key, true);
         
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `bool_${opt.key}`;
-        checkbox.checked = parsedBooleanOptions.userSelections[opt.key];
-        checkbox.classList.add('bool-option-checkbox');
-        checkbox.addEventListener('change', (e) => {
-            parsedBooleanOptions.userSelections[opt.key] = e.target.checked;
-        });
-        
-        const label = document.createElement('label');
-        label.htmlFor = `bool_${opt.key}`;
-        label.classList.add('bool-option-label');
-        
-        const labelText = document.createElement('div');
-        labelText.classList.add('bool-option-label-text');
-        labelText.textContent = generateOptionLabel(opt.key);
-        
-        const keyName = document.createElement('div');
-        keyName.classList.add('bool-option-key');
-        keyName.textContent = opt.key;
-        
-        const tooltip = document.createElement('div');
-        tooltip.classList.add('bool-option-tooltip');
-        
-        // Get English location (always shown as gray text)
-        const englishLocation = getOptionLocation(opt.key);
-        if (englishLocation) {
-            // Gray text: always English (matches SEB Config Tool)
-            tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${englishLocation}`;
+        // Add location tooltip to label
+        const label = tile.querySelector('.bool-option-label');
+        if (label && !label.querySelector('.bool-option-tooltip')) {
+            const tooltip = document.createElement('div');
+            tooltip.classList.add('bool-option-tooltip');
             
-            // Tooltip hover: German if language is DE, otherwise English
-            if (currentLang === 'de') {
-                const germanLocation = getLocalizedLocation(opt.key);
-                tooltip.title = germanLocation;
+            // Get English location (always shown as gray text)
+            const englishLocation = getOptionLocation(opt.key);
+            if (englishLocation) {
+                // Gray text: always English (matches SEB Config Tool)
+                tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${englishLocation}`;
+                
+                // Tooltip hover: German if language is DE, otherwise English
+                if (currentLang === 'de') {
+                    const germanLocation = getLocalizedLocation(opt.key);
+                    tooltip.title = germanLocation;
+                } else {
+                    tooltip.title = englishLocation;
+                }
             } else {
-                tooltip.title = englishLocation;
+                // Use translated hint texts for undocumented options
+                const notDocText = getTranslatedText('notDocumented');
+                const notDocHint = getTranslatedText('notDocumentedHint');
+                tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${notDocText}`;
+                tooltip.title = notDocHint;
+                tooltip.classList.add('undocumented');
             }
-        } else {
-            // Use translated hint texts for undocumented options
-            const notDocText = getTranslatedText('notDocumented');
-            const notDocHint = getTranslatedText('notDocumentedHint');
-            tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${notDocText}`;
-            tooltip.title = notDocHint;
-            tooltip.classList.add('undocumented');
+            
+            label.appendChild(tooltip);
         }
         
-        label.appendChild(labelText);
-        label.appendChild(keyName);
-        label.appendChild(tooltip);
-        
-        optionDiv.appendChild(checkbox);
-        optionDiv.appendChild(label);
-        optionsGrid.appendChild(optionDiv);
+        optionsGrid.appendChild(tile);
     });
     
     groupContent.appendChild(optionsGrid);
@@ -3128,264 +3642,128 @@ parsedDictStructures.urlFilterRules.forEach(rule => {
 `;
 });
 
-// Generate complete plist XML with version info
-const buildDateFormatted = formatBuildDate('en'); // Use international format for file
-const xml = `<?xml version="1.0" encoding="UTF-8"?>
+// ============================================================================
+// STEP 1: Serialize complete DOM (all values, arrays, dicts)
+// ============================================================================
+if (!configState.loaded) {
+    console.error('❌ DOM not loaded, cannot export');
+    return null;
+}
+
+// Clone the DOM to avoid modifying the original
+const exportDoc = configState.xmlDoc.cloneNode(true);
+const exportRootDict = exportDoc.querySelector('plist > dict');
+
+if (!exportRootDict) {
+    console.error('❌ Root dict not found in cloned DOM');
+    return null;
+}
+
+// ============================================================================
+// STEP 2: Override specific keys that are dynamically generated or user input
+// ============================================================================
+
+// Helper function to set/update a key in the export DOM
+function setExportValue(key, value, type = 'string') {
+    const children = exportRootDict.children;
+    let keyFound = false;
+    
+    for (let i = 0; i < children.length; i++) {
+        if (children[i].tagName === 'key' && children[i].textContent.trim() === key) {
+            keyFound = true;
+            const nextElement = children[i].nextElementSibling;
+            
+            // Create new element with correct type
+            let newElement;
+            if (type === 'boolean') {
+                newElement = exportDoc.createElement(value ? 'true' : 'false');
+            } else if (type === 'integer') {
+                newElement = exportDoc.createElement('integer');
+                newElement.textContent = value;
+            } else {
+                newElement = exportDoc.createElement('string');
+                newElement.textContent = value;
+            }
+            
+            // Replace or insert
+            if (nextElement) {
+                exportRootDict.replaceChild(newElement, nextElement);
+            } else {
+                exportRootDict.appendChild(newElement);
+            }
+            break;
+        }
+    }
+    
+    // If key doesn't exist, add it
+    if (!keyFound) {
+        const keyElement = exportDoc.createElement('key');
+        keyElement.textContent = key;
+        exportRootDict.appendChild(keyElement);
+        
+        let valueElement;
+        if (type === 'boolean') {
+            valueElement = exportDoc.createElement(value ? 'true' : 'false');
+        } else if (type === 'integer') {
+            valueElement = exportDoc.createElement('integer');
+            valueElement.textContent = value;
+        } else {
+            valueElement = exportDoc.createElement('string');
+            valueElement.textContent = value;
+        }
+        exportRootDict.appendChild(valueElement);
+    }
+}
+
+// Override 1: startURL (User Input)
+setExportValue('startURL', escapeXML(startUrl), 'string');
+
+// Override 2: originatorVersion (Dynamic)
+const buildDateFormatted = formatBuildDate('en');
+const originatorValue = `SEB_Config_Generator_${APP_VERSION}_${buildDateFormatted.replace(/[/:]/g, '-').replace(/ /g, '_')}`;
+setExportValue('originatorVersion', originatorValue, 'string');
+
+// Override 3: URLFilterEnable (Dynamic - based on whether we have rules)
+setExportValue('URLFilterEnable', urlFilterRulesXML.length > 0, 'boolean');
+
+// Override 4: URLFilterRules (Dynamic - merge existing + new rules)
+// Find and replace the URLFilterRules array in the export DOM
+for (let i = 0; i < exportRootDict.children.length; i++) {
+    if (exportRootDict.children[i].tagName === 'key' && 
+        exportRootDict.children[i].textContent.trim() === 'URLFilterRules') {
+        const nextElement = exportRootDict.children[i].nextElementSibling;
+        if (nextElement && nextElement.tagName === 'array') {
+            // Clear existing array and rebuild with new rules
+            nextElement.innerHTML = '\n\t\t' + urlFilterRulesXML + '\t';
+        }
+        break;
+    }
+}
+
+// ============================================================================
+// STEP 3: Serialize complete DOM to XML string
+// ============================================================================
+const serializer = new XMLSerializer();
+let finalXML = serializer.serializeToString(exportDoc);
+
+// Add comment header with proper XML declaration and DOCTYPE
+const buildComment = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- Generated by SEB Config Generator ${APP_VERSION} (Build: ${buildDateFormatted}) -->
 <!-- https://github.com/markuskiller/SEBConfigGenerator -->
-<plist version="1.0">
-<dict>
-\t<key>URLFilterEnable</key>
-\t<${urlFilterRulesXML.length > 0 ? 'true' : 'false'}/>
-\t<key>URLFilterEnableContentFilter</key>
-\t<false/>
-\t<key>URLFilterRules</key>
-\t<array>
-${urlFilterRulesXML}\t</array>
-\t<key>allowAudioCapture</key>
-\t<false/>
-\t<key>allowBrowsingBackForward</key>
-\t<${document.getElementById('allowBackForward').checked ? 'true' : 'false'}/>
-\t<key>allowDictionaryLookup</key>
-\t<false/>
-\t<key>allowDownUploads</key>
-\t<${document.getElementById('allowDownloads').checked ? 'true' : 'false'}/>
-\t<key>allowDownloads</key>
-\t<${document.getElementById('allowDownloads').checked ? 'true' : 'false'}/>
-\t<key>allowFlashFullscreen</key>
-\t<false/>
-\t<key>allowPreferencesWindow</key>
-\t<false/>
-\t<key>allowQuit</key>
-\t<${securitySettings.allowQuit ? 'true' : 'false'}/>
-\t<key>allowSpellCheck</key>
-\t<${document.getElementById('allowSpellCheck').checked ? 'true' : 'false'}/>
-\t<key>allowSwitchToApplications</key>
-\t<${securitySettings.allowSwitchToApplications ? 'true' : 'false'}/>
-\t<key>allowVideoCapture</key>
-\t<false/>
-\t<key>browserViewMode</key>
-\t<integer>${securitySettings.browserViewMode}</integer>
-\t<key>browserWindowAllowReload</key>
-\t<${document.getElementById('showReloadButton').checked ? 'true' : 'false'}/>
-\t<key>enableBrowserWindowToolbar</key>
-\t<${securitySettings.enableBrowserWindowToolbar ? 'true' : 'false'}/>
-\t<key>enablePlugIns</key>
-\t<true/>
-\t<key>enableSebBrowser</key>
-\t<true/>
-\t<key>enableZoomPage</key>
-\t<true/>
-\t<key>enableZoomText</key>
-\t<true/>
-\t<key>examSessionClearCookiesOnEnd</key>
-\t<true/>
-\t<key>examSessionClearCookiesOnStart</key>
-\t<true/>
-\t<key>newBrowserWindowAllowReload</key>
-\t<${document.getElementById('showReloadButton').checked ? 'true' : 'false'}/>
-\t<key>originatorVersion</key>
-\t<string>SEB_Config_Generator_${APP_VERSION}_${buildDateFormatted.replace(/[/:]/g, '-').replace(/ /g, '_')}</string>
-\t<key>removeBrowserProfile</key>
-\t<false/>
-\t<key>showMenuBar</key>
-\t<${securitySettings.showMenuBar ? 'true' : 'false'}/>
-\t<key>showReloadButton</key>
-\t<${document.getElementById('showReloadButton').checked ? 'true' : 'false'}/>
-\t<key>startURL</key>
-\t<string>${escapeXML(startUrl)}</string>
-\t<key>touchOptimized</key>
-\t<false/>`;
+`;
 
-// Add all boolean options from parsed XML (dynamically loaded)
-// This includes ALL true/false options that were parsed from the template
-let booleanOptionsXML = '';
-if (parsedBooleanOptions.options && Object.keys(parsedBooleanOptions.options).length > 0) {
-    // Sort keys alphabetically for consistent output
-    const sortedKeys = Object.keys(parsedBooleanOptions.userSelections).sort();
-    sortedKeys.forEach(key => {
-        const value = parsedBooleanOptions.userSelections[key];
-        booleanOptionsXML += `\n\t<key>${escapeXML(key)}</key>\n\t<${value ? 'true' : 'false'}/>`;
-    });
+// Remove XML declaration and DOCTYPE from serialized output (we add our own clean version)
+finalXML = finalXML.replace(/<\?xml[^?]*\?>/, ''); // Remove XML declaration
+finalXML = finalXML.replace(/<!DOCTYPE[^>]*>/, ''); // Remove DOCTYPE
+
+return buildComment + finalXML;
 }
-
-// Add dict structures (process lists, certificates, etc.)
-let dictStructuresXML = '';
-if (parsedDictStructures.loaded) {
-    dictStructuresXML += generateDictStructuresXML();
-}
-
-return xml + booleanOptionsXML + dictStructuresXML + `
-</dict>
-</plist>`;
-}
-
 // ============================================================================
-// GENERATE DICT STRUCTURES XML (Process Lists, Certificates, etc.)
+// LEGACY CODE REMOVED
 // ============================================================================
-function generateDictStructuresXML() {
-let xml = '';
-
-// Generate prohibited processes
-if (parsedDictStructures.prohibitedProcesses.length > 0) {
-    xml += `\n\t<key>prohibitedProcesses</key>\n\t<array>`;
-    
-    parsedDictStructures.prohibitedProcesses.forEach(proc => {
-        xml += `\n\t\t<dict>`;
-        xml += `\n\t\t\t<key>active</key>`;
-        xml += `\n\t\t\t<${proc.active ? 'true' : 'false'}/>`;
-        
-        if (proc.allowedExecutables !== undefined) {
-            xml += `\n\t\t\t<key>allowedExecutables</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.allowedExecutables)}</string>`;
-        }
-        
-        xml += `\n\t\t\t<key>currentUser</key>`;
-        xml += `\n\t\t\t<${proc.currentUser ? 'true' : 'false'}/>`;
-        
-        if (proc.description !== undefined) {
-            xml += `\n\t\t\t<key>description</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.description)}</string>`;
-        }
-        
-        if (proc.executable) {
-            xml += `\n\t\t\t<key>executable</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.executable)}</string>`;
-        }
-        
-        if (proc.identifier) {
-            xml += `\n\t\t\t<key>identifier</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.identifier)}</string>`;
-        }
-        
-        xml += `\n\t\t\t<key>ignoreInAAC</key>`;
-        xml += `\n\t\t\t<${proc.ignoreInAAC ? 'true' : 'false'}/>`;
-        
-        if (proc.originalName !== undefined) {
-            xml += `\n\t\t\t<key>originalName</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.originalName)}</string>`;
-        }
-        
-        if (proc.os !== undefined) {
-            xml += `\n\t\t\t<key>os</key>`;
-            xml += `\n\t\t\t<integer>${proc.os}</integer>`;
-        }
-        
-        xml += `\n\t\t\t<key>strongKill</key>`;
-        xml += `\n\t\t\t<${proc.strongKill ? 'true' : 'false'}/>`;
-        
-        if (proc.user !== undefined) {
-            xml += `\n\t\t\t<key>user</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.user)}</string>`;
-        }
-        
-        if (proc.windowHandlingProcess !== undefined) {
-            xml += `\n\t\t\t<key>windowHandlingProcess</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.windowHandlingProcess)}</string>`;
-        }
-        
-        xml += `\n\t\t</dict>`;
-    });
-    
-    xml += `\n\t</array>`;
-}
-
-// Generate permitted processes (if any exist)
-if (parsedDictStructures.permittedProcesses.length > 0) {
-    xml += `\n\t<key>permittedProcesses</key>\n\t<array>`;
-    
-    parsedDictStructures.permittedProcesses.forEach(proc => {
-        xml += `\n\t\t<dict>`;
-        // Same structure as prohibited processes
-        xml += `\n\t\t\t<key>active</key>`;
-        xml += `\n\t\t\t<${proc.active ? 'true' : 'false'}/>`;
-        
-        if (proc.allowedExecutables !== undefined) {
-            xml += `\n\t\t\t<key>allowedExecutables</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.allowedExecutables)}</string>`;
-        }
-        
-        xml += `\n\t\t\t<key>currentUser</key>`;
-        xml += `\n\t\t\t<${proc.currentUser ? 'true' : 'false'}/>`;
-        
-        if (proc.description !== undefined) {
-            xml += `\n\t\t\t<key>description</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.description)}</string>`;
-        }
-        
-        if (proc.executable) {
-            xml += `\n\t\t\t<key>executable</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.executable)}</string>`;
-        }
-        
-        if (proc.identifier) {
-            xml += `\n\t\t\t<key>identifier</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.identifier)}</string>`;
-        }
-        
-        xml += `\n\t\t\t<key>ignoreInAAC</key>`;
-        xml += `\n\t\t\t<${proc.ignoreInAAC ? 'true' : 'false'}/>`;
-        
-        if (proc.originalName !== undefined) {
-            xml += `\n\t\t\t<key>originalName</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.originalName)}</string>`;
-        }
-        
-        if (proc.os !== undefined) {
-            xml += `\n\t\t\t<key>os</key>`;
-            xml += `\n\t\t\t<integer>${proc.os}</integer>`;
-        }
-        
-        xml += `\n\t\t\t<key>strongKill</key>`;
-        xml += `\n\t\t\t<${proc.strongKill ? 'true' : 'false'}/>`;
-        
-        if (proc.user !== undefined) {
-            xml += `\n\t\t\t<key>user</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.user)}</string>`;
-        }
-        
-        if (proc.windowHandlingProcess !== undefined) {
-            xml += `\n\t\t\t<key>windowHandlingProcess</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.windowHandlingProcess)}</string>`;
-        }
-        
-        xml += `\n\t\t</dict>`;
-    });
-    
-    xml += `\n\t</array>`;
-}
-
-// Generate embedded certificates (if any exist)
-if (parsedDictStructures.embeddedCertificates.length > 0) {
-    xml += `\n\t<key>embeddedCertificates</key>\n\t<array>`;
-    
-    parsedDictStructures.embeddedCertificates.forEach(cert => {
-        xml += `\n\t\t<dict>`;
-        
-        if (cert.certificateDataBase64) {
-            xml += `\n\t\t\t<key>certificateDataBase64</key>`;
-            xml += `\n\t\t\t<data>${cert.certificateDataBase64}</data>`;
-        }
-        
-        if (cert.name) {
-            xml += `\n\t\t\t<key>name</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(cert.name)}</string>`;
-        }
-        
-        if (cert.type !== undefined) {
-            xml += `\n\t\t\t<key>type</key>`;
-            xml += `\n\t\t\t<integer>${cert.type}</integer>`;
-        }
-        
-        xml += `\n\t\t</dict>`;
-    });
-    
-    xml += `\n\t</array>`;
-}
-
-return xml;
-}
+// generateConfigXML_OLD() - Replaced by DOM serialization in generateConfigXML()
+// generateDictStructuresXML() - No longer needed, all structures exported from DOM
 
 function escapeXML(str) {
 return str
@@ -4296,6 +4674,14 @@ const savedLang = localStorage.getItem('sebConfigLang');
 const initialLang = urlLang || savedLang || 'de';
 
 setLanguage(initialLang);
+
+// Initialize XML DOM (Single Source of Truth)
+if (!configState.loaded) {
+    initializeConfigDOM();
+}
+
+// Sync UI checkboxes with DOM values
+syncUICheckboxesFromDOM();
 
 // Initialize export format buttons visibility (default: .seb selected)
 document.getElementById('generateBtn')?.classList.remove('hidden');
