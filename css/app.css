@@ -1977,6 +1977,26 @@ textarea {
     cursor: not-allowed;
 }
 
+.url-filter-reset {
+    color: #ff9800;
+    padding: 0.5rem;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.url-filter-reset:hover {
+    color: #f57c00;
+}
+
+.source-badge em {
+    font-style: italic;
+    color: #ff9800;
+    font-size: 0.9em;
+}
+
 .url-filter-action:disabled,
 .url-filter-active:disabled,
 .url-filter-regex:disabled {

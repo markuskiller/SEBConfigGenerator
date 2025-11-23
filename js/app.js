@@ -2351,7 +2351,7 @@ card.classList.add('url-filter-rule-card');
 card.setAttribute('data-source', rule.source || 'custom');
 
 const actionClass = rule.action === 1 ? 'allow' : 'block';
-const isEditable = rule.source === 'custom' || rule.source === 'imported';
+const isEditable = true; // All rules are editable
 
 // Generate unique IDs for form elements
 const activeId = `url-filter-active-${index}`;
@@ -2377,10 +2377,20 @@ const sourceLabels = {
 const sourceIcon = sourceIcons[rule.source] || '✏️';
 const sourceLabel = sourceLabels[rule.source] || (rule.label || '');
 
-// Add source badge
+// Add source badge with modified indicator
+const modifiedText = rule.modified ? ` <em>${currentLang === 'de' ? '(modifiziert)' : '(modified)'}</em>` : '';
 const labelBadge = `<span class="source-badge source-${rule.source || 'custom'}" title="${sourceLabel}">
-    ${sourceIcon} ${rule.label || sourceLabel}
+    ${sourceIcon} ${rule.label || sourceLabel}${modifiedText}
 </span>`;
+
+    // Add reset button for modified auto-generated rules
+    const resetButton = (rule.modified && (rule.source === 'tool-preset' || rule.source === 'sharepoint'))
+        ? `<button class="btn-icon url-filter-reset" 
+                   data-index="${index}"
+                   title="${currentLang === 'de' ? 'Auf Standard zurücksetzen' : 'Reset to default'}">
+               ↺
+           </button>`
+        : '';
 
     card.innerHTML = `
         ${labelBadge}
@@ -2390,8 +2400,7 @@ const labelBadge = `<span class="source-badge source-${rule.source || 'custom'}"
                        id="${activeId}"
                        class="url-filter-active" 
                        data-index="${index}"
-                       ${rule.active ? 'checked' : ''}
-                       ${!isEditable ? 'disabled' : ''}>
+                       ${rule.active ? 'checked' : ''}>
                 <span>${currentLang === 'de' ? 'Aktiv' : 'Active'}</span>
             </label>
             <label class="url-filter-label" for="${regexId}">
@@ -2399,8 +2408,7 @@ const labelBadge = `<span class="source-badge source-${rule.source || 'custom'}"
                        id="${regexId}"
                        class="url-filter-regex" 
                        data-index="${index}"
-                       ${rule.regex ? 'checked' : ''}
-                       ${!isEditable ? 'disabled' : ''}>
+                       ${rule.regex ? 'checked' : ''}>
                 <span>Regex</span>
             </label>
             <input type="text" 
@@ -2408,63 +2416,88 @@ const labelBadge = `<span class="source-badge source-${rule.source || 'custom'}"
                    class="url-filter-expression" 
                    data-index="${index}"
                    value="${(rule.expression || '').replace(/"/g, '&quot;')}"
-                   placeholder="${currentLang === 'de' ? 'URL-Pattern oder Regex...' : 'URL pattern or regex...'}"
-                   ${!isEditable ? 'readonly' : ''}>
+                   placeholder="${currentLang === 'de' ? 'URL-Pattern oder Regex...' : 'URL pattern or regex...'}">
             <select id="${actionId}"
                     class="url-filter-action ${actionClass}" 
-                    data-index="${index}"
-                    ${!isEditable ? 'disabled' : ''}>
+                    data-index="${index}">
                 <option value="1" ${rule.action === 1 ? 'selected' : ''}>${currentLang === 'de' ? '✓ Erlauben' : '✓ Allow'}</option>
                 <option value="0" ${rule.action === 0 ? 'selected' : ''}>${currentLang === 'de' ? '✗ Blockieren' : '✗ Block'}</option>
             </select>
+            ${resetButton}
             <button class="btn-icon url-filter-delete" 
                     data-index="${index}"
-                    title="${!isEditable ? (currentLang === 'de' ? 'Auto-generierte Regeln können nicht gelöscht werden' : 'Auto-generated rules cannot be deleted') : (currentLang === 'de' ? 'Regel löschen' : 'Delete rule')}"
-                    ${!isEditable ? 'disabled' : ''}>
-                ${!isEditable ? '🔒' : '🗑️'}
+                    title="${currentLang === 'de' ? 'Regel löschen' : 'Delete rule'}">
+                🗑️
             </button>
         </div>
-    `;// Event listeners (only for editable rules)
-if (isEditable) {
-    card.querySelector('.url-filter-active').addEventListener('change', (e) => {
-        parsedDictStructures.urlFilterRules[index].active = e.target.checked;
-        debugLog(`URLFilter rule ${index} active: ${e.target.checked}`);
-        updatePreview();
-    });
-
-    card.querySelector('.url-filter-regex').addEventListener('change', (e) => {
-        parsedDictStructures.urlFilterRules[index].regex = e.target.checked;
-        debugLog(`URLFilter rule ${index} regex: ${e.target.checked}`);
-        updatePreview();
-    });
-
-    card.querySelector('.url-filter-expression').addEventListener('input', (e) => {
-        parsedDictStructures.urlFilterRules[index].expression = e.target.value;
-        debugLog(`URLFilter rule ${index} expression: ${e.target.value}`);
-        updatePreview();
-    });
-}
-
-    if (isEditable) {
-        card.querySelector('.url-filter-action').addEventListener('change', (e) => {
-            parsedDictStructures.urlFilterRules[index].action = parseInt(e.target.value);
-            debugLog(`URLFilter rule ${index} action: ${e.target.value}`);
-            // Update CSS class for color
-            if (e.target.value === '1') {
-                e.target.classList.remove('block');
-                e.target.classList.add('allow');
-            } else {
-                e.target.classList.remove('allow');
-                e.target.classList.add('block');
-            }
-            updatePreview();
-        });
+    `;// Event listeners - mark as modified when edited
+card.querySelector('.url-filter-active').addEventListener('change', (e) => {
+    const rule = parsedDictStructures.urlFilterRules[index];
+    rule.active = e.target.checked;
+    // Mark as modified if it's auto-generated
+    if (rule.source === 'tool-preset' || rule.source === 'sharepoint') {
+        rule.modified = true;
+        // Re-render to show modified badge
+        const container = document.querySelector('.url-filter-content');
+        if (container) renderURLFilterContent(container);
     }
+    debugLog(`URLFilter rule ${index} active: ${e.target.checked}`);
+    updatePreview();
+});
 
-if (isEditable) {
-    card.querySelector('.url-filter-delete').addEventListener('click', () => {
-        if (confirm(currentLang === 'de' ? 'Regel wirklich löschen?' : 'Really delete this rule?')) {
+card.querySelector('.url-filter-regex').addEventListener('change', (e) => {
+    const rule = parsedDictStructures.urlFilterRules[index];
+    rule.regex = e.target.checked;
+    if (rule.source === 'tool-preset' || rule.source === 'sharepoint') {
+        rule.modified = true;
+        const container = document.querySelector('.url-filter-content');
+        if (container) renderURLFilterContent(container);
+    }
+    debugLog(`URLFilter rule ${index} regex: ${e.target.checked}`);
+    updatePreview();
+});
+
+card.querySelector('.url-filter-expression').addEventListener('input', (e) => {
+    const rule = parsedDictStructures.urlFilterRules[index];
+    rule.expression = e.target.value;
+    if (rule.source === 'tool-preset' || rule.source === 'sharepoint') {
+        rule.modified = true;
+        const container = document.querySelector('.url-filter-content');
+        if (container) renderURLFilterContent(container);
+    }
+    debugLog(`URLFilter rule ${index} expression: ${e.target.value}`);
+    updatePreview();
+});
+
+card.querySelector('.url-filter-action').addEventListener('change', (e) => {
+    const rule = parsedDictStructures.urlFilterRules[index];
+    rule.action = parseInt(e.target.value);
+    if (rule.source === 'tool-preset' || rule.source === 'sharepoint') {
+        rule.modified = true;
+        const container = document.querySelector('.url-filter-content');
+        if (container) renderURLFilterContent(container);
+    }
+    debugLog(`URLFilter rule ${index} action: ${e.target.value}`);
+    // Update CSS class for color
+    if (e.target.value === '1') {
+        e.target.classList.remove('block');
+        e.target.classList.add('allow');
+    } else {
+        e.target.classList.remove('allow');
+        e.target.classList.add('block');
+    }
+    updatePreview();
+});
+
+// Reset button (only for modified auto-generated rules)
+const resetBtn = card.querySelector('.url-filter-reset');
+if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+        if (confirm(currentLang === 'de' ? 'Regel auf Standard zurücksetzen?' : 'Reset rule to default?')) {
+            // Remove the rule - it will be regenerated on next sync
             parsedDictStructures.urlFilterRules.splice(index, 1);
+            // Re-sync to regenerate default
+            syncAllURLFilterSources();
             // Re-render
             const container = document.querySelector('.url-filter-content');
             if (container) {
@@ -2477,6 +2510,22 @@ if (isEditable) {
         }
     });
 }
+
+// Delete button
+card.querySelector('.url-filter-delete').addEventListener('click', () => {
+    if (confirm(currentLang === 'de' ? 'Regel wirklich löschen?' : 'Really delete this rule?')) {
+        parsedDictStructures.urlFilterRules.splice(index, 1);
+        // Re-render
+        const container = document.querySelector('.url-filter-content');
+        if (container) {
+            renderURLFilterContent(container);
+        }
+        // Update count in header
+        updateURLFilterCount();
+        // Update preview
+        updatePreview();
+    }
+});
 
 return card;
 }
@@ -3201,9 +3250,9 @@ return info;
 
 // Consolidate all URL filter sources into parsedDictStructures.urlFilterRules
 function syncAllURLFilterSources() {
-    // Remove all auto-generated rules (will be re-added)
+    // Keep custom, imported, and MODIFIED rules (don't regenerate modified rules)
     parsedDictStructures.urlFilterRules = parsedDictStructures.urlFilterRules.filter(rule => 
-        rule.source === 'custom' || rule.source === 'imported'
+        rule.source === 'custom' || rule.source === 'imported' || rule.modified === true
     );
     
     // 1. Add preset domains (allow)
