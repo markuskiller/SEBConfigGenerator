@@ -35,7 +35,7 @@
 - ✅ **Pre-configured Services** - OneNote, Word, Kahoot, Mentimeter, Miro, Padlet, Whiteboard.fi, Slido, Etherpad *(PRs welcome)*
 - ✅ **Multi-Tool Support** - Combine multiple services in one configuration
 - ✅ **Bilingual Interface** - German and English *(PRs welcome)*
-- ✅ **Privacy-First** - 100% browser-local processing, no data transmission
+- ✅ **Privacy-First** - 100% browser-local processing, no data transmission (see Privacy section below)
 - ✅ **Flexible Domain Control** - Wildcards, custom domains, blocked domains
 - ✅ **Moodle Quiz Integration** - Export URL lists for direct copy-paste into Moodle SEB settings
 - ✅ **Subject-Specific Tools** - Pre-configured dictionaries and reference tools *(PRs welcome)*
@@ -57,6 +57,25 @@
 - High-stakes exams (insufficient security)
 - Unsupervised assessments
 - Preventing determined circumvention
+
+---
+
+## Privacy & Data Storage
+
+**100% Local Processing:**
+- All configuration data is processed exclusively in your browser
+- No data is transmitted to any server
+- No analytics, tracking, or external dependencies
+- Can be used completely offline
+
+**Local Storage (Browser):**
+The following user preferences are saved locally in your browser:
+- **Language preference** (`sebConfigLang`) - Selected UI language (German/English)
+- **Favorites** (`sebConfigFavorites`) - Your favorite boolean options for quick access
+- **Translation display** (`sebConfigShowTranslations`) - Show original or translated labels in advanced options
+- **URL filter source** (`sebConfigURLFilterSource`) - Active filter for URL rules (all/preset/SharePoint/custom/imported)
+
+**Note:** These preferences enhance usability and are stored only on your device. No configuration data or user inputs are ever stored or transmitted.
 
 ---
 

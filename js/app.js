@@ -2292,9 +2292,12 @@ header.addEventListener('click', async () => {
         
         // Update count badge with actual numbers
         updateURLFilterCount();
+        
+        // Keep content visible after loading (don't toggle off)
+        return;
     }
     
-    // Toggle visibility
+    // Toggle visibility (only if content was already loaded)
     content.classList.toggle('show');
 });
 
@@ -2315,6 +2318,89 @@ infoBox.innerHTML = currentLang === 'de'
     ? '<strong>ℹ️ Hinweis:</strong> Manuelle Filter-Regeln werden zusätzlich zu den automatisch generierten Preset-Domains verwendet. Regex-Patterns sind fortgeschrittene Optionen für erfahrene Nutzer.'
     : '<strong>ℹ️ Note:</strong> Manual filter rules are used in addition to auto-generated preset domains. Regex patterns are advanced options for experienced users.';
 container.appendChild(infoBox);
+
+// Source filter buttons
+const filterBar = document.createElement('div');
+filterBar.classList.add('url-filter-source-bar');
+
+const sources = [
+    { key: 'all', icon: '🔍', label: currentLang === 'de' ? 'Alle' : 'All', shortcut: '1' },
+    { key: 'tool-preset', icon: '📦', label: currentLang === 'de' ? 'Tool-Presets' : 'Tool Presets', shortcut: '2' },
+    { key: 'sharepoint', icon: '🔄', label: 'SharePoint', shortcut: '3' },
+    { key: 'custom', icon: '✏️', label: currentLang === 'de' ? 'Manuell' : 'Custom', shortcut: '4' },
+    { key: 'imported', icon: '📄', label: currentLang === 'de' ? 'Importiert' : 'Imported', shortcut: '5' }
+];
+
+// Load active filter from localStorage
+let activeFilter = 'all';
+try {
+    const stored = localStorage.getItem('sebConfigURLFilterSource');
+    if (stored && sources.some(s => s.key === stored)) {
+        activeFilter = stored;
+    }
+} catch (e) {
+    console.warn('Could not load URL filter source preference:', e);
+}
+
+const applyFilter = (filterKey) => {
+    // Update active state
+    filterBar.querySelectorAll('.source-filter-btn').forEach(b => b.classList.remove('active'));
+    const activeBtn = filterBar.querySelector(`[data-source="${filterKey}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+    activeFilter = filterKey;
+    
+    // Save to localStorage
+    try {
+        localStorage.setItem('sebConfigURLFilterSource', activeFilter);
+    } catch (e) {
+        console.warn('Could not save URL filter source preference:', e);
+    }
+    
+    // Filter rules
+    const allCards = container.querySelectorAll('.url-filter-rule-card');
+    allCards.forEach(card => {
+        if (activeFilter === 'all' || card.getAttribute('data-source') === activeFilter) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+};
+
+sources.forEach((source, index) => {
+    const btn = document.createElement('button');
+    btn.classList.add('source-filter-btn');
+    if (source.key === activeFilter) btn.classList.add('active');
+    btn.innerHTML = `${source.icon} ${source.label}`;
+    btn.setAttribute('data-source', source.key);
+    btn.setAttribute('aria-label', `${currentLang === 'de' ? 'Filtern nach' : 'Filter by'} ${source.label}`);
+    btn.setAttribute('title', `${source.label} (${currentLang === 'de' ? 'Tastenkürzel' : 'Shortcut'}: ${source.shortcut})`);
+    
+    btn.addEventListener('click', () => applyFilter(source.key));
+    
+    filterBar.appendChild(btn);
+});
+
+// Keyboard navigation (1-5 for filters)
+filterBar.addEventListener('keydown', (e) => {
+    const { key } = e;
+    const source = sources.find(s => s.shortcut === key);
+    if (source) {
+        e.preventDefault();
+        applyFilter(source.key);
+    }
+});
+
+// Make filter bar focusable for keyboard navigation
+filterBar.setAttribute('tabindex', '0');
+
+container.appendChild(filterBar);
+
+// Apply initial filter (important if loaded from localStorage)
+if (activeFilter !== 'all') {
+    // Defer to next tick to ensure all cards are rendered
+    setTimeout(() => applyFilter(activeFilter), 0);
+}
 
 // Rules list
 const rulesList = document.createElement('div');
@@ -5071,6 +5157,7 @@ function setupGlobalSearch() {
 const globalSearchContainer = document.getElementById('globalSearchContainer');
 const globalSearchInput = document.getElementById('globalSearch');
 const globalSearchCount = document.getElementById('globalSearchCount');
+const globalSearchClear = document.getElementById('globalSearchClear');
 
 if (!globalSearchContainer || !globalSearchInput || !globalSearchCount) {
     console.warn('⚠️ Global search elements not found');
@@ -5087,7 +5174,30 @@ globalSearchInput.placeholder = currentLang === 'de'
 
 debugLog('🔍 Setting up global search...');
 
+// Clear button functionality
+if (globalSearchClear) {
+    globalSearchClear.addEventListener('click', () => {
+        globalSearchInput.value = '';
+        globalSearchClear.classList.add('hidden');
+        globalSearchCount.textContent = '';
+        collapseAllSections();
+        globalSearchInput.focus();
+    });
+}
+
+// Toggle clear button visibility
+const toggleClearButton = () => {
+    if (globalSearchClear) {
+        if (globalSearchInput.value) {
+            globalSearchClear.classList.remove('hidden');
+        } else {
+            globalSearchClear.classList.add('hidden');
+        }
+    }
+};
+
 globalSearchInput.addEventListener('input', async (e) => {
+    toggleClearButton();
     const searchTerm = e.target.value.toLowerCase();
     
     // Lazy load dict structures if user is searching and they're not loaded yet

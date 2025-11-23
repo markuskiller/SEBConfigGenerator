@@ -163,7 +163,7 @@
   "copiedMsg": "✓ Kopiert!",
   "configNamePlaceholder": "Meine_Schule_",
   "privacyTitle": "Datenschutz:",
-  "privacyText": "Alle Daten werden ausschließlich lokal in Ihrem Browser verarbeitet. Es werden keine Konfigurationsdaten oder Eingaben an unseren Server gesendet oder gespeichert. Nur Ihre Sprachpräferenz wird lokal im Browser gespeichert.",
+  "privacyText": "Alle Daten werden ausschließlich lokal in Ihrem Browser verarbeitet. Es werden keine Konfigurationsdaten oder Eingaben an unseren Server gesendet oder gespeichert. Folgende Präferenzen werden lokal im Browser gespeichert: Spracheinstellung, Favoriten, Anzeige von Übersetzungen und aktiver URL-Filter.",
   "suggestService": "Dienst oder Hilfsmittel vorschlagen / Problem melden",
   "versionLabel": "Version",
   "buildLabel": "Build",

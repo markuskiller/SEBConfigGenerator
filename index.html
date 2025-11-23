@@ -184,10 +184,15 @@
                             
                             <!-- Global Search for all Boolean Options & Process Lists -->
                             <div id="globalSearchContainer" class="global-search-container hidden">
-                                <input type="text" 
-                                       id="globalSearch" 
-                                       class="global-search-input" 
-                                       placeholder="🔍 Search all settings and processes...">
+                                <div class="search-input-wrapper">
+                                    <input type="text" 
+                                           id="globalSearch" 
+                                           class="global-search-input" 
+                                           placeholder="🔍 Search all settings and processes..."
+                                           autocomplete="on"
+                                           name="global-search">
+                                    <button class="search-clear-btn hidden" id="globalSearchClear" title="Clear search">✕</button>
+                                </div>
                                 <span class="global-search-count" id="globalSearchCount"></span>
                             </div>
                             

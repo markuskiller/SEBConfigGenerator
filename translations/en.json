@@ -163,7 +163,7 @@
   "copiedMsg": "✓ Copied!",
   "configNamePlaceholder": "My_School_",
   "privacyTitle": "Privacy:",
-  "privacyText": "All data is processed locally in your browser. No configuration data or inputs are sent to or stored on our server. Only your language preference is saved locally in your browser.",
+  "privacyText": "All data is processed locally in your browser. No configuration data or inputs are sent to or stored on our server. The following preferences are saved locally in your browser: language setting, favorites, translation display, and active URL filter.",
   "suggestService": "Suggest Service or Tool / Report Issue",
   "versionLabel": "Version",
   "buildLabel": "Build",
