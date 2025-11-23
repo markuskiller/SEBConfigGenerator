@@ -129,7 +129,12 @@
                 </div>
             </div>
             <div class="section">
-                <h2><span data-i18n="step3">3. Benutzerdefinierte Domains (Optional)</span></h2>
+                <h2>
+                    <span data-i18n="step3">3. Benutzerdefinierte Domains (Optional)</span>
+                    <a href="#" id="advancedURLFilterLink" class="advanced-url-filter-link" title="Zu erweiterten URL-Einstellungen">
+                        🔗 <span data-i18n="advancedURLFilterLinkText">URL-Einstellungen für Fortgeschrittene</span>
+                    </a>
+                </h2>
                 <div class="form-group">
                     <label for="customDomains" data-i18n="customDomainsLabel">Zusätzliche erlaubte Domains hinzufügen (eine pro Zeile)</label>
                     <textarea id="customDomains" data-i18n-placeholder="customDomainsPlaceholder" placeholder="beispiel.de&#10;*.schule-domain.de"></textarea>
@@ -184,10 +189,15 @@
                             
                             <!-- Global Search for all Boolean Options & Process Lists -->
                             <div id="globalSearchContainer" class="global-search-container hidden">
-                                <input type="text" 
-                                       id="globalSearch" 
-                                       class="global-search-input" 
-                                       placeholder="🔍 Search all settings and processes...">
+                                <div class="search-input-wrapper">
+                                    <input type="text" 
+                                           id="globalSearch" 
+                                           class="global-search-input" 
+                                           placeholder="🔍 Search all settings and processes..."
+                                           autocomplete="on"
+                                           name="global-search">
+                                    <button class="search-clear-btn hidden" id="globalSearchClear" title="Clear search">✕</button>
+                                </div>
                                 <span class="global-search-count" id="globalSearchCount"></span>
                             </div>
                             
@@ -211,7 +221,7 @@
                         
                         <!-- Preview & Download -->
                         <div class="section">
-                            <h2><span data-i18n="previewAndDownload">Vorschau & Download</span></h2>
+                            <h2><span data-i18n="previewAndDownload">Vorschau</span></h2>
                             <div class="preview">
                                 <h3><span data-i18n="allowedDomains">Erlaubte Domains</span> <span class="badge" id="domainCount">0</span></h3>
                                 <div class="domain-list" id="domainPreview"></div>
