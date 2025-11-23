@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.23.0b14
-// Build: 2025-11-23 23:58
+// Version: v0.23.0b15
+// Build: 2025-11-24 00:09
 
 // ============================================================================
 
@@ -1098,8 +1098,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.23.0b14';
-const BUILD_DATE = new Date('2025-11-23T23:58:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.23.0b15';
+const BUILD_DATE = new Date('2025-11-24T00:09:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -3533,9 +3533,12 @@ return info;
 function syncAllURLFilterSources() {
     // Keep ONLY imported, MODIFIED, and DELETED rules
     // Remove ALL tool-preset, custom, and sharepoint rules (will be regenerated fresh)
-    // Deleted rules are kept to prevent regeneration, but filtered out in rendering
+    // CRITICAL: Remove deleted SHAREPOINT rules (restrictions may have changed)
+    // Keep deleted TOOL-PRESET rules (user wants them deleted permanently)
     parsedDictStructures.urlFilterRules = parsedDictStructures.urlFilterRules.filter(rule => 
-        rule.source === 'imported' || rule.modified === true || rule.deleted === true
+        rule.source === 'imported' || 
+        rule.modified === true || 
+        (rule.deleted === true && rule.source !== 'sharepoint')
     );
     
     // 1. Add preset domains (allow)
