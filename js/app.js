@@ -837,6 +837,17 @@ try {
             
             for (let dict of dicts) {
                 const parsed = parseDict(dict);
+                // Mark XML template rules as 'imported' so they survive syncAllURLFilterSources() filter
+                parsed.source = 'imported';
+                
+                // Check if this is an example.com rule (should stay inactive)
+                const isExampleRule = parsed.expression && parsed.expression.toLowerCase().includes('example.com');
+                
+                // Activate all XML template rules by default, except example.com rules
+                if (!isExampleRule && (parsed.active === false || parsed.active === undefined)) {
+                    parsed.active = true;
+                }
+                
                 parsedDictStructures.urlFilterRules.push(parsed);
             }
             
@@ -1648,6 +1659,21 @@ checkbox.addEventListener('change', () => {
     if (!sharepointConfig[serviceType].restrictions) {
         sharepointConfig[serviceType].restrictions = {};
     }
+    
+    // Radio-button behavior: only one restriction level can be active at a time
+    if (checkbox.checked) {
+        // Uncheck all other SharePoint restriction checkboxes for this service
+        const allCheckboxes = document.querySelectorAll(`input[id^="sp_${serviceType}_"]`);
+        allCheckboxes.forEach(cb => {
+            if (cb !== checkbox && cb.checked) {
+                cb.checked = false;
+                // Update restriction state
+                const cbRestrictionType = cb.id.replace(`sp_${serviceType}_`, '');
+                sharepointConfig[serviceType].restrictions[cbRestrictionType] = false;
+            }
+        });
+    }
+    
     sharepointConfig[serviceType].restrictions[restrictionType] = checkbox.checked;
     syncAllURLFilterSources();
     updatePreview();
@@ -2267,37 +2293,9 @@ const content = document.createElement('div');
 content.classList.add('url-filter-content', 'bool-group-content');
 content.style.padding = '1rem';
 
-// Toggle functionality with lazy loading
-let contentLoaded = false;
-header.addEventListener('click', async () => {
-    const isExpanding = !content.classList.contains('show');
-    
-    if (isExpanding && !contentLoaded) {
-        // Lazy load dict structures if not already loaded
-        if (!parsedDictStructures.loaded) {
-            debugLog('🔄 Lazy loading dict structures for URL filter rules...');
-            content.innerHTML = '<div class="loading-indicator">⏳ ' + 
-                (currentLang === 'de' ? 'Lade Filter-Regeln...' : 'Loading filter rules...') + '</div>';
-            content.classList.add('show');
-            
-            await parseXMLDictArrays();
-            parsedDictStructures.loaded = true;
-            debugLog('✅ Dict structures loaded');
-        }
-        
-        // Render content
-        debugLog('🔄 Rendering URL filter rules content...');
-        renderURLFilterContent(content);
-        contentLoaded = true;
-        
-        // Update count badge with actual numbers
-        updateURLFilterCount();
-        
-        // Keep content visible after loading (don't toggle off)
-        return;
-    }
-    
-    // Toggle visibility (only if content was already loaded)
+// Toggle functionality (no lazy loading - content is already loaded in Advanced Section)
+header.addEventListener('click', () => {
+    // Just toggle visibility - content is already rendered
     content.classList.toggle('show');
 });
 
@@ -2319,9 +2317,13 @@ infoBox.innerHTML = currentLang === 'de'
     : '<strong>ℹ️ Note:</strong> Manual filter rules are used in addition to auto-generated preset domains. Regex patterns are advanced options for experienced users.';
 container.appendChild(infoBox);
 
+// Filter bars container
+const filterBarsContainer = document.createElement('div');
+filterBarsContainer.classList.add('url-filter-bars-container');
+
 // Source filter buttons
-const filterBar = document.createElement('div');
-filterBar.classList.add('url-filter-source-bar');
+const sourceFilterBar = document.createElement('div');
+sourceFilterBar.classList.add('url-filter-source-bar');
 
 const sources = [
     { key: 'all', icon: '🔍', label: currentLang === 'de' ? 'Alle' : 'All', shortcut: '1' },
@@ -2331,35 +2333,94 @@ const sources = [
     { key: 'imported', icon: '📄', label: currentLang === 'de' ? 'Importiert' : 'Imported', shortcut: '5' }
 ];
 
-// Load active filter from localStorage
-let activeFilter = 'all';
+// Action filter buttons (allow/block)
+const actionFilterBar = document.createElement('div');
+actionFilterBar.classList.add('url-filter-action-bar');
+
+const actions = [
+    { key: 'all', icon: '🔍', label: currentLang === 'de' ? 'Alle' : 'All', shortcut: 'a' },
+    { key: 'allow', icon: '✅', label: currentLang === 'de' ? 'Erlauben' : 'Allow', shortcut: 'e' },
+    { key: 'block', icon: '🚫', label: currentLang === 'de' ? 'Blockieren' : 'Block', shortcut: 'b' }
+];
+
+// Collect all unique labels from rules for label filter (exclude infrastructure labels)
+const allLabels = new Set();
+const excludeLabels = ['SharePoint Auth', 'SharePoint Infra'];
+parsedDictStructures.urlFilterRules.forEach(rule => {
+    if (rule.label && !excludeLabels.includes(rule.label)) {
+        allLabels.add(rule.label);
+    }
+});
+const sortedLabels = Array.from(allLabels).sort();
+
+// Label filter (multi-select dropdown)
+const labelFilterBar = document.createElement('div');
+labelFilterBar.classList.add('url-filter-label-bar');
+
+// Load active filters from localStorage
+let activeSourceFilter = 'all';
+let activeActionFilter = 'all';
+let activeLabelFilters = new Set(); // Multi-select for labels
 try {
-    const stored = localStorage.getItem('sebConfigURLFilterSource');
-    if (stored && sources.some(s => s.key === stored)) {
-        activeFilter = stored;
+    const storedSource = localStorage.getItem('sebConfigURLFilterSource');
+    if (storedSource && sources.some(s => s.key === storedSource)) {
+        activeSourceFilter = storedSource;
+    }
+    const storedAction = localStorage.getItem('sebConfigURLFilterAction');
+    if (storedAction && actions.some(a => a.key === storedAction)) {
+        activeActionFilter = storedAction;
+    }
+    const storedLabels = localStorage.getItem('sebConfigURLFilterLabels');
+    if (storedLabels) {
+        activeLabelFilters = new Set(JSON.parse(storedLabels));
     }
 } catch (e) {
-    console.warn('Could not load URL filter source preference:', e);
+    console.warn('Could not load URL filter preferences:', e);
 }
 
-const applyFilter = (filterKey) => {
-    // Update active state
-    filterBar.querySelectorAll('.source-filter-btn').forEach(b => b.classList.remove('active'));
-    const activeBtn = filterBar.querySelector(`[data-source="${filterKey}"]`);
-    if (activeBtn) activeBtn.classList.add('active');
-    activeFilter = filterKey;
+const applyFilters = () => {
+    // Update active states for source and action
+    sourceFilterBar.querySelectorAll('.source-filter-btn').forEach(b => b.classList.remove('active'));
+    const activeSourceBtn = sourceFilterBar.querySelector(`[data-source="${activeSourceFilter}"]`);
+    if (activeSourceBtn) activeSourceBtn.classList.add('active');
+    
+    actionFilterBar.querySelectorAll('.action-filter-btn').forEach(b => b.classList.remove('active'));
+    const activeActionBtn = actionFilterBar.querySelector(`[data-action="${activeActionFilter}"]`);
+    if (activeActionBtn) activeActionBtn.classList.add('active');
+    
+    // Update label filter button text
+    const labelFilterBtn = labelFilterBar.querySelector('.label-filter-btn');
+    if (labelFilterBtn) {
+        const selectedCount = activeLabelFilters.size;
+        const labelText = currentLang === 'de' ? 'Tools' : 'Tools';
+        if (selectedCount === 0) {
+            labelFilterBtn.innerHTML = `🏷️ ${labelText}: <span class="label-count">${currentLang === 'de' ? 'Alle' : 'All'}</span>`;
+        } else {
+            labelFilterBtn.innerHTML = `🏷️ ${labelText}: <span class="label-count">${selectedCount}</span>`;
+        }
+    }
     
     // Save to localStorage
     try {
-        localStorage.setItem('sebConfigURLFilterSource', activeFilter);
+        localStorage.setItem('sebConfigURLFilterSource', activeSourceFilter);
+        localStorage.setItem('sebConfigURLFilterAction', activeActionFilter);
+        localStorage.setItem('sebConfigURLFilterLabels', JSON.stringify(Array.from(activeLabelFilters)));
     } catch (e) {
-        console.warn('Could not save URL filter source preference:', e);
+        console.warn('Could not save URL filter preferences:', e);
     }
     
-    // Filter rules
+    // Filter rules by source, action, AND label
     const allCards = container.querySelectorAll('.url-filter-rule-card');
     allCards.forEach(card => {
-        if (activeFilter === 'all' || card.getAttribute('data-source') === activeFilter) {
+        const cardSource = card.getAttribute('data-source');
+        const cardAction = card.getAttribute('data-action');
+        const cardLabel = card.getAttribute('data-label');
+        
+        const sourceMatch = activeSourceFilter === 'all' || cardSource === activeSourceFilter;
+        const actionMatch = activeActionFilter === 'all' || cardAction === activeActionFilter;
+        const labelMatch = activeLabelFilters.size === 0 || activeLabelFilters.has(cardLabel);
+        
+        if (sourceMatch && actionMatch && labelMatch) {
             card.style.display = '';
         } else {
             card.style.display = 'none';
@@ -2367,39 +2428,154 @@ const applyFilter = (filterKey) => {
     });
 };
 
-sources.forEach((source, index) => {
+// Create source filter buttons
+sources.forEach((source) => {
     const btn = document.createElement('button');
     btn.classList.add('source-filter-btn');
-    if (source.key === activeFilter) btn.classList.add('active');
+    if (source.key === activeSourceFilter) btn.classList.add('active');
     btn.innerHTML = `${source.icon} ${source.label}`;
     btn.setAttribute('data-source', source.key);
-    btn.setAttribute('aria-label', `${currentLang === 'de' ? 'Filtern nach' : 'Filter by'} ${source.label}`);
+    btn.setAttribute('aria-label', `${currentLang === 'de' ? 'Filtern nach Quelle' : 'Filter by source'}: ${source.label}`);
     btn.setAttribute('title', `${source.label} (${currentLang === 'de' ? 'Tastenkürzel' : 'Shortcut'}: ${source.shortcut})`);
     
-    btn.addEventListener('click', () => applyFilter(source.key));
+    btn.addEventListener('click', () => {
+        activeSourceFilter = source.key;
+        applyFilters();
+    });
     
-    filterBar.appendChild(btn);
+    sourceFilterBar.appendChild(btn);
 });
 
-// Keyboard navigation (1-5 for filters)
-filterBar.addEventListener('keydown', (e) => {
+// Create action filter buttons
+actions.forEach((action) => {
+    const btn = document.createElement('button');
+    btn.classList.add('action-filter-btn');
+    if (action.key === activeActionFilter) btn.classList.add('active');
+    btn.innerHTML = `${action.icon} ${action.label}`;
+    btn.setAttribute('data-action', action.key);
+    btn.setAttribute('aria-label', `${currentLang === 'de' ? 'Filtern nach Aktion' : 'Filter by action'}: ${action.label}`);
+    btn.setAttribute('title', `${action.label} (${currentLang === 'de' ? 'Tastenkürzel' : 'Shortcut'}: ${action.shortcut})`);
+    
+    btn.addEventListener('click', () => {
+        activeActionFilter = action.key;
+        applyFilters();
+    });
+    
+    actionFilterBar.appendChild(btn);
+});
+
+// Keyboard navigation for source filters (1-5)
+sourceFilterBar.addEventListener('keydown', (e) => {
     const { key } = e;
     const source = sources.find(s => s.shortcut === key);
     if (source) {
         e.preventDefault();
-        applyFilter(source.key);
+        activeSourceFilter = source.key;
+        applyFilters();
     }
 });
 
-// Make filter bar focusable for keyboard navigation
-filterBar.setAttribute('tabindex', '0');
+// Keyboard navigation for action filters (a, e, b)
+actionFilterBar.addEventListener('keydown', (e) => {
+    const { key } = e;
+    const action = actions.find(a => a.shortcut === key.toLowerCase());
+    if (action) {
+        e.preventDefault();
+        activeActionFilter = action.key;
+        applyFilters();
+    }
+});
 
-container.appendChild(filterBar);
+// Create label filter (multi-select dropdown)
+if (sortedLabels.length > 0) {
+    const labelFilterBtn = document.createElement('button');
+    labelFilterBtn.classList.add('label-filter-btn');
+    const selectedCount = activeLabelFilters.size;
+    const labelText = currentLang === 'de' ? 'Tools' : 'Tools';
+    labelFilterBtn.innerHTML = selectedCount === 0 
+        ? `🏷️ ${labelText}: <span class="label-count">${currentLang === 'de' ? 'Alle' : 'All'}</span>`
+        : `🏷️ ${labelText}: <span class="label-count">${selectedCount}</span>`;
+    labelFilterBtn.setAttribute('aria-label', currentLang === 'de' ? 'Nach Tools filtern' : 'Filter by tools');
+    
+    const labelDropdown = document.createElement('div');
+    labelDropdown.classList.add('label-filter-dropdown', 'hidden');
+    
+    // "All" option
+    const allOption = document.createElement('label');
+    allOption.classList.add('label-filter-option');
+    allOption.innerHTML = `
+        <input type="checkbox" value="" ${activeLabelFilters.size === 0 ? 'checked' : ''}>
+        <span>${currentLang === 'de' ? '✓ Alle auswählen' : '✓ Select all'}</span>
+    `;
+    allOption.querySelector('input').addEventListener('change', (e) => {
+        if (e.target.checked) {
+            activeLabelFilters.clear();
+            labelDropdown.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                if (cb.value === '') cb.checked = true;
+                else cb.checked = false;
+            });
+        }
+        applyFilters();
+    });
+    labelDropdown.appendChild(allOption);
+    
+    // Individual label options
+    sortedLabels.forEach(label => {
+        const option = document.createElement('label');
+        option.classList.add('label-filter-option');
+        option.innerHTML = `
+            <input type="checkbox" value="${label}" ${activeLabelFilters.has(label) ? 'checked' : ''}>
+            <span>${label}</span>
+        `;
+        option.querySelector('input').addEventListener('change', (e) => {
+            const allCheckbox = labelDropdown.querySelector('input[value=""]');
+            if (e.target.checked) {
+                activeLabelFilters.add(label);
+                allCheckbox.checked = false;
+            } else {
+                activeLabelFilters.delete(label);
+                if (activeLabelFilters.size === 0) {
+                    allCheckbox.checked = true;
+                }
+            }
+            applyFilters();
+        });
+        labelDropdown.appendChild(option);
+    });
+    
+    // Toggle dropdown on button click
+    labelFilterBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        labelDropdown.classList.toggle('hidden');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!labelFilterBar.contains(e.target)) {
+            labelDropdown.classList.add('hidden');
+        }
+    });
+    
+    labelFilterBar.appendChild(labelFilterBtn);
+    labelFilterBar.appendChild(labelDropdown);
+}
 
-// Apply initial filter (important if loaded from localStorage)
-if (activeFilter !== 'all') {
+// Make filter bars focusable for keyboard navigation
+sourceFilterBar.setAttribute('tabindex', '0');
+actionFilterBar.setAttribute('tabindex', '0');
+
+// Add filter bars to container
+filterBarsContainer.appendChild(sourceFilterBar);
+filterBarsContainer.appendChild(actionFilterBar);
+if (sortedLabels.length > 0) {
+    filterBarsContainer.appendChild(labelFilterBar);
+}
+container.appendChild(filterBarsContainer);
+
+// Apply initial filters (important if loaded from localStorage)
+if (activeSourceFilter !== 'all' || activeActionFilter !== 'all' || activeLabelFilters.size > 0) {
     // Defer to next tick to ensure all cards are rendered
-    setTimeout(() => applyFilter(activeFilter), 0);
+    setTimeout(() => applyFilters(), 0);
 }
 
 // Rules list
@@ -2437,6 +2613,14 @@ card.classList.add('url-filter-rule-card');
 card.setAttribute('data-source', rule.source || 'custom');
 
 const actionClass = rule.action === 1 ? 'allow' : 'block';
+const actionFilterValue = rule.action === 1 ? 'allow' : 'block';
+card.setAttribute('data-action', actionFilterValue);
+
+// Add label attribute for filtering
+if (rule.label) {
+    card.setAttribute('data-label', rule.label);
+}
+
 const isEditable = true; // All rules are editable
 
 // Generate unique IDs for form elements
@@ -3336,9 +3520,9 @@ return info;
 
 // Consolidate all URL filter sources into parsedDictStructures.urlFilterRules
 function syncAllURLFilterSources() {
-    // Keep custom, imported, and MODIFIED rules (don't regenerate modified rules)
+    // Keep ONLY imported and MODIFIED rules (regenerate all custom rules from scratch)
     parsedDictStructures.urlFilterRules = parsedDictStructures.urlFilterRules.filter(rule => 
-        rule.source === 'custom' || rule.source === 'imported' || rule.modified === true
+        rule.source === 'imported' || rule.modified === true
     );
     
     // 1. Add preset domains (allow)
@@ -3413,29 +3597,36 @@ function syncAllURLFilterSources() {
     
     // 5. Add SharePoint patterns
     const sharepointPatterns = getSharePointUrlPatterns();
+    debugLog(`📍 SharePoint patterns generated: ${sharepointPatterns.length}`);
     sharepointPatterns.forEach(pattern => {
+        debugLog(`   ➕ Adding pattern:`, pattern);
         parsedDictStructures.urlFilterRules.push({
             ...pattern,
             source: 'sharepoint'
         });
     });
     
-    // Deduplicate preset domains (keep first occurrence)
+    // Add preset domains first
+    parsedDictStructures.urlFilterRules = [
+        ...presetDomains,
+        ...parsedDictStructures.urlFilterRules
+    ];
+    
+    // GLOBAL DEDUPLICATION: Remove duplicate rules across ALL sources
+    // Keep first occurrence (presets > custom > sharepoint > imported)
+    // Key: expression + action + regex flag
     const seen = new Set();
-    const dedupedPresets = [];
-    presetDomains.forEach(rule => {
-        const key = `${rule.expression}:${rule.action}`;
+    const deduplicated = [];
+    
+    parsedDictStructures.urlFilterRules.forEach(rule => {
+        const key = `${rule.expression}:${rule.action}:${rule.regex}`;
         if (!seen.has(key)) {
             seen.add(key);
-            dedupedPresets.push(rule);
+            deduplicated.push(rule);
         }
     });
     
-    // Add deduplicated presets at the beginning
-    parsedDictStructures.urlFilterRules = [
-        ...dedupedPresets,
-        ...parsedDictStructures.urlFilterRules
-    ];
+    parsedDictStructures.urlFilterRules = deduplicated;
     
     // Re-render URL filter section if it's currently visible
     const urlFilterContent = document.querySelector('.url-filter-content.show');
@@ -3450,13 +3641,48 @@ function syncAllURLFilterSources() {
 function getSharePointUrlPatterns() {
 const patterns = [];
 
+debugLog('🔍 getSharePointUrlPatterns called');
+debugLog(`   sharepointConfig:`, sharepointConfig);
+
 // Check both OneNote and Word configurations
 ['onenote', 'word'].forEach(serviceType => {
     const config = sharepointConfig[serviceType];
-    if (!config.parsedLink || !config.parsedLink.isSharePoint) return;
+    debugLog(`   Checking ${serviceType}:`, config);
     
-    const { parsedLink, restrictions } = config;
+    if (!config.parsedLink || !config.parsedLink.isSharePoint) {
+        debugLog(`   ❌ ${serviceType}: No SharePoint link`);
+        return;
+    }
+    
+    const { parsedLink } = config;
     const { domain } = parsedLink;
+    debugLog(`   ✅ ${serviceType}: SharePoint domain = ${domain}`);
+    
+    // Initialize restrictions if not set
+    if (!config.restrictions) {
+        config.restrictions = {};
+        debugLog(`   ⚠️ ${serviceType}: restrictions was undefined, initialized to {}`);
+    }
+    const restrictions = config.restrictions;
+    debugLog(`   📋 ${serviceType}: restrictions =`, restrictions);
+    
+    // Check if any restriction is actively set
+    const hasAnyRestriction = Object.keys(restrictions).some(key => restrictions[key] === true);
+    debugLog(`   🔍 ${serviceType}: hasAnyRestriction = ${hasAnyRestriction}`);
+    
+    // If no restrictions are set, use school-level as default (wildcard)
+    if (!hasAnyRestriction && domain) {
+        debugLog(`   ➕ ${serviceType}: Adding default wildcard pattern for ${domain}`);
+        patterns.push({
+            expression: `*${domain}*`,
+            regex: false,
+            active: true,
+            action: 1,
+            label: currentLang === 'de' ? 'Schul-SharePoint' : 'School SharePoint',
+            name: domain || null
+        });
+        return; // Skip further processing - wildcard is enough
+    }
     
     // Determine if we need any restrictions beyond school-level
     const hasGranularRestrictions = restrictions.teamsSite || restrictions.notebook || 
@@ -3524,8 +3750,12 @@ const patterns = [];
             // Extract shortest unique identifier from notebook name
             // For "Englisch G22e-Notizbuch", we could use the full name
             const notebookId = parsedLink.notebook.replace(/-Notizbuch$/i, '');
+            // Escape special regex characters
+            const escapedNotebookId = notebookId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // URL-encode spaces (spaces in URLs are always encoded as %20)
+            const urlEncodedNotebookId = escapedNotebookId.replace(/ /g, '%20');
             patterns.push({
-                expression: `^https?://${domain.replace(/\./g, '\\.')}/.*${notebookId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.*`,
+                expression: `^https?://${domain.replace(/\./g, '\\.')}/.*${urlEncodedNotebookId}.*`,
                 regex: true,
                 active: true,
                 action: 1,
@@ -3731,113 +3961,45 @@ return uniqueDomains;
 }
 
 function updatePreview() {
-const presetDomains = [];
-selectedPresets.forEach(presetKey => {
-    if (PRESETS[presetKey]) {
-        presetDomains.push(...PRESETS[presetKey].domains);
-    }
-});
-
-const customDomainsValue = document.getElementById('customDomains')?.value || '';
-const customDomains = customDomainsValue
-    .split('\n')
-    .map(d => d.trim())
-    .filter(d => d && !d.startsWith('#'));
-
-const allDomainsBeforeDedup = [...presetDomains, ...customDomains];
-const domains = getAllDomains();
-const duplicatesRemoved = allDomainsBeforeDedup.length - domains.length;
-
 const container = document.getElementById('domainPreview');
 const domainCountEl = document.getElementById('domainCount');
-if (domainCountEl) domainCountEl.textContent = domains.length;
+
+debugLog('🔄 updatePreview called');
 
 // Clear container safely
 container.innerHTML = '';
 
-// Show warning if duplicates were removed (add first)
-if (duplicatesRemoved > 0) {
-    const warningDiv = document.createElement('div');
-    warningDiv.classList.add('preview-warning');
-    const warningText = currentLang === 'de' 
-        ? `⚠️ ${duplicatesRemoved} doppelte Domain(s) wurden entfernt`
-        : `⚠️ ${duplicatesRemoved} duplicate domain(s) removed`;
-    warningDiv.textContent = warningText;
-    container.appendChild(warningDiv);
+// Read directly from parsedDictStructures (same logic as Moodle export)
+const allowedRules = [];
+const blockedRules = [];
+const regexAllowedRules = [];
+const regexBlockedRules = [];
+
+if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
+    parsedDictStructures.urlFilterRules.forEach(rule => {
+        // Only include active rules (same logic as Moodle export)
+        if (rule.active && rule.expression) {
+            // Regex rules
+            if (rule.regex && rule.action === 1) {
+                regexAllowedRules.push(rule.expression);
+            } else if (rule.regex && rule.action === 0) {
+                regexBlockedRules.push(rule.expression);
+            // Non-regex rules
+            } else if (!rule.regex && rule.action === 1) {
+                allowedRules.push(rule.expression);
+            } else if (!rule.regex && rule.action === 0) {
+                blockedRules.push(rule.expression);
+            }
+        }
+    });
 }
 
-// Show SharePoint restriction info if active
-let sharepointRestrictionLevel = 0;
-let specificSharePointDomain = null;
-let restrictionLabels = [];
+debugLog(`   📋 Results: ${allowedRules.length} allowed, ${blockedRules.length} blocked, ${regexAllowedRules.length} regex-allow, ${regexBlockedRules.length} regex-block`);
 
-['onenote', 'word'].forEach(serviceType => {
-    const config = sharepointConfig[serviceType];
-    if (config.parsedLink && config.parsedLink.isSharePoint && config.parsedLink.domain) {
-        const r = config.restrictions;
-        
-        // Determine level first
-        if (r.page || r.file) {
-            sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 4);
-        } else if (r.section || r.notebook || r.folder) {
-            sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 3);
-        } else if (r.teamsSite) {
-            sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 2);
-        } else if (r.schoolSharepoint) {
-            sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 1);
-        }
-        
-        // Build hierarchical label list (all parent levels are implicitly active)
-        if (sharepointRestrictionLevel >= 1) {
-            specificSharePointDomain = config.parsedLink.domain;
-            restrictionLabels.push(currentLang === 'de' ? 'Schul-SharePoint' : 'School SharePoint');
-        }
-        if (sharepointRestrictionLevel >= 2 && r.teamsSite) {
-            restrictionLabels.push(currentLang === 'de' ? 'Teams-Site' : 'Teams Site');
-        }
-        if (sharepointRestrictionLevel >= 3) {
-            if (r.notebook) {
-                restrictionLabels.push(currentLang === 'de' ? 'Notizbuch' : 'Notebook');
-            }
-            if (r.section) {
-                restrictionLabels.push(currentLang === 'de' ? 'Abschnitt' : 'Section');
-            }
-            if (r.folder) {
-                restrictionLabels.push(currentLang === 'de' ? 'Ordner' : 'Folder');
-            }
-        }
-        if (sharepointRestrictionLevel >= 4) {
-            if (r.page) {
-                restrictionLabels.push(currentLang === 'de' ? 'Seite' : 'Page');
-            }
-            if (r.file) {
-                restrictionLabels.push(currentLang === 'de' ? 'Datei' : 'File');
-            }
-        }
-    }
-});
+// Update domain count (only non-regex allowed domains)
+if (domainCountEl) domainCountEl.textContent = allowedRules.length;
 
-if (sharepointRestrictionLevel > 0 && restrictionLabels.length > 0) {
-    const spInfoDiv = document.createElement('div');
-    spInfoDiv.classList.add('preview-sp-info');
-    
-    let spInfoText = '';
-    if (sharepointRestrictionLevel === 1) {
-        spInfoText = currentLang === 'de'
-            ? `🔒 SharePoint: *.sharepoint.com → ${specificSharePointDomain}`
-            : `🔒 SharePoint: *.sharepoint.com → ${specificSharePointDomain}`;
-    } else if (sharepointRestrictionLevel >= 2) {
-        const restrictionText = restrictionLabels.join(' → ');
-        spInfoText = currentLang === 'de'
-            ? `🔒 Einschränkungen: ${restrictionText} (Wildcards entfernt)`
-            : `🔒 Restrictions: ${restrictionText} (wildcards removed)`;
-    }
-    
-    spInfoDiv.textContent = spInfoText;
-    container.appendChild(spInfoDiv);
-}
-
-// Show selected services/tools info
+// Show selected services/tools info (kept for quick overview)
 if (selectedPresets.length > 0) {
     const serviceNames = selectedPresets.map(key => 
         t('preset' + key.charAt(0).toUpperCase() + key.slice(1))
@@ -3849,37 +4011,15 @@ if (selectedPresets.length > 0) {
         : `✓ Selected: ${serviceNames}`;
     infoDiv.textContent = infoText;
     container.appendChild(infoDiv);
-} else if (customDomains.length > 0) {
-    // Show info when only custom domains are used
-    const infoDiv = document.createElement('div');
-    infoDiv.classList.add('preview-info');
-    const infoText = currentLang === 'de'
-        ? `ℹ️ Nur benutzerdefinierte Domains`
-        : `ℹ️ Custom domains only`;
-    infoDiv.textContent = infoText;
-    container.appendChild(infoDiv);
 }
 
-// Add allowed domains (XSS-safe with textContent)
-domains.forEach(domain => {
+// Display allowed domains (directly from DOM - no deduplication needed)
+allowedRules.forEach(domain => {
     const div = document.createElement('div');
     div.className = 'domain-item';
     div.textContent = `✓ ${domain}`;
     container.appendChild(div);
 });
-
-// Add manual URL filter rules (allowed, non-regex) from advanced settings
-if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
-    parsedDictStructures.urlFilterRules.forEach(rule => {
-        if (rule.active && rule.expression && rule.action === 1 && !rule.regex) {
-            const div = document.createElement('div');
-            div.className = 'domain-item';
-            const label = t('urlFilterAllowLabel');
-            div.textContent = `✓ ${rule.expression} ${label}`;
-            container.appendChild(div);
-        }
-    });
-}
 
 // Show SharePoint restriction info box if active
 const restrictionInfo = getSharePointRestrictionInfo();
@@ -3939,38 +4079,8 @@ if (restrictionInfo.length > 0) {
     container.appendChild(restrictionSectionDiv);
 }
 
-// Show blocked domains if any
-const blockedDomains = [];
-selectedPresets.forEach(presetKey => {
-    const preset = PRESETS[presetKey];
-    if (preset && preset.blockedDomains) {
-        blockedDomains.push(...preset.blockedDomains);
-    }
-});
-
-// Add manual URL filter rules (blocked, non-regex) from advanced settings
-const urlFilterBlockedRules = [];
-if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
-    parsedDictStructures.urlFilterRules.forEach(rule => {
-        if (rule.active && rule.expression && rule.action === 0 && !rule.regex) {
-            urlFilterBlockedRules.push(rule.expression);
-        }
-    });
-}
-
-// Add custom blocked domains from user input
-const MAX_BLOCKED_DOMAINS = 500;  // Limit blocked domains to prevent performance issues
-const customBlockedInput = document.getElementById('blockedDomains')?.value || '';
-if (customBlockedInput.trim()) {
-    const customBlockedDomains = customBlockedInput
-        .split('\n')
-        .slice(0, MAX_BLOCKED_DOMAINS)  // Limit number of lines
-        .map(domain => domain.trim())
-        .filter(domain => domain && !domain.startsWith('#'));
-    blockedDomains.push(...customBlockedDomains);
-}
-
-if (blockedDomains.length > 0 || urlFilterBlockedRules.length > 0) {
+// Display blocked domains (directly from DOM - no deduplication needed)
+if (blockedRules.length > 0) {
     const blockedTitleDiv = document.createElement('div');
     blockedTitleDiv.classList.add('preview-blocked-title');
     const blockedTitleStrong = document.createElement('strong');
@@ -3981,40 +4091,16 @@ if (blockedDomains.length > 0 || urlFilterBlockedRules.length > 0) {
     blockedTitleDiv.appendChild(blockedTitleStrong);
     container.appendChild(blockedTitleDiv);
     
-    // Add blocked domains (XSS-safe with textContent)
-    blockedDomains.forEach(domain => {
+    blockedRules.forEach(domain => {
         const div = document.createElement('div');
         div.className = 'domain-item blocked';
         div.textContent = `✗ ${domain}`;
         container.appendChild(div);
     });
-    
-    // Add URL filter blocked rules with label
-    urlFilterBlockedRules.forEach(domain => {
-        const div = document.createElement('div');
-        div.className = 'domain-item blocked';
-        const label = t('urlFilterBlockLabel');
-        div.textContent = `✗ ${domain} ${label}`;
-        container.appendChild(div);
-    });
 }
 
-// Show regex rules from URL filter if any
-const regexAllowed = [];
-const regexBlocked = [];
-if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
-    parsedDictStructures.urlFilterRules.forEach(rule => {
-        if (rule.active && rule.expression && rule.regex) {
-            if (rule.action === 1) {
-                regexAllowed.push(rule.expression);
-            } else if (rule.action === 0) {
-                regexBlocked.push(rule.expression);
-            }
-        }
-    });
-}
-
-if (regexAllowed.length > 0) {
+// Display regex allowed rules (directly from DOM)
+if (regexAllowedRules.length > 0) {
     const regexTitleDiv = document.createElement('div');
     regexTitleDiv.classList.add('preview-blocked-title');
     const regexTitleStrong = document.createElement('strong');
@@ -4023,7 +4109,7 @@ if (regexAllowed.length > 0) {
     regexTitleDiv.appendChild(regexTitleStrong);
     container.appendChild(regexTitleDiv);
     
-    regexAllowed.forEach(pattern => {
+    regexAllowedRules.forEach(pattern => {
         const div = document.createElement('div');
         div.className = 'domain-item';
         div.textContent = `✓ ${pattern}`;
@@ -4031,7 +4117,7 @@ if (regexAllowed.length > 0) {
     });
 }
 
-if (regexBlocked.length > 0) {
+if (regexBlockedRules.length > 0) {
     const regexTitleDiv = document.createElement('div');
     regexTitleDiv.classList.add('preview-blocked-title');
     const regexTitleStrong = document.createElement('strong');
@@ -4040,7 +4126,7 @@ if (regexBlocked.length > 0) {
     regexTitleDiv.appendChild(regexTitleStrong);
     container.appendChild(regexTitleDiv);
     
-    regexBlocked.forEach(pattern => {
+    regexBlockedRules.forEach(pattern => {
         const div = document.createElement('div');
         div.className = 'domain-item blocked';
         div.textContent = `✗ ${pattern}`;
@@ -4754,11 +4840,11 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
 // Main actions
 document.getElementById('generateBtn').addEventListener('click', downloadConfig);
 document.getElementById('copyBtn').addEventListener('click', copyDomains);
-document.getElementById('customDomains').addEventListener('input', () => {
+document.getElementById('customDomains').addEventListener('blur', () => {
     syncAllURLFilterSources();
     updatePreview();
 });
-document.getElementById('blockedDomains').addEventListener('input', () => {
+document.getElementById('blockedDomains').addEventListener('blur', () => {
     syncAllURLFilterSources();
     updatePreview();
 });
@@ -4843,6 +4929,49 @@ document.getElementById('browserHelperBtn').addEventListener('click', showBrowse
 
 // Advanced section toggle
 document.getElementById('advancedHeader').addEventListener('click', toggleAdvancedSection);
+
+// Advanced URL Filter link (expand sections and scroll)
+const advancedURLFilterLink = document.getElementById('advancedURLFilterLink');
+if (advancedURLFilterLink) {
+    advancedURLFilterLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        
+        // 1. Expand advanced section if not already expanded
+        const advancedContent = document.getElementById('advancedContent');
+        if (advancedContent && !advancedContent.classList.contains('show')) {
+            document.getElementById('advancedHeader')?.click();
+            // Wait for animation
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+        
+        // 2. Find and expand URL filter section if not already expanded
+        const urlFilterSection = document.querySelector('.url-filter-section');
+        if (urlFilterSection) {
+            const urlFilterHeader = urlFilterSection.querySelector('.url-filter-header');
+            const urlFilterContent = urlFilterSection.querySelector('.url-filter-content');
+            
+            if (urlFilterContent && !urlFilterContent.classList.contains('show')) {
+                urlFilterHeader?.click();
+                // Wait for lazy loading and animation
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            // 3. Scroll to URL filter section with optimal positioning
+            urlFilterSection.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+            
+            // Add visual highlight (fade effect)
+            urlFilterSection.style.outline = '3px solid #2196f3';
+            urlFilterSection.style.outlineOffset = '8px';
+            setTimeout(() => {
+                urlFilterSection.style.outline = '';
+                urlFilterSection.style.outlineOffset = '';
+            }, 2000);
+        }
+    });
+}
 
 // Platform selection buttons (Boolean Options)
 document.querySelectorAll('.platform-btn').forEach(btn => {
@@ -4989,10 +5118,36 @@ if (content.classList.contains('expanded')) {
             await renderDictStructures();
             debugLog('✅ Dict structures rendered');
             
-            // Render URL filter rules shell AFTER dict structures (collapsed, will lazy load on expand)
+            // Render URL filter rules shell AFTER dict structures (collapsed)
             debugLog('🌐 Rendering URL filter rules shell...');
             renderURLFilterRules();
             debugLog('✅ URL filter rules shell rendered');
+            
+            // Load URL filter rules content immediately (not lazy)
+            // This is needed because the preview section uses the DOM cards
+            debugLog('🔄 Loading URL filter rules content...');
+            if (!parsedDictStructures.loaded) {
+                await parseXMLDictArrays();
+                parsedDictStructures.loaded = true;
+                debugLog('✅ Dict structures loaded');
+            }
+            
+            // Sync URL filter sources BEFORE rendering
+            // This populates parsedDictStructures.urlFilterRules from presets/custom/sharepoint
+            debugLog('🔄 Syncing URL filter sources...');
+            syncAllURLFilterSources();
+            debugLog('✅ URL filter sources synced');
+            
+            const urlFilterContent = document.querySelector('.url-filter-content');
+            if (urlFilterContent) {
+                renderURLFilterContent(urlFilterContent);
+                updateURLFilterCount();
+                debugLog('✅ URL filter rules content loaded');
+            }
+            
+            // Update preview after URL filter cards are loaded
+            updatePreview();
+            debugLog('✅ Preview updated with URL filter cards');
             
             // Setup global search after both are rendered
             setupGlobalSearch();
