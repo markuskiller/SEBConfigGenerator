@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.23.0b13
-// Build: 2025-11-23 23:47
+// Version: v0.23.0b14
+// Build: 2025-11-23 23:58
 
 // ============================================================================
 
@@ -1098,8 +1098,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.23.0b13';
-const BUILD_DATE = new Date('2025-11-23T23:47:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.23.0b14';
+const BUILD_DATE = new Date('2025-11-23T23:58:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -2707,8 +2707,8 @@ const labelBadge = `<span class="source-badge source-${rule.source || 'custom'}"
 card.querySelector('.url-filter-active').addEventListener('change', (e) => {
     const rule = parsedDictStructures.urlFilterRules[index];
     rule.active = e.target.checked;
-    // Mark as modified if it's auto-generated
-    if (rule.source === 'tool-preset' || rule.source === 'sharepoint') {
+    // Mark as modified if it's auto-generated (but NOT sharepoint - those are always regenerated)
+    if (rule.source === 'tool-preset') {
         rule.modified = true;
         // Re-render to show modified badge
         const container = document.querySelector('.url-filter-content');
@@ -2721,7 +2721,7 @@ card.querySelector('.url-filter-active').addEventListener('change', (e) => {
 card.querySelector('.url-filter-regex').addEventListener('change', (e) => {
     const rule = parsedDictStructures.urlFilterRules[index];
     rule.regex = e.target.checked;
-    if (rule.source === 'tool-preset' || rule.source === 'sharepoint') {
+    if (rule.source === 'tool-preset') {
         rule.modified = true;
         const container = document.querySelector('.url-filter-content');
         if (container) renderURLFilterContent(container);
@@ -2733,7 +2733,7 @@ card.querySelector('.url-filter-regex').addEventListener('change', (e) => {
 card.querySelector('.url-filter-expression').addEventListener('input', (e) => {
     const rule = parsedDictStructures.urlFilterRules[index];
     rule.expression = e.target.value;
-    if (rule.source === 'tool-preset' || rule.source === 'sharepoint') {
+    if (rule.source === 'tool-preset') {
         rule.modified = true;
         const container = document.querySelector('.url-filter-content');
         if (container) renderURLFilterContent(container);
@@ -2745,7 +2745,7 @@ card.querySelector('.url-filter-expression').addEventListener('input', (e) => {
 card.querySelector('.url-filter-action').addEventListener('change', (e) => {
     const rule = parsedDictStructures.urlFilterRules[index];
     rule.action = parseInt(e.target.value);
-    if (rule.source === 'tool-preset' || rule.source === 'sharepoint') {
+    if (rule.source === 'tool-preset') {
         rule.modified = true;
         const container = document.querySelector('.url-filter-content');
         if (container) renderURLFilterContent(container);
@@ -3628,18 +3628,21 @@ function syncAllURLFilterSources() {
     // GLOBAL DEDUPLICATION: Remove duplicate rules across ALL sources
     // Keep first occurrence (presets > custom > sharepoint > imported)
     // Key: expression + action + regex flag
-    // Deleted rules are kept (to prevent regeneration) but not checked for duplicates
+    // CRITICAL: Deleted rules must be added to 'seen' to block regeneration of same rule
     const seen = new Set();
     const deduplicated = [];
     
     parsedDictStructures.urlFilterRules.forEach(rule => {
-        // Keep deleted rules as-is (don't deduplicate)
+        const key = `${rule.expression}:${rule.action}:${rule.regex}`;
+        
+        // Keep deleted rules AND add them to seen (blocks new rules with same key)
         if (rule.deleted) {
+            seen.add(key); // CRITICAL: Block regeneration
             deduplicated.push(rule);
             return;
         }
         
-        const key = `${rule.expression}:${rule.action}:${rule.regex}`;
+        // Only add non-deleted rules if not already seen
         if (!seen.has(key)) {
             seen.add(key);
             deduplicated.push(rule);
