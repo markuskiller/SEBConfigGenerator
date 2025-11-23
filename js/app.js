@@ -3186,20 +3186,11 @@ const patterns = [];
         });
     }
     
-    if (restrictions.teamsSite && parsedLink.teamsSite) {
-        // Restrict to specific Teams site
-        // Use regex to match both direct paths and ALL SharePoint redirect formats
-        // Redirect formats: /:o:/r/ /:w:/r/ /:x:/r/ /:p:/r/ /:b:/r/ /:f:/r/ /:i:/r/ /:v:/r/
-        const escapedTeamsSite = parsedLink.teamsSite.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        patterns.push({
-            expression: `.*/(:.[^/]+/r/)?sites/${escapedTeamsSite}/.*`,
-            regex: true,
-            active: true,
-            action: 1, // Allow
-            label: currentLang === 'de' ? 'Teams-Site' : 'Teams Site',
-            name: parsedLink.teamsSite || null
-        });
-    }
+    // NOTE: For Teams-Site and Notebook level restrictions, we rely on the
+    // tenant-specific wildcard (*.tenant.sharepoint.com) added in the domain filtering logic.
+    // URL patterns with regex are too restrictive as OneNote makes many API calls
+    // to URLs that don't contain the notebook/site path.
+    // Only Section and Page level use specific URL patterns with GUIDs.
     
     if (serviceType === 'onenote') {
         // IMPORTANT: SEB opens OneNote pages via the web URL (_layouts/Doc.aspx?...),
@@ -3207,22 +3198,6 @@ const patterns = [];
         // web link's wd=target(...) parameter, which contains:
         // - Section GUID (937FFC30-10F8-7546-9E1D-BECCA08633E1)
         // - Page GUID (F07BB273-C7EF-1548-9CFF-A866F644BE47)
-        
-        // Notebook restriction: Use notebook name in URL path
-        // The notebook name appears in the path as /SiteAssets/{NotebookName}/
-        if (restrictions.notebook && parsedLink.notebook) {
-            // Use regex to match both direct paths and ALL SharePoint redirect formats
-            // Redirect formats: /:o:/r/ /:w:/r/ /:x:/r/ /:p:/r/ /:b:/r/ /:f:/r/ /:i:/r/ /:v:/r/
-            const escapedNotebook = parsedLink.notebook.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            patterns.push({
-                expression: `.*/(:.[^/]+/r/)?.*SiteAssets/${escapedNotebook}/.*`,
-                regex: true,
-                active: true,
-                action: 1,
-                label: currentLang === 'de' ? 'Notizbuch' : 'Notebook',
-                name: parsedLink.notebook || null
-            });
-        }
         
         if (restrictions.section && parsedLink.sectionId) {
             // Match section GUID in wd=target(...) parameter
