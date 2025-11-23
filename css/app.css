@@ -139,7 +139,32 @@ body {
     color: #2c3e5a; 
     margin-bottom: 20px; 
     padding-bottom: 10px; 
-    border-bottom: 2px solid #5b9bd5; 
+    border-bottom: 2px solid #5b9bd5;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.advanced-url-filter-link {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #2196f3;
+    text-decoration: none;
+    padding: 0.4rem 0.8rem;
+    border: 2px solid #2196f3;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.advanced-url-filter-link:hover {
+    background: #2196f3;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
 }
 
 .form-group { 
@@ -2055,11 +2080,16 @@ textarea {
     border-radius: 4px;
 }
 
+/* URL Filter Bars Container */
+.url-filter-bars-container {
+    margin-bottom: 1.5rem;
+}
+
 /* URL Filter Source Filter Bar */
 .url-filter-source-bar {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.75rem;
     flex-wrap: wrap;
 }
 
@@ -2083,6 +2113,121 @@ textarea {
     background: #2196f3;
     color: white;
     border-color: #2196f3;
+}
+
+/* URL Filter Action Filter Bar */
+.url-filter-action-bar {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.action-filter-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.action-filter-btn:hover {
+    border-color: #4caf50;
+    background: #f5f5f5;
+}
+
+.action-filter-btn.active {
+    background: #4caf50;
+    color: white;
+    border-color: #4caf50;
+}
+
+/* URL Filter Label Filter Bar */
+.url-filter-label-bar {
+    position: relative;
+    display: inline-block;
+    margin-top: 0.75rem;
+}
+
+.label-filter-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.label-filter-btn:hover {
+    border-color: #ff9800;
+    background: #f5f5f5;
+}
+
+.label-filter-btn .label-count {
+    background: #ff9800;
+    color: white;
+    padding: 0.1rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.label-filter-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.5rem;
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 250px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.label-filter-dropdown.hidden {
+    display: none;
+}
+
+.label-filter-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.label-filter-option:hover {
+    background: #f5f5f5;
+}
+
+.label-filter-option:first-child {
+    font-weight: 600;
+    background: #fff8e1;
+}
+
+.label-filter-option:first-child:hover {
+    background: #ffecb3;
+}
+
+.label-filter-option input[type="checkbox"] {
+    cursor: pointer;
+}
+
+.label-filter-option span {
+    flex: 1;
+    user-select: none;
 }
 
 /* Utility: Margin top */
