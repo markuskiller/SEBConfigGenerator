@@ -201,9 +201,16 @@ try {
         // Note: Only use simple path-based extraction if we don't have wd= parameter
         // (wd= parameter parsing below is more accurate for browser links)
         if (!result.notebook && !webUrl.includes('wd=')) {
-            const notebookMatch = webUrl.match(/\/([^\/]+)-Notizbuch/i);
-            if (notebookMatch) {
-                result.notebook = decodeURIComponent(notebookMatch[1] + '-Notizbuch');
+            // Try to extract notebook name from /SiteAssets/ path
+            const siteAssetsMatch = parsed.pathname.match(/\/SiteAssets\/([^\/]+)/);
+            if (siteAssetsMatch) {
+                result.notebook = decodeURIComponent(siteAssetsMatch[1]);
+            } else {
+                // Fallback to old pattern for -Notizbuch URLs
+                const notebookMatch = webUrl.match(/\/([^\/]+)-Notizbuch/i);
+                if (notebookMatch) {
+                    result.notebook = decodeURIComponent(notebookMatch[1] + '-Notizbuch');
+                }
             }
         }
         
@@ -3315,75 +3322,82 @@ let specificSharePointDomain = null;
 let filteredPresetDomains = presetDomains;
 
 if (sharepointRestrictionLevel >= 1) {
-    // Level 1+: Remove SharePoint-related wildcards that would bypass restrictions
-    // NOTE: *.sharepointonline.com is removed here - needs integration testing to verify
-    // it's not required for 2FA/login. If login issues occur, may need to keep this wildcard.
+    // Level 1+: Remove broad SharePoint wildcards that would bypass restrictions
+    // but replace with specific tenant domain to allow infrastructure
     const sharePointWildcardsToRemove = [
         '*.sharepoint.com',
-        '*.sharepointonline.com'  // TODO: Verify not needed for 2FA during integration tests
+        '*.sharepointonline.com'
     ];
     
     filteredPresetDomains = filteredPresetDomains.filter(d => 
         !sharePointWildcardsToRemove.includes(d.toLowerCase())
     );
     
-    if (sharepointRestrictionLevel >= 2) {
-        // Level 2+: Also remove any tenant-specific wildcards (e.g., *.kshch0.sharepoint.com)
-        filteredPresetDomains = filteredPresetDomains.filter(d => {
-            const lowerD = d.toLowerCase();
-            // Remove anything that starts with *. and contains sharepoint
-            return !(lowerD.startsWith('*.') && (lowerD.includes('.sharepoint.com') || lowerD.includes('.sharepointonline.com')));
-        });
+    // Add specific tenant domain wildcard to allow SharePoint infrastructure
+    // This allows API calls, CDN, etc. for the specific tenant
+    let tenantDomain = null;
+    ['onenote', 'word'].forEach(serviceType => {
+        const config = sharepointConfig[serviceType];
+        if (config.parsedLink && config.parsedLink.isSharePoint && config.parsedLink.domain) {
+            tenantDomain = config.parsedLink.domain;
+        }
+    });
+    
+    if (tenantDomain) {
+        // Add wildcard for the specific tenant (e.g., *.kshch0.sharepoint.com)
+        // This allows all SharePoint infrastructure for this tenant
+        const tenantWildcard = `*.${tenantDomain}`;
+        if (!filteredPresetDomains.includes(tenantWildcard)) {
+            filteredPresetDomains.push(tenantWildcard);
+        }
     }
     
     // Add back specific SharePoint URLs based on restriction level
     // The more specific the restriction, the more specific the URL
-    if (sharepointRestrictionLevel >= 1) {
-        ['onenote', 'word'].forEach(serviceType => {
-            const config = sharepointConfig[serviceType];
-            if (!config.parsedLink || !config.parsedLink.isSharePoint) return;
-            
-            const { parsedLink, restrictions } = config;
-            
-            // Build the specific URL based on the most restrictive level
-            let specificUrl = `https://${parsedLink.domain}`;
-            
-            // Add Teams site if available
-            if (parsedLink.teamsSite && (restrictions.teamsSite || restrictions.notebook || restrictions.section || restrictions.page || restrictions.folder || restrictions.file)) {
-                specificUrl += `/sites/${parsedLink.teamsSite}`;
+    ['onenote', 'word'].forEach(serviceType => {
+        const config = sharepointConfig[serviceType];
+        if (!config.parsedLink || !config.parsedLink.isSharePoint) return;
+        
+        const { parsedLink, restrictions } = config;
+        
+        // Build the specific URL based on the most restrictive level
+        let specificUrl = `https://${parsedLink.domain}`;
+        
+        // Add Teams site if available
+        if (parsedLink.teamsSite && (restrictions.teamsSite || restrictions.notebook || restrictions.section || restrictions.page || restrictions.folder || restrictions.file)) {
+            specificUrl += `/sites/${parsedLink.teamsSite}`;
+        }
+        
+        if (serviceType === 'onenote') {
+            if (restrictions.page && parsedLink.pageId) {
+                // Most specific: Page level - use full _layouts URL with page ID
+                // This allows only this specific page
+                specificUrl += `/*wd=*${parsedLink.pageId}*`;
+            } else if (restrictions.section && parsedLink.sectionId) {
+                // Section level - use section ID in URL
+                specificUrl += `/*${parsedLink.sectionId}*`;
+            } else if (restrictions.notebook && parsedLink.notebook) {
+                // Notebook level - use SiteAssets path
+                specificUrl += `/SiteAssets/${encodeURIComponent(parsedLink.notebook)}/*`;
+            } else {
+                // School or Teams site level only
+                specificUrl += '/*';
             }
-            
-            if (serviceType === 'onenote') {
-                if (restrictions.page && parsedLink.pageId) {
-                    // Most specific: Page level - use full _layouts URL with page ID
-                    // This allows only this specific page
-                    specificUrl += `/*wd=*${parsedLink.pageId}*`;
-                } else if (restrictions.section && parsedLink.sectionId) {
-                    // Section level - use section ID in URL
-                    specificUrl += `/*${parsedLink.sectionId}*`;
-                } else if (restrictions.notebook && parsedLink.notebook) {
-                    // Notebook level - use SiteAssets path
-                    specificUrl += `/SiteAssets/${encodeURIComponent(parsedLink.notebook)}/*`;
-                } else {
-                    // School or Teams site level only
-                    specificUrl += '/*';
-                }
-            } else if (serviceType === 'word') {
-                if (restrictions.file && parsedLink.fileId) {
-                    // File level - use sourcedoc parameter
-                    specificUrl += `/*sourcedoc={${parsedLink.fileId}}*`;
-                } else if (restrictions.folder && parsedLink.folder) {
-                    // Folder level
-                    specificUrl += `/${encodeURIComponent(parsedLink.folder)}/*`;
-                } else {
-                    // School or Teams site level only
-                    specificUrl += '/*';
-                }
+        } else if (serviceType === 'word') {
+            if (restrictions.file && parsedLink.fileId) {
+                // File level - use sourcedoc parameter
+                specificUrl += `/*sourcedoc={${parsedLink.fileId}}*`;
+            } else if (restrictions.folder && parsedLink.folder) {
+                // Folder level
+                specificUrl += `/${encodeURIComponent(parsedLink.folder)}/*`;
+            } else {
+                // School or Teams site level only
+                specificUrl += '/*';
             }
-            
-            filteredPresetDomains.push(specificUrl);
-        });
-    }
+        }
+        
+        filteredPresetDomains.push(specificUrl);
+    });
 }
 
 // Combine and remove duplicates (case-insensitive)
