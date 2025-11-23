@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.23.0b9
-// Build: 2025-11-23 01:21
+// Version: v0.23.0b10
+// Build: 2025-11-23 01:27
 
 // ============================================================================
 
@@ -1080,8 +1080,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.23.0b9';
-const BUILD_DATE = new Date('2025-11-23T01:21:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.23.0b10';
+const BUILD_DATE = new Date('2025-11-23T01:27:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -3815,6 +3815,22 @@ parsedDictStructures.urlFilterRules.forEach(rule => {
 \t\t\t<string>${escapeXML(rule.expression || '')}</string>
 \t\t\t<key>regex</key>
 \t\t\t<${rule.regex ? 'true' : 'false'}/>
+\t\t</dict>
+`;
+});
+
+// Add SharePoint URL filter patterns (includes regex patterns for redirects)
+const sharepointPatterns = getSharePointUrlPatterns();
+sharepointPatterns.forEach(pattern => {
+    urlFilterRulesXML += `\t\t<dict>
+\t\t\t<key>action</key>
+\t\t\t<integer>${pattern.action}</integer>
+\t\t\t<key>active</key>
+\t\t\t<${pattern.active ? 'true' : 'false'}/>
+\t\t\t<key>expression</key>
+\t\t\t<string>${escapeXML(pattern.expression || '')}</string>
+\t\t\t<key>regex</key>
+\t\t\t<${pattern.regex ? 'true' : 'false'}/>
 \t\t</dict>
 `;
 });
