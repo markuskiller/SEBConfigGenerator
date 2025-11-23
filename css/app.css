@@ -1883,20 +1883,36 @@ textarea {
     position: relative;
 }
 
-.url-filter-rule-card.auto-generated {
+.url-filter-rule-card[data-source="tool-preset"],
+.url-filter-rule-card[data-source="sharepoint"] {
     background: #f5f5f5;
     border-color: #bbb;
 }
 
-.auto-gen-badge {
+.source-badge {
     display: inline-block;
-    background: #2196f3;
     color: white;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     font-size: 0.875rem;
     font-weight: 500;
     margin-bottom: 0.5rem;
+}
+
+.source-badge.source-sharepoint {
+    background: #2196f3;
+}
+
+.source-badge.source-tool-preset {
+    background: #ff9800;
+}
+
+.source-badge.source-custom {
+    background: #4caf50;
+}
+
+.source-badge.source-imported {
+    background: #9c27b0;
 }
 
 .url-filter-controls {
