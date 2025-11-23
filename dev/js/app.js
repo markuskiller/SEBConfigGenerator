@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.23.0b12
-// Build: 2025-11-23 23:17
+// Version: v0.23.0b13
+// Build: 2025-11-23 23:47
 
 // ============================================================================
 
@@ -1098,8 +1098,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.23.0b12';
-const BUILD_DATE = new Date('2025-11-23T23:17:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.23.0b13';
+const BUILD_DATE = new Date('2025-11-23T23:47:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -2592,6 +2592,9 @@ if (parsedDictStructures.urlFilterRules.length === 0) {
     rulesList.appendChild(emptyMsg);
 } else {
     parsedDictStructures.urlFilterRules.forEach((rule, index) => {
+        // Skip deleted rules in rendering
+        if (rule.deleted) return;
+        
         const ruleCard = createURLFilterRuleCard(rule, index);
         rulesList.appendChild(ruleCard);
     });
@@ -2784,7 +2787,15 @@ if (resetBtn) {
 // Delete button
 card.querySelector('.url-filter-delete').addEventListener('click', () => {
     if (confirm(currentLang === 'de' ? 'Regel wirklich löschen?' : 'Really delete this rule?')) {
-        parsedDictStructures.urlFilterRules.splice(index, 1);
+        const rule = parsedDictStructures.urlFilterRules[index];
+        // Mark auto-generated rules as deleted (prevents regeneration)
+        if (rule.source === 'tool-preset' || rule.source === 'sharepoint') {
+            rule.deleted = true;
+            rule.active = false; // Also deactivate
+        } else {
+            // Actually remove custom/imported rules
+            parsedDictStructures.urlFilterRules.splice(index, 1);
+        }
         // Re-render
         const container = document.querySelector('.url-filter-content');
         if (container) {
@@ -3520,9 +3531,11 @@ return info;
 
 // Consolidate all URL filter sources into parsedDictStructures.urlFilterRules
 function syncAllURLFilterSources() {
-    // Keep ONLY imported and MODIFIED rules (regenerate all custom rules from scratch)
+    // Keep ONLY imported, MODIFIED, and DELETED rules
+    // Remove ALL tool-preset, custom, and sharepoint rules (will be regenerated fresh)
+    // Deleted rules are kept to prevent regeneration, but filtered out in rendering
     parsedDictStructures.urlFilterRules = parsedDictStructures.urlFilterRules.filter(rule => 
-        rule.source === 'imported' || rule.modified === true
+        rule.source === 'imported' || rule.modified === true || rule.deleted === true
     );
     
     // 1. Add preset domains (allow)
@@ -3615,10 +3628,17 @@ function syncAllURLFilterSources() {
     // GLOBAL DEDUPLICATION: Remove duplicate rules across ALL sources
     // Keep first occurrence (presets > custom > sharepoint > imported)
     // Key: expression + action + regex flag
+    // Deleted rules are kept (to prevent regeneration) but not checked for duplicates
     const seen = new Set();
     const deduplicated = [];
     
     parsedDictStructures.urlFilterRules.forEach(rule => {
+        // Keep deleted rules as-is (don't deduplicate)
+        if (rule.deleted) {
+            deduplicated.push(rule);
+            return;
+        }
+        
         const key = `${rule.expression}:${rule.action}:${rule.regex}`;
         if (!seen.has(key)) {
             seen.add(key);
@@ -3690,6 +3710,7 @@ debugLog(`   sharepointConfig:`, sharepointConfig);
                                    restrictions.folder || restrictions.file;
     
     // School-level restriction: simple wildcard (no regex needed)
+    // ONLY add wildcard if no granular restrictions are set
     if (restrictions.schoolSharepoint && domain && !hasGranularRestrictions) {
         patterns.push({
             expression: `*${domain}*`,
@@ -3700,6 +3721,8 @@ debugLog(`   sharepointConfig:`, sharepointConfig);
             name: domain || null
         });
     }
+    // NOTE: If granular restrictions are set, we DON'T add the wildcard pattern
+    // because it would bypass the granular restrictions
     
     // For granular restrictions, add SharePoint infrastructure patterns
     // These are required for authentication and page rendering
@@ -3977,6 +4000,9 @@ const regexBlockedRules = [];
 
 if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
     parsedDictStructures.urlFilterRules.forEach(rule => {
+        // Skip deleted rules
+        if (rule.deleted) return;
+        
         // Only include active rules (same logic as Moodle export)
         if (rule.active && rule.expression) {
             // Regex rules
@@ -4161,6 +4187,9 @@ syncAllURLFilterSources();
 // Export all URL filter rules from single source of truth
 let urlFilterRulesXML = '';
 parsedDictStructures.urlFilterRules.forEach(rule => {
+    // Skip deleted rules
+    if (rule.deleted) return;
+    
     urlFilterRulesXML += `\t\t<dict>
 \t\t\t<key>action</key>
 \t\t\t<integer>${rule.action}</integer>
@@ -4572,6 +4601,9 @@ config.expressionsAllowed.push(...filteredPresetDomains);
 // Add manual URL filter rules from advanced settings (if loaded)
 if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
     parsedDictStructures.urlFilterRules.forEach(rule => {
+        // Skip deleted rules
+        if (rule.deleted) return;
+        
         // Only include active rules
         if (rule.active && rule.expression) {
             // Regex rules
