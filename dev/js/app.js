@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.23.0b8
-// Build: 2025-11-23 00:44
+// Version: v0.23.0b9
+// Build: 2025-11-23 01:21
 
 // ============================================================================
 
@@ -1080,8 +1080,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.23.0b8';
-const BUILD_DATE = new Date('2025-11-23T00:44:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.23.0b9';
+const BUILD_DATE = new Date('2025-11-23T01:21:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -3181,8 +3181,12 @@ const patterns = [];
     
     if (restrictions.teamsSite && parsedLink.teamsSite) {
         // Restrict to specific Teams site
+        // Use regex to match both direct paths and ALL SharePoint redirect formats
+        // Redirect formats: /:o:/r/ /:w:/r/ /:x:/r/ /:p:/r/ /:b:/r/ /:f:/r/ /:i:/r/ /:v:/r/
+        const escapedTeamsSite = parsedLink.teamsSite.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         patterns.push({
-            expression: `*/sites/${parsedLink.teamsSite}/*`,
+            expression: `.*/(:.[^/]+/r/)?sites/${escapedTeamsSite}/.*`,
+            regex: true,
             active: true,
             action: 1, // Allow
             label: currentLang === 'de' ? 'Teams-Site' : 'Teams Site',
@@ -3200,8 +3204,12 @@ const patterns = [];
         // Notebook restriction: Use notebook name in URL path
         // The notebook name appears in the path as /SiteAssets/{NotebookName}/
         if (restrictions.notebook && parsedLink.notebook) {
+            // Use regex to match both direct paths and ALL SharePoint redirect formats
+            // Redirect formats: /:o:/r/ /:w:/r/ /:x:/r/ /:p:/r/ /:b:/r/ /:f:/r/ /:i:/r/ /:v:/r/
+            const escapedNotebook = parsedLink.notebook.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             patterns.push({
-                expression: `*/SiteAssets/${encodeURIComponent(parsedLink.notebook)}/*`,
+                expression: `.*/(:.[^/]+/r/)?.*SiteAssets/${escapedNotebook}/.*`,
+                regex: true,
                 active: true,
                 action: 1,
                 label: currentLang === 'de' ? 'Notizbuch' : 'Notebook',
