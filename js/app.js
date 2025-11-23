@@ -3819,6 +3819,22 @@ parsedDictStructures.urlFilterRules.forEach(rule => {
 `;
 });
 
+// Add SharePoint URL filter patterns (includes regex patterns for redirects)
+const sharepointPatterns = getSharePointUrlPatterns();
+sharepointPatterns.forEach(pattern => {
+    urlFilterRulesXML += `\t\t<dict>
+\t\t\t<key>action</key>
+\t\t\t<integer>${pattern.action}</integer>
+\t\t\t<key>active</key>
+\t\t\t<${pattern.active ? 'true' : 'false'}/>
+\t\t\t<key>expression</key>
+\t\t\t<string>${escapeXML(pattern.expression || '')}</string>
+\t\t\t<key>regex</key>
+\t\t\t<${pattern.regex ? 'true' : 'false'}/>
+\t\t</dict>
+`;
+});
+
 // ============================================================================
 // STEP 1: Serialize complete DOM (all values, arrays, dicts)
 // ============================================================================
