@@ -2578,6 +2578,16 @@ if (activeSourceFilter !== 'all' || activeActionFilter !== 'all' || activeLabelF
     setTimeout(() => applyFilters(), 0);
 }
 
+// Warning container for duplicates (hidden by default)
+const warningDiv = document.createElement('div');
+warningDiv.id = 'urlFilterDuplicateWarning';
+warningDiv.classList.add('preset-category-warning', 'hidden');
+warningDiv.innerHTML = `
+    <strong>⚠️ ${currentLang === 'de' ? 'Duplikate gefunden' : 'Duplicates Found'}</strong>
+    <div id="urlFilterDuplicateWarningText"></div>
+`;
+container.appendChild(warningDiv);
+
 // Rules list
 const rulesList = document.createElement('div');
 rulesList.classList.add('url-filter-rules-list');
@@ -2608,6 +2618,9 @@ addButton.classList.add('btn', 'btn-secondary', 'mt-1');
 addButton.innerHTML = `➕ ${currentLang === 'de' ? 'Neue Regel' : 'New Rule'}`;
 addButton.addEventListener('click', addNewURLFilterRule);
 container.appendChild(addButton);
+
+// Check for duplicates and show warning if any
+checkURLFilterDuplicates();
 }
 
 function createURLFilterRuleCard(rule, index) {
@@ -2820,6 +2833,59 @@ function updateURLFilterCount() {
             ? `+ ${autoCount} automatisch` 
             : `+ ${autoCount} auto`;
         countSpan.textContent = `(${editableCount} ${currentLang === 'de' ? 'manuell' : 'manual'} ${autoText})`;
+    }
+}
+
+/**
+ * Check for duplicate URL filter rules and show warning
+ */
+function checkURLFilterDuplicates() {
+    const warningDiv = document.getElementById('urlFilterDuplicateWarning');
+    const warningText = document.getElementById('urlFilterDuplicateWarningText');
+    
+    if (!warningDiv || !warningText) return;
+    
+    // Find duplicates by expression only - each expression must be unique
+    const seen = new Map(); // expression -> [indices]
+    const duplicates = new Map();
+    
+    parsedDictStructures.urlFilterRules.forEach((rule, index) => {
+        // Skip deleted rules
+        if (rule.deleted) return;
+        
+        const key = rule.expression;
+        
+        if (seen.has(key)) {
+            // Duplicate found
+            if (!duplicates.has(key)) {
+                duplicates.set(key, [seen.get(key)[0], index]);
+            } else {
+                duplicates.get(key).push(index);
+            }
+        } else {
+            seen.set(key, [index]);
+        }
+    });
+    
+    if (duplicates.size > 0) {
+        // Build warning message
+        const duplicateList = Array.from(duplicates.entries())
+            .map(([expression, indices]) => {
+                return `<li><code>${expression}</code> (${indices.length + 1}×)</li>`;
+            })
+            .join('');
+        
+        const message = currentLang === 'de'
+            ? `Die folgenden Regeln sind mehrfach vorhanden. Duplikate werden automatisch entfernt beim Export:<ul>${duplicateList}</ul>`
+            : `The following rules are duplicated. Duplicates will be automatically removed during export:<ul>${duplicateList}</ul>`;
+        
+        warningText.innerHTML = message;
+        warningDiv.classList.remove('hidden');
+        
+        debugLog(`⚠️ Found ${duplicates.size} duplicate rule(s)`);
+    } else {
+        // No duplicates - hide warning
+        warningDiv.classList.add('hidden');
     }
 }
 
