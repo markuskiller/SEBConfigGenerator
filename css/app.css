@@ -1965,6 +1965,21 @@ textarea {
     background: #4caf50;
 }
 
+.source-badge.source-custom-advanced {
+    background: #4caf50;
+}
+
+/* Custom Domain: Hellblau */
+.source-badge.label-custom-domain {
+    background: #64b5f6 !important;
+}
+
+/* Blocked Domain: Hellrot (dimmed) */
+.source-badge.label-blocked-domain {
+    background: #ffcdd2 !important;
+    color: #c62828 !important;
+}
+
 .source-badge.source-imported {
     background: #9c27b0;
 }

@@ -118,7 +118,8 @@ function parseRuleDictFromDOM(dictElement) {
         } else if (currentKey) {
             switch (currentKey) {
                 case 'action':
-                    rule.action = parseInt(child.textContent) || 1;
+                    const actionValue = parseInt(child.textContent);
+                    rule.action = isNaN(actionValue) ? 1 : actionValue;
                     break;
                 case 'active':
                     rule.active = child.tagName === 'true';
