@@ -1171,6 +1171,12 @@ let configState = {
     }
 };
 
+// URL Filter Meta Information (UI Context - Not stored in DOM)
+// Maps expression to UI-related metadata
+// Key: expression (e.g., "*.cambridge.org")
+// Value: { source, label, presetKey, modified }
+let urlFilterMetaInfo = {};
+
 // Legacy structures (will be replaced by configState)
 // TODO: Remove after full migration
 let parsedBooleanOptions = {
@@ -2347,8 +2353,11 @@ const actions = [
 const allLabels = new Set();
 const excludeLabels = ['SharePoint Auth', 'SharePoint Infra'];
 parsedDictStructures.urlFilterRules.forEach(rule => {
-    if (rule.label && !excludeLabels.includes(rule.label)) {
-        allLabels.add(rule.label);
+    // Get label from meta-info
+    const metaInfo = urlFilterMetaInfo[rule.expression];
+    const label = metaInfo?.label;
+    if (label && !excludeLabels.includes(label)) {
+        allLabels.add(label);
     }
 });
 const sortedLabels = Array.from(allLabels).sort();
@@ -2602,9 +2611,7 @@ if (parsedDictStructures.urlFilterRules.length === 0) {
     rulesList.appendChild(emptyMsg);
 } else {
     parsedDictStructures.urlFilterRules.forEach((rule, index) => {
-        // Skip deleted rules in rendering
-        if (rule.deleted) return;
-        
+        // No need to skip deleted - DOM doesn't contain them
         const ruleCard = createURLFilterRuleCard(rule, index);
         rulesList.appendChild(ruleCard);
     });
@@ -2626,15 +2633,22 @@ checkURLFilterDuplicates();
 function createURLFilterRuleCard(rule, index) {
 const card = document.createElement('div');
 card.classList.add('url-filter-rule-card');
-card.setAttribute('data-source', rule.source || 'custom');
+
+// Get meta-info from separate structure (UI context)
+const metaInfo = urlFilterMetaInfo[rule.expression] || {};
+const source = metaInfo.source || 'custom';
+const label = metaInfo.label || '';
+const modified = metaInfo.modified || false;
+
+card.setAttribute('data-source', source);
 
 const actionClass = rule.action === 1 ? 'allow' : 'block';
 const actionFilterValue = rule.action === 1 ? 'allow' : 'block';
 card.setAttribute('data-action', actionFilterValue);
 
 // Add label attribute for filtering
-if (rule.label) {
-    card.setAttribute('data-label', rule.label);
+if (label) {
+    card.setAttribute('data-label', label);
 }
 
 const isEditable = true; // All rules are editable
@@ -2660,17 +2674,17 @@ const sourceLabels = {
     'imported': currentLang === 'de' ? 'Importiert' : 'Imported'
 };
 
-const sourceIcon = sourceIcons[rule.source] || '✏️';
-const sourceLabel = sourceLabels[rule.source] || (rule.label || '');
+const sourceIcon = sourceIcons[source] || '✏️';
+const sourceLabel = sourceLabels[source] || label;
 
 // Add source badge with modified indicator
-const modifiedText = rule.modified ? ` <em>${currentLang === 'de' ? '(modifiziert)' : '(modified)'}</em>` : '';
-const labelBadge = `<span class="source-badge source-${rule.source || 'custom'}" title="${sourceLabel}">
-    ${sourceIcon} ${rule.label || sourceLabel}${modifiedText}
+const modifiedText = modified ? ` <em>${currentLang === 'de' ? '(modifiziert)' : '(modified)'}</em>` : '';
+const labelBadge = `<span class="source-badge source-${source}" title="${sourceLabel}">
+    ${sourceIcon} ${label || sourceLabel}${modifiedText}
 </span>`;
 
     // Add reset button for modified auto-generated rules
-    const resetButton = (rule.modified && (rule.source === 'tool-preset' || rule.source === 'sharepoint'))
+    const resetButton = (modified && (source === 'tool-preset' || source === 'sharepoint'))
         ? `<button class="btn-icon url-filter-reset" 
                    data-index="${index}"
                    title="${currentLang === 'de' ? 'Auf Standard zurücksetzen' : 'Reset to default'}">
@@ -2716,56 +2730,95 @@ const labelBadge = `<span class="source-badge source-${rule.source || 'custom'}"
                 🗑️
             </button>
         </div>
-    `;// Event listeners - mark as modified when edited
+    `;// Event listeners - update DOM directly
 card.querySelector('.url-filter-active').addEventListener('change', (e) => {
-    const rule = parsedDictStructures.urlFilterRules[index];
-    rule.active = e.target.checked;
-    // Mark as modified if it's auto-generated (but NOT sharepoint - those are always regenerated)
-    if (rule.source === 'tool-preset') {
-        rule.modified = true;
-        // Re-render to show modified badge
+    // Update in DOM
+    updateURLFilterRuleInDOM(index, { active: e.target.checked });
+    
+    // Mark as modified in meta-info if it's auto-generated
+    const metaInfo = urlFilterMetaInfo[rule.expression];
+    if (metaInfo && metaInfo.source === 'tool-preset') {
+        metaInfo.modified = true;
+        // Refresh view and re-render to show modified badge
+        refreshURLFilterViewFromDOM();
         const container = document.querySelector('.url-filter-content');
         if (container) renderURLFilterContent(container);
+    } else {
+        // Just refresh view for UI consistency
+        refreshURLFilterViewFromDOM();
     }
+    
     debugLog(`URLFilter rule ${index} active: ${e.target.checked}`);
     updatePreview();
 });
 
 card.querySelector('.url-filter-regex').addEventListener('change', (e) => {
-    const rule = parsedDictStructures.urlFilterRules[index];
-    rule.regex = e.target.checked;
-    if (rule.source === 'tool-preset') {
-        rule.modified = true;
+    // Update in DOM
+    updateURLFilterRuleInDOM(index, { regex: e.target.checked });
+    
+    // Mark as modified in meta-info if it's auto-generated
+    const metaInfo = urlFilterMetaInfo[rule.expression];
+    if (metaInfo && metaInfo.source === 'tool-preset') {
+        metaInfo.modified = true;
+        refreshURLFilterViewFromDOM();
         const container = document.querySelector('.url-filter-content');
         if (container) renderURLFilterContent(container);
+    } else {
+        refreshURLFilterViewFromDOM();
     }
+    
     debugLog(`URLFilter rule ${index} regex: ${e.target.checked}`);
     updatePreview();
 });
 
 card.querySelector('.url-filter-expression').addEventListener('input', (e) => {
-    const rule = parsedDictStructures.urlFilterRules[index];
-    rule.expression = e.target.value;
-    if (rule.source === 'tool-preset') {
-        rule.modified = true;
-        const container = document.querySelector('.url-filter-content');
-        if (container) renderURLFilterContent(container);
+    const oldExpression = rule.expression;
+    const newExpression = e.target.value;
+    
+    // Update in DOM
+    updateURLFilterRuleInDOM(index, { expression: newExpression });
+    
+    // Update meta-info key (expression changed!)
+    const metaInfo = urlFilterMetaInfo[oldExpression];
+    if (metaInfo) {
+        delete urlFilterMetaInfo[oldExpression];
+        urlFilterMetaInfo[newExpression] = metaInfo;
+        
+        if (metaInfo.source === 'tool-preset') {
+            metaInfo.modified = true;
+            refreshURLFilterViewFromDOM();
+            const container = document.querySelector('.url-filter-content');
+            if (container) renderURLFilterContent(container);
+        } else {
+            refreshURLFilterViewFromDOM();
+        }
     }
-    debugLog(`URLFilter rule ${index} expression: ${e.target.value}`);
+    
+    debugLog(`URLFilter rule ${index} expression: ${newExpression}`);
     updatePreview();
 });
 
 card.querySelector('.url-filter-action').addEventListener('change', (e) => {
-    const rule = parsedDictStructures.urlFilterRules[index];
-    rule.action = parseInt(e.target.value);
-    if (rule.source === 'tool-preset') {
-        rule.modified = true;
+    const newAction = parseInt(e.target.value);
+    
+    // Update in DOM
+    updateURLFilterRuleInDOM(index, { action: newAction });
+    
+    // Mark as modified in meta-info if it's auto-generated
+    const metaInfo = urlFilterMetaInfo[rule.expression];
+    if (metaInfo && metaInfo.source === 'tool-preset') {
+        metaInfo.modified = true;
+        refreshURLFilterViewFromDOM();
         const container = document.querySelector('.url-filter-content');
         if (container) renderURLFilterContent(container);
+    } else {
+        refreshURLFilterViewFromDOM();
     }
-    debugLog(`URLFilter rule ${index} action: ${e.target.value}`);
+    
+    debugLog(`URLFilter rule ${index} action: ${newAction}`);
+    
     // Update CSS class for color
-    if (e.target.value === '1') {
+    if (newAction === 1) {
         e.target.classList.remove('block');
         e.target.classList.add('allow');
     } else {
@@ -2780,17 +2833,18 @@ const resetBtn = card.querySelector('.url-filter-reset');
 if (resetBtn) {
     resetBtn.addEventListener('click', () => {
         if (confirm(currentLang === 'de' ? 'Regel auf Standard zurücksetzen?' : 'Reset rule to default?')) {
-            // Remove the rule - it will be regenerated on next sync
-            parsedDictStructures.urlFilterRules.splice(index, 1);
+            // Delete from DOM - will be regenerated on next sync
+            deleteURLFilterRuleFromDOM(index);
+            
+            // Remove from meta-info
+            delete urlFilterMetaInfo[rule.expression];
+            
             // Re-sync to regenerate default
             syncAllURLFilterSources();
-            // Re-render
-            const container = document.querySelector('.url-filter-content');
-            if (container) {
-                renderURLFilterContent(container);
-            }
+            
             // Update count in header
             updateURLFilterCount();
+            
             // Update preview
             updatePreview();
         }
@@ -2800,22 +2854,24 @@ if (resetBtn) {
 // Delete button
 card.querySelector('.url-filter-delete').addEventListener('click', () => {
     if (confirm(currentLang === 'de' ? 'Regel wirklich löschen?' : 'Really delete this rule?')) {
-        const rule = parsedDictStructures.urlFilterRules[index];
-        // Mark auto-generated rules as deleted (prevents regeneration)
-        if (rule.source === 'tool-preset' || rule.source === 'sharepoint') {
-            rule.deleted = true;
-            rule.active = false; // Also deactivate
-        } else {
-            // Actually remove custom/imported rules
-            parsedDictStructures.urlFilterRules.splice(index, 1);
-        }
+        // Delete from DOM
+        deleteURLFilterRuleFromDOM(index);
+        
+        // Remove from meta-info
+        delete urlFilterMetaInfo[rule.expression];
+        
+        // Refresh view from DOM
+        refreshURLFilterViewFromDOM();
+        
         // Re-render
         const container = document.querySelector('.url-filter-content');
         if (container) {
             renderURLFilterContent(container);
         }
+        
         // Update count in header
         updateURLFilterCount();
+        
         // Update preview
         updatePreview();
     }
@@ -2827,8 +2883,21 @@ return card;
 function updateURLFilterCount() {
     const countSpan = document.querySelector('.url-filter-header span');
     if (countSpan) {
-        const editableCount = parsedDictStructures.urlFilterRules.filter(r => r.source === 'custom' || r.source === 'imported').length;
-        const autoCount = parsedDictStructures.urlFilterRules.length - editableCount;
+        // Count rules by source from meta-info
+        let editableCount = 0;
+        let autoCount = 0;
+        
+        parsedDictStructures.urlFilterRules.forEach(rule => {
+            const metaInfo = urlFilterMetaInfo[rule.expression];
+            const source = metaInfo?.source || 'custom';
+            
+            if (source === 'custom' || source === 'imported') {
+                editableCount++;
+            } else {
+                autoCount++;
+            }
+        });
+        
         const autoText = currentLang === 'de' 
             ? `+ ${autoCount} automatisch` 
             : `+ ${autoCount} auto`;
@@ -2838,6 +2907,7 @@ function updateURLFilterCount() {
 
 /**
  * Check for duplicate URL filter rules and show warning
+ * Works with refreshed view from DOM (parsedDictStructures.urlFilterRules)
  */
 function checkURLFilterDuplicates() {
     const warningDiv = document.getElementById('urlFilterDuplicateWarning');
@@ -2850,9 +2920,7 @@ function checkURLFilterDuplicates() {
     const duplicates = new Map();
     
     parsedDictStructures.urlFilterRules.forEach((rule, index) => {
-        // Skip deleted rules
-        if (rule.deleted) return;
-        
+        // No need to check for deleted - DOM doesn't have deleted rules
         const key = rule.expression;
         
         if (seen.has(key)) {
@@ -2890,29 +2958,40 @@ function checkURLFilterDuplicates() {
 }
 
 function addNewURLFilterRule() {
-const newRule = {
-    action: 1,  // Allow by default
-    active: true,
-    expression: '',
-    regex: false,
-    source: 'custom'
-};
-
-parsedDictStructures.urlFilterRules.push(newRule);
-
-// Re-render
-const container = document.querySelector('.url-filter-content');
-if (container) {
-    renderURLFilterContent(container);
-}
-
-// Update count in header
-updateURLFilterCount();
-
-// Update preview
-updatePreview();
-
-debugLog('➕ New URL filter rule added');
+    const newRule = {
+        action: 1,  // Allow by default
+        active: true,
+        expression: '',
+        regex: false
+    };
+    
+    // Add to DOM (with temporary empty expression)
+    const currentRules = getURLFilterRulesFromDOM();
+    currentRules.push(newRule);
+    setURLFilterRulesInDOM(currentRules);
+    
+    // Add meta-info
+    urlFilterMetaInfo[''] = {
+        source: 'custom',
+        label: 'Custom Domain'
+    };
+    
+    // Refresh view from DOM
+    refreshURLFilterViewFromDOM();
+    
+    // Re-render
+    const container = document.querySelector('.url-filter-content');
+    if (container) {
+        renderURLFilterContent(container);
+    }
+    
+    // Update count in header
+    updateURLFilterCount();
+    
+    // Update preview
+    updatePreview();
+    
+    debugLog('➕ New URL filter rule added to DOM');
 }
 
 // ============================================================================
@@ -3597,51 +3676,99 @@ return info;
 
 // Consolidate all URL filter sources into parsedDictStructures.urlFilterRules
 function syncAllURLFilterSources() {
-    // Keep ONLY imported, MODIFIED, and DELETED rules
-    // Remove ALL tool-preset, custom, and sharepoint rules (will be regenerated fresh)
-    // CRITICAL: Remove deleted SHAREPOINT rules (restrictions may have changed)
-    // Keep deleted TOOL-PRESET rules (user wants them deleted permanently)
-    parsedDictStructures.urlFilterRules = parsedDictStructures.urlFilterRules.filter(rule => 
-        rule.source === 'imported' || 
-        rule.modified === true || 
-        (rule.deleted === true && rule.source !== 'sharepoint')
-    );
+    debugLog('🔄 syncAllURLFilterSources - DOM-First Implementation');
     
-    // 1. Add preset domains (allow)
-    const presetDomains = [];
-    selectedPresets.forEach(presetKey => {
-        if (PRESETS[presetKey]) {
-            PRESETS[presetKey].domains.forEach(domain => {
-                presetDomains.push({
-                    expression: domain,
-                    regex: false,
-                    active: true,
-                    action: 1,
-                    source: 'tool-preset',
-                    label: PRESETS[presetKey].name || presetKey
-                });
-            });
+    // ========================================================================
+    // STEP 1: Remove all auto-generated rules from DOM (keep only imported/custom manual rules)
+    // ========================================================================
+    const currentRules = getURLFilterRulesFromDOM();
+    const preservedRules = [];
+    
+    // Clear meta-info for auto-generated sources (will be rebuilt)
+    const preservedMetaInfo = {};
+    
+    currentRules.forEach(rule => {
+        const metaInfo = urlFilterMetaInfo[rule.expression];
+        
+        // Preserve imported rules (from loaded .seb files)
+        if (metaInfo && metaInfo.source === 'imported') {
+            preservedRules.push(rule);
+            preservedMetaInfo[rule.expression] = metaInfo;
+            debugLog(`   ✅ Preserved imported: ${rule.expression}`);
+        }
+        // Preserve manually modified rules (custom with manual edits)
+        else if (metaInfo && metaInfo.source === 'custom' && metaInfo.modified === true) {
+            preservedRules.push(rule);
+            preservedMetaInfo[rule.expression] = metaInfo;
+            debugLog(`   ✅ Preserved modified custom: ${rule.expression}`);
+        }
+        // Remove all tool-preset and sharepoint rules (will be regenerated)
+        else {
+            debugLog(`   🗑️ Removed auto-generated: ${rule.expression} (source: ${metaInfo?.source || 'unknown'})`);
         }
     });
     
-    // 2. Add preset blocked domains (block)
+    // Write preserved rules back to DOM
+    setURLFilterRulesInDOM(preservedRules);
+    urlFilterMetaInfo = preservedMetaInfo;
+    
+    debugLog(`   📊 After cleanup: ${preservedRules.length} preserved rules`);
+    
+    // ========================================================================
+    // STEP 2: Add Tool Preset domains (auto-generated, allow + block)
+    // ========================================================================
     selectedPresets.forEach(presetKey => {
         const preset = PRESETS[presetKey];
-        if (preset && preset.blockedDomains) {
-            preset.blockedDomains.forEach(domain => {
-                presetDomains.push({
+        if (!preset) return;
+        
+        const presetLabel = preset.name || presetKey;
+        
+        // Add allowed domains
+        if (preset.domains) {
+            preset.domains.forEach(domain => {
+                const added = addURLFilterRuleToDOM({
                     expression: domain,
                     regex: false,
                     active: true,
-                    action: 0,
-                    source: 'tool-preset',
-                    label: PRESETS[presetKey].name || presetKey
-                });
+                    action: 1
+                }, 'tool-preset');
+                
+                if (added) {
+                    urlFilterMetaInfo[domain] = {
+                        source: 'tool-preset',
+                        label: presetLabel,
+                        presetKey: presetKey
+                    };
+                    debugLog(`   ➕ Added preset (allow): ${domain} [${presetLabel}]`);
+                }
+            });
+        }
+        
+        // Add blocked domains
+        if (preset.blockedDomains) {
+            preset.blockedDomains.forEach(domain => {
+                const added = addURLFilterRuleToDOM({
+                    expression: domain,
+                    regex: false,
+                    active: true,
+                    action: 0
+                }, 'tool-preset');
+                
+                if (added) {
+                    urlFilterMetaInfo[domain] = {
+                        source: 'tool-preset',
+                        label: presetLabel,
+                        presetKey: presetKey
+                    };
+                    debugLog(`   ➕ Added preset (block): ${domain} [${presetLabel}]`);
+                }
             });
         }
     });
     
-    // 3. Add custom domains from textarea (allow)
+    // ========================================================================
+    // STEP 3: Add Custom domains from textarea (allow)
+    // ========================================================================
     const customDomainsValue = document.getElementById('customDomains')?.value || '';
     const customDomains = customDomainsValue
         .split('\n')
@@ -3649,17 +3776,25 @@ function syncAllURLFilterSources() {
         .filter(d => d && !d.startsWith('#'));
     
     customDomains.forEach(domain => {
-        parsedDictStructures.urlFilterRules.push({
+        const added = addURLFilterRuleToDOM({
             expression: domain,
             regex: false,
             active: true,
-            action: 1,
-            source: 'custom',
-            label: 'Custom Domain'
-        });
+            action: 1
+        }, 'custom');
+        
+        if (added) {
+            urlFilterMetaInfo[domain] = {
+                source: 'custom',
+                label: 'Custom Domain'
+            };
+            debugLog(`   ➕ Added custom (allow): ${domain}`);
+        }
     });
     
-    // 4. Add blocked domains from textarea (block)
+    // ========================================================================
+    // STEP 4: Add Blocked domains from textarea (block)
+    // ========================================================================
     const blockedDomainsValue = document.getElementById('blockedDomains')?.value || '';
     const blockedDomains = blockedDomainsValue
         .split('\n')
@@ -3667,58 +3802,49 @@ function syncAllURLFilterSources() {
         .filter(d => d && !d.startsWith('#'));
     
     blockedDomains.forEach(domain => {
-        parsedDictStructures.urlFilterRules.push({
+        const added = addURLFilterRuleToDOM({
             expression: domain,
             regex: false,
             active: true,
-            action: 0,
-            source: 'custom',
-            label: 'Blocked Domain'
-        });
+            action: 0
+        }, 'custom');
+        
+        if (added) {
+            urlFilterMetaInfo[domain] = {
+                source: 'custom',
+                label: 'Blocked Domain'
+            };
+            debugLog(`   ➕ Added custom (block): ${domain}`);
+        }
     });
     
-    // 5. Add SharePoint patterns
+    // ========================================================================
+    // STEP 5: Add SharePoint patterns (auto-generated based on restrictions)
+    // ========================================================================
     const sharepointPatterns = getSharePointUrlPatterns();
-    debugLog(`📍 SharePoint patterns generated: ${sharepointPatterns.length}`);
+    debugLog(`   📍 SharePoint patterns generated: ${sharepointPatterns.length}`);
+    
     sharepointPatterns.forEach(pattern => {
-        debugLog(`   ➕ Adding pattern:`, pattern);
-        parsedDictStructures.urlFilterRules.push({
-            ...pattern,
-            source: 'sharepoint'
-        });
-    });
-    
-    // Add preset domains first
-    parsedDictStructures.urlFilterRules = [
-        ...presetDomains,
-        ...parsedDictStructures.urlFilterRules
-    ];
-    
-    // GLOBAL DEDUPLICATION: Remove duplicate rules across ALL sources
-    // Keep first occurrence (presets > custom > sharepoint > imported)
-    // Key: expression + action + regex flag
-    // CRITICAL: Deleted rules must be added to 'seen' to block regeneration of same rule
-    const seen = new Set();
-    const deduplicated = [];
-    
-    parsedDictStructures.urlFilterRules.forEach(rule => {
-        const key = `${rule.expression}:${rule.action}:${rule.regex}`;
+        const added = addURLFilterRuleToDOM({
+            expression: pattern.expression,
+            regex: pattern.regex || false,
+            active: pattern.active !== false,
+            action: pattern.action || 1
+        }, 'sharepoint');
         
-        // Keep deleted rules AND add them to seen (blocks new rules with same key)
-        if (rule.deleted) {
-            seen.add(key); // CRITICAL: Block regeneration
-            deduplicated.push(rule);
-            return;
-        }
-        
-        // Only add non-deleted rules if not already seen
-        if (!seen.has(key)) {
-            seen.add(key);
-            deduplicated.push(rule);
+        if (added) {
+            urlFilterMetaInfo[pattern.expression] = {
+                source: 'sharepoint',
+                label: pattern.label || 'SharePoint'
+            };
+            debugLog(`   ➕ Added SharePoint: ${pattern.expression} [${pattern.label}]`);
         }
     });
     
-    parsedDictStructures.urlFilterRules = deduplicated;
+    // ========================================================================
+    // STEP 6: Refresh UI view from DOM (Single Source of Truth)
+    // ========================================================================
+    refreshURLFilterViewFromDOM();
     
     // Re-render URL filter section if it's currently visible
     const urlFilterContent = document.querySelector('.url-filter-content.show');
@@ -3726,7 +3852,8 @@ function syncAllURLFilterSources() {
         renderURLFilterContent(urlFilterContent);
     }
     
-    debugLog(`✅ Synced all URL filter sources: ${parsedDictStructures.urlFilterRules.length} total rules`);
+    const finalCount = getURLFilterRulesFromDOM().length;
+    debugLog(`✅ Synced all URL filter sources: ${finalCount} total rules in DOM`);
 }
 
 // Generate SharePoint URL filter patterns based on restriction levels
@@ -4072,8 +4199,7 @@ const regexBlockedRules = [];
 
 if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
     parsedDictStructures.urlFilterRules.forEach(rule => {
-        // Skip deleted rules
-        if (rule.deleted) return;
+        // No need to skip deleted - DOM doesn't contain them
         
         // Only include active rules (same logic as Moodle export)
         if (rule.active && rule.expression) {
@@ -4256,12 +4382,11 @@ const startUrl = startUrlInput;
 // Consolidate all URL filter sources before export
 syncAllURLFilterSources();
 
-// Export all URL filter rules from single source of truth
+// Export all URL filter rules directly from DOM (Single Source of Truth)
+// No need to filter deleted rules - DOM doesn't contain them
 let urlFilterRulesXML = '';
-parsedDictStructures.urlFilterRules.forEach(rule => {
-    // Skip deleted rules
-    if (rule.deleted) return;
-    
+const exportRules = getURLFilterRulesFromDOM();
+exportRules.forEach(rule => {
     urlFilterRulesXML += `\t\t<dict>
 \t\t\t<key>action</key>
 \t\t\t<integer>${rule.action}</integer>
@@ -4670,11 +4795,11 @@ if (sharepointRestrictionLevel >= 1) {
 // Add filtered preset domains to config
 config.expressionsAllowed.push(...filteredPresetDomains);
 
-// Add manual URL filter rules from advanced settings (if loaded)
-if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
-    parsedDictStructures.urlFilterRules.forEach(rule => {
-        // Skip deleted rules
-        if (rule.deleted) return;
+// Add manual URL filter rules from advanced settings (directly from DOM)
+const urlFilterRules = getURLFilterRulesFromDOM();
+if (urlFilterRules && Array.isArray(urlFilterRules)) {
+    urlFilterRules.forEach(rule => {
+        // No need to skip deleted - DOM doesn't contain them
         
         // Only include active rules
         if (rule.active && rule.expression) {
