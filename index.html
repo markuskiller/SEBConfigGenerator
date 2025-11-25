@@ -75,10 +75,13 @@
                 <h2><span data-i18n="step2">2. Konfigurationseinstellungen</span></h2>
                 <div class="form-group">
                     <label for="startUrl" data-i18n="startUrl">Start-URL</label>
-                    <div id="startUrlSelectorContainer" class="start-url-selector-container">
-                        <select id="startUrlSelector" class="start-url-selector">
+                    <div id="startUrlSelectorContainer" class="start-url-selector-container dropdown-container single-choice">
+                        <button type="button" id="startUrlDropdownBtn" class="dropdown-btn">
+                            <span data-i18n="selectStartUrl">Start-URL wählen</span>
+                        </button>
+                        <div id="startUrlDropdownMenu" class="dropdown-menu hidden">
                             <!-- Options will be populated dynamically -->
-                        </select>
+                        </div>
                     </div>
                     <input type="url" id="startUrl" placeholder="https://sites.google.com/view/your-secret-page-xyz123">
                 </div>
@@ -161,13 +164,8 @@
                         <div class="section">
                             <h2><span data-i18n="allBooleanOptions">Erweiterte Optionen (für fortgeschrittene Anwender)</span></h2>
                             
-                            <!-- Experimental Warning -->
-                            <div class="boolean-warning">
-                                <strong>⚠️ <span data-i18n="experimentalFeature">Experimentelle Funktion</span></strong><br>
-                                <span data-i18n="booleanOptionsWarning">
-                                    Diese Funktion befindet sich in Entwicklung. Die Menü-Referenzen werden schrittweise für alle Plattformen ergänzt. Verwenden Sie diese Optionen mit Vorsicht und testen Sie die generierte Konfiguration gründlich.
-                                </span>
-                            </div>
+                            <!-- URL Filter Rules (TOP PRIORITY - after title) -->
+                            <div id="urlFilterPlaceholder"></div>
                             
                             <!-- Platform Selection for Boolean Options -->
                             <div class="platform-selector">
@@ -187,6 +185,14 @@
                                 </div>
                             </div>
                             
+                            <!-- Experimental Warning -->
+                            <div class="boolean-warning">
+                                <strong>⚠️ <span data-i18n="experimentalFeature">Experimentelle Funktion</span></strong><br>
+                                <span data-i18n="booleanOptionsWarning">
+                                    Diese Funktion befindet sich in Entwicklung. Die Menü-Referenzen werden schrittweise für alle Plattformen ergänzt. Verwenden Sie diese Optionen mit Vorsicht und testen Sie die generierte Konfiguration gründlich.
+                                </span>
+                            </div>
+                            
                             <!-- Global Search for all Boolean Options & Process Lists -->
                             <div id="globalSearchContainer" class="global-search-container hidden">
                                 <div class="search-input-wrapper">
@@ -202,9 +208,6 @@
                             </div>
                             
                             <div id="booleanOptionsContainer"></div>
-                            
-                            <!-- URL Filter Rules (inserted here by JS) -->
-                            <div id="urlFilterPlaceholder"></div>
                             
                             <!-- Dict Structures (Process Lists, Certificates, etc.) -->
                             <div id="dictStructuresContainer"></div>
@@ -293,7 +296,7 @@
                     <button class="btn btn-primary btn-full-width" id="generateBtn">
                         <span data-i18n="downloadBtn">📥 SEB Konfiguration herunterladen (.seb)</span>
                     </button>
-                    <button class="btn btn-secondary btn-full-width" id="generateMoodleBtn">
+                    <button class="btn btn-primary btn-full-width" id="generateMoodleBtn">
                         <span data-i18n="generateMoodleBtn">📋 Moodle-Konfiguration anzeigen</span>
                     </button>
                 </div>
