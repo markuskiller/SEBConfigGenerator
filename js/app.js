@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.23.0b18
-// Build: 2025-11-25 08:26
+// Version: v0.23.0b19
+// Build: 2025-11-25 08:41
 
 // ============================================================================
 
@@ -1098,8 +1098,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.23.0b18';
-const BUILD_DATE = new Date('2025-11-25T08:26:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.23.0b19';
+const BUILD_DATE = new Date('2025-11-25T08:41:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -2346,7 +2346,6 @@ container.appendChild(infoBox);
 // Filter dropdowns container (all in one row)
 const filterBarsContainer = document.createElement('div');
 filterBarsContainer.classList.add('url-filter-bars-container');
-filterBarsContainer.style.cssText = 'display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;';
 
 const sources = [
     { key: 'all', icon: '🔍', label: currentLang === 'de' ? 'Alle' : 'All' },
@@ -2421,13 +2420,9 @@ const applyFilters = () => {
     actionButtons.forEach(btn => {
         const btnAction = btn.getAttribute('data-action');
         if (btnAction === activeActionFilter) {
-            btn.style.background = '#2196F3';
-            btn.style.color = 'white';
-            btn.style.borderColor = '#2196F3';
+            btn.classList.add('active');
         } else {
-            btn.style.background = 'white';
-            btn.style.color = '';
-            btn.style.borderColor = '#ddd';
+            btn.classList.remove('active');
         }
     });
     
@@ -2481,41 +2476,38 @@ const applyFilters = () => {
 
 // Create Source filter (dropdown like Tools)
 const sourceFilterWrapper = document.createElement('div');
-sourceFilterWrapper.style.cssText = 'flex: 1; min-width: 180px; position: relative;';
+sourceFilterWrapper.classList.add('url-filter-source-wrapper');
 
 const sourceLabel = document.createElement('label');
+sourceLabel.classList.add('url-filter-dropdown-label');
 sourceLabel.textContent = currentLang === 'de' ? '🔍 Quelle:' : '🔍 Source:';
-sourceLabel.style.cssText = 'display: block; font-weight: 500; margin-bottom: 5px; font-size: 0.9em;';
 sourceFilterWrapper.appendChild(sourceLabel);
 
 const sourceFilterBtn = document.createElement('button');
-sourceFilterBtn.classList.add('source-filter-btn');
-sourceFilterBtn.style.cssText = 'width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; background: white; font-size: 0.95em; cursor: pointer; text-align: left; display: flex; justify-content: space-between; align-items: center;';
+sourceFilterBtn.classList.add('source-filter-btn', 'url-filter-dropdown-btn');
 const activeSource = sources.find(s => s.key === activeSourceFilter) || sources[0];
 sourceFilterBtn.innerHTML = `<span>${activeSource.icon} ${activeSource.label}</span><span>▼</span>`;
 sourceFilterBtn.setAttribute('aria-label', currentLang === 'de' ? 'Quelle filtern' : 'Filter by source');
 
 const sourceDropdown = document.createElement('div');
-sourceDropdown.classList.add('source-filter-dropdown', 'hidden');
-sourceDropdown.style.cssText = 'position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 4px; margin-top: 2px; max-height: 300px; overflow-y: auto; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.15);';
+sourceDropdown.classList.add('source-filter-dropdown', 'url-filter-dropdown-menu', 'hidden');
 
 sources.forEach(source => {
     const option = document.createElement('div');
-    option.style.cssText = 'padding: 8px 12px; cursor: pointer; user-select: none;';
+    option.classList.add('url-filter-dropdown-option');
     if (source.key === activeSourceFilter) {
-        option.style.background = '#e3f2fd';
+        option.classList.add('active');
     }
     option.innerHTML = `${source.icon} ${source.label}`;
-    option.addEventListener('mouseover', () => {
-        if (source.key !== activeSourceFilter) option.style.background = '#f0f0f0';
-    });
-    option.addEventListener('mouseout', () => {
-        option.style.background = source.key === activeSourceFilter ? '#e3f2fd' : '';
-    });
     option.addEventListener('click', () => {
         activeSourceFilter = source.key;
         sourceFilterBtn.innerHTML = `<span>${source.icon} ${source.label}</span><span>▼</span>`;
         sourceDropdown.classList.add('hidden');
+        // Update active class
+        sourceDropdown.querySelectorAll('.url-filter-dropdown-option').forEach(opt => {
+            opt.classList.remove('active');
+        });
+        option.classList.add('active');
         applyFilters();
     });
     sourceDropdown.appendChild(option);
@@ -2537,23 +2529,22 @@ sourceFilterWrapper.appendChild(sourceDropdown);
 
 // Create Action filter (buttons)
 const actionFilterWrapper = document.createElement('div');
-actionFilterWrapper.style.cssText = 'flex: 1; min-width: 250px;';
+actionFilterWrapper.classList.add('url-filter-action-wrapper');
 const actionLabel = document.createElement('label');
+actionLabel.classList.add('url-filter-dropdown-label');
 actionLabel.textContent = currentLang === 'de' ? '⚡ Aktion:' : '⚡ Action:';
-actionLabel.style.cssText = 'display: block; font-weight: 500; margin-bottom: 5px; font-size: 0.9em;';
 actionFilterWrapper.appendChild(actionLabel);
 
 const actionButtonsContainer = document.createElement('div');
-actionButtonsContainer.style.cssText = 'display: flex; gap: 5px;';
+actionButtonsContainer.style.display = 'flex';
+actionButtonsContainer.style.gap = '5px';
 
 actions.forEach(action => {
     const btn = document.createElement('button');
-    btn.classList.add('action-filter-btn');
-    btn.style.cssText = 'flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; background: white; font-size: 0.95em; cursor: pointer; transition: all 0.2s;';
+    btn.classList.add('action-filter-btn', 'url-filter-dropdown-btn');
+    btn.style.flex = '1';
     if (action.key === activeActionFilter) {
-        btn.style.background = '#2196F3';
-        btn.style.color = 'white';
-        btn.style.borderColor = '#2196F3';
+        btn.classList.add('active');
     }
     btn.innerHTML = `${action.icon} ${action.label}`;
     btn.setAttribute('data-action', action.key);
@@ -2568,17 +2559,16 @@ actionFilterWrapper.appendChild(actionButtonsContainer);
 
 // Create label filter (multi-select dropdown) - styled like other dropdowns
 const labelFilterWrapper = document.createElement('div');
-labelFilterWrapper.style.cssText = 'flex: 1; min-width: 180px; position: relative;';
+labelFilterWrapper.classList.add('url-filter-label-wrapper');
 
 if (sortedLabels.length > 0) {
     const labelLabel = document.createElement('label');
+    labelLabel.classList.add('url-filter-dropdown-label');
     labelLabel.textContent = currentLang === 'de' ? '🏷️ Tools:' : '🏷️ Tools:';
-    labelLabel.style.cssText = 'display: block; font-weight: 500; margin-bottom: 5px; font-size: 0.9em;';
     labelFilterWrapper.appendChild(labelLabel);
     
     const labelFilterBtn = document.createElement('button');
-    labelFilterBtn.classList.add('label-filter-btn');
-    labelFilterBtn.style.cssText = 'width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; background: white; font-size: 0.95em; cursor: pointer; text-align: left; display: flex; justify-content: space-between; align-items: center;';
+    labelFilterBtn.classList.add('label-filter-btn', 'url-filter-dropdown-btn');
     const selectedCount = activeLabelFilters.size;
     const labelText = currentLang === 'de' ? 'Tools' : 'Tools';
     labelFilterBtn.innerHTML = selectedCount === 0 
@@ -2587,19 +2577,15 @@ if (sortedLabels.length > 0) {
     labelFilterBtn.setAttribute('aria-label', currentLang === 'de' ? 'Nach Tools filtern' : 'Filter by tools');
     
     const labelDropdown = document.createElement('div');
-    labelDropdown.classList.add('label-filter-dropdown', 'hidden');
-    labelDropdown.style.cssText = 'position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 4px; margin-top: 2px; max-height: 300px; overflow-y: auto; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.15);';
+    labelDropdown.classList.add('label-filter-dropdown', 'url-filter-dropdown-menu', 'hidden');
     
     // "All" option
     const allOption = document.createElement('label');
-    allOption.classList.add('label-filter-option');
-    allOption.style.cssText = 'display: block; padding: 8px 12px; cursor: pointer; user-select: none;';
+    allOption.classList.add('label-filter-option', 'url-filter-dropdown-option');
     allOption.innerHTML = `
-        <input type="checkbox" value="" ${activeLabelFilters.size === 0 ? 'checked' : ''} style="margin-right: 8px;">
+        <input type="checkbox" value="" ${activeLabelFilters.size === 0 ? 'checked' : ''}>
         <span>${currentLang === 'de' ? '✓ Alle auswählen' : '✓ Select all'}</span>
     `;
-    allOption.addEventListener('mouseover', () => allOption.style.background = '#f0f0f0');
-    allOption.addEventListener('mouseout', () => allOption.style.background = '');
     allOption.querySelector('input').addEventListener('change', (e) => {
         if (e.target.checked) {
             activeLabelFilters.clear();
@@ -2615,14 +2601,11 @@ if (sortedLabels.length > 0) {
     // Individual label options
     sortedLabels.forEach(label => {
         const option = document.createElement('label');
-        option.classList.add('label-filter-option');
-        option.style.cssText = 'display: block; padding: 8px 12px; cursor: pointer; user-select: none;';
+        option.classList.add('label-filter-option', 'url-filter-dropdown-option');
         option.innerHTML = `
-            <input type="checkbox" value="${label}" ${activeLabelFilters.has(label) ? 'checked' : ''} style="margin-right: 8px;">
+            <input type="checkbox" value="${label}" ${activeLabelFilters.has(label) ? 'checked' : ''}>
             <span>${label}</span>
         `;
-        option.addEventListener('mouseover', () => option.style.background = '#f0f0f0');
-        option.addEventListener('mouseout', () => option.style.background = '');
         option.querySelector('input').addEventListener('change', (e) => {
             const allCheckbox = labelDropdown.querySelector('input[value=""]');
             if (e.target.checked) {
