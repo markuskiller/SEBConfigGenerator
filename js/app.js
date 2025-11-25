@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.23.0b17
-// Build: 2025-11-24 23:24
+// Version: v0.23.0b18
+// Build: 2025-11-25 08:26
 
 // ============================================================================
 
@@ -1098,8 +1098,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.23.0b17';
-const BUILD_DATE = new Date('2025-11-24T23:24:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.23.0b18';
+const BUILD_DATE = new Date('2025-11-25T08:26:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -2782,44 +2782,40 @@ const labelBadge = `<span class="source-badge ${badgeClass}" title="${sourceLabe
         : '';
 
     card.innerHTML = `
-        <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="url-filter-card-container">
             <!-- Zeile 1: Quelle, Aktiv, Regex, Papierkorb -->
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="url-filter-card-row">
                 ${labelBadge}
-                <label class="url-filter-label" for="${activeId}" style="margin: 0;">
+                <label class="url-filter-label" for="${activeId}">
                     <input type="checkbox" 
                            id="${activeId}"
                            class="url-filter-active" 
                            data-index="${index}"
-                           ${rule.active ? 'checked' : ''}
-                           style="margin-right: 4px;">
+                           ${rule.active ? 'checked' : ''}>
                     <span>${currentLang === 'de' ? 'Aktiv' : 'Active'}</span>
                 </label>
-                <label class="url-filter-label" for="${regexId}" style="margin: 0;">
+                <label class="url-filter-label" for="${regexId}">
                     <input type="checkbox" 
                            id="${regexId}"
                            class="url-filter-regex" 
                            data-index="${index}"
-                           ${rule.regex ? 'checked' : ''}
-                           style="margin-right: 4px;">
+                           ${rule.regex ? 'checked' : ''}>
                     <span>Regex</span>
                 </label>
-                <div style="margin-left: auto; display: flex; gap: 4px;">
+                <div class="url-filter-card-row-right">
                     ${resetButton}
                     <button class="btn-icon url-filter-delete" 
                             data-index="${index}"
-                            title="${currentLang === 'de' ? 'Regel löschen' : 'Delete rule'}"
-                            style="padding: 4px 8px; font-size: 1.1em;">
+                            title="${currentLang === 'de' ? 'Regel löschen' : 'Delete rule'}">
                         🗑️
                     </button>
                 </div>
             </div>
             <!-- Zeile 2: Aktion-Dropdown (schmal) + Expression (breit) -->
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="url-filter-card-row">
                 <select id="${actionId}"
                         class="url-filter-action ${actionClass}" 
-                        data-index="${index}"
-                        style="width: auto; min-width: 130px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
+                        data-index="${index}">
                     <option value="1" ${rule.action === 1 ? 'selected' : ''}>${currentLang === 'de' ? '✓ Erlauben' : '✓ Allow'}</option>
                     <option value="0" ${rule.action === 0 ? 'selected' : ''}>${currentLang === 'de' ? '✗ Blockieren' : '✗ Block'}</option>
                 </select>
@@ -2828,8 +2824,7 @@ const labelBadge = `<span class="source-badge ${badgeClass}" title="${sourceLabe
                        class="url-filter-expression" 
                        data-index="${index}"
                        value="${(rule.expression || '').replace(/"/g, '&quot;')}"
-                       placeholder="${currentLang === 'de' ? 'URL-Pattern oder Regex...' : 'URL pattern or regex...'}"
-                       style="flex: 1; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em;">
+                       placeholder="${currentLang === 'de' ? 'URL-Pattern oder Regex...' : 'URL pattern or regex...'}">
             </div>
         </div>
     `;// Helper: Promote custom rule to custom-advanced when edited
@@ -3988,7 +3983,7 @@ function syncAllURLFilterSources() {
     ['onenote', 'word'].forEach(serviceType => {
         const config = sharepointConfig[serviceType];
         if (config?.parsedLink?.isSharePoint && config?.restrictions) {
-            const restrictions = config.restrictions;
+            const { restrictions } = config;
             // Check if ANY restriction checkbox is checked
             const hasChecked = restrictions.schoolSharepoint || 
                              restrictions.teamsSite || 
@@ -4030,13 +4025,13 @@ function syncAllURLFilterSources() {
             action: pattern.action || 1
         }, 'sharepoint');
         
-        if (added) {
-            urlFilterMetaInfo[pattern.expression] = {
-                source: 'sharepoint',
-                label: pattern.label || 'SharePoint'
-            };
-            // debugLog(`   ➕ Added SharePoint: ${pattern.expression} [${pattern.label}]`);
-        }
+        if (!added) return; // Skip if duplicate
+        
+        urlFilterMetaInfo[pattern.expression] = {
+            source: 'sharepoint',
+            label: pattern.label || 'SharePoint'
+        };
+        // debugLog(`   ➕ Added SharePoint: ${pattern.expression} [${pattern.label}]`);
     });
     
     // ========================================================================
@@ -4080,7 +4075,7 @@ const patterns = [];
         config.restrictions = {};
         // debugLog(`   ⚠️ ${serviceType}: restrictions was undefined, initialized to {}`);
     }
-    const restrictions = config.restrictions;
+    const { restrictions } = config;
     // debugLog(`   📋 ${serviceType}: restrictions =`, restrictions);
     
     // Check if any restriction is actively set
