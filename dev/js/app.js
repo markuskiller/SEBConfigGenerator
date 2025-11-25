@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.23.0b19
-// Build: 2025-11-25 08:41
+// Version: v0.23.0b20
+// Build: 2025-11-26 00:15
 
 // ============================================================================
 
@@ -1098,8 +1098,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.23.0b19';
-const BUILD_DATE = new Date('2025-11-25T08:41:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.23.0b20';
+const BUILD_DATE = new Date('2025-11-26T00:15:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1433,38 +1433,81 @@ group3Title.classList.add('preset-group-title', 'spacing-top');
 group3Title.innerHTML = `📚 ${t('groupAllowedTools')}`;
 container.appendChild(group3Title);
 
-// Subject selector - dynamically generated from SUBJECTS configuration
+// Subject selector - Single-Choice Custom Dropdown
 const subjectSelector = document.createElement('div');
-subjectSelector.classList.add('preset-subject-selector');
+subjectSelector.classList.add('preset-subject-selector', 'dropdown-container', 'single-choice');
 
 const subjectLabel = document.createElement('label');
 subjectLabel.classList.add('preset-subject-label');
-subjectLabel.setAttribute('for', 'subjectSelect');
 subjectLabel.textContent = `${t('selectSubject')}:`;
 subjectSelector.appendChild(subjectLabel);
 
-const subjectSelect = document.createElement('select');
-subjectSelect.id = 'subjectSelect';
-subjectSelect.classList.add('preset-subject-select');
+// Dropdown Button
+const dropdownBtn = document.createElement('button');
+dropdownBtn.type = 'button';
+dropdownBtn.id = 'subjectDropdownBtn';
+dropdownBtn.classList.add('dropdown-btn');
+dropdownBtn.innerHTML = `<span>${t('selectSubject')}</span>`;
+subjectSelector.appendChild(dropdownBtn);
 
-// Default option
-const defaultOption = document.createElement('option');
-defaultOption.value = '';
-defaultOption.textContent = `-- ${t('selectSubject')} --`;
-subjectSelect.appendChild(defaultOption);
+// Dropdown Menu
+const dropdownMenu = document.createElement('div');
+dropdownMenu.id = 'subjectDropdownMenu';
+dropdownMenu.classList.add('dropdown-menu', 'hidden');
 
-// Dynamically add options from SUBJECTS configuration
+// Add options from SUBJECTS configuration
 Object.keys(SUBJECTS).forEach(subjectKey => {
-    const option = document.createElement('option');
-    option.value = subjectKey;
-    // Capitalize first letter for translation key: german -> subjectGerman
+    const option = document.createElement('div');
+    option.classList.add('dropdown-option');
+    option.dataset.value = subjectKey;
+    
+    const label = document.createElement('span');
     const translationKey = 'subject' + subjectKey.charAt(0).toUpperCase() + subjectKey.slice(1);
-    option.textContent = t(translationKey);
-    subjectSelect.appendChild(option);
+    label.textContent = t(translationKey);
+    
+    option.appendChild(label);
+    
+    // Click handler - Single-Choice: Select + Close
+    option.addEventListener('click', () => {
+        // Remove previous selection
+        dropdownMenu.querySelectorAll('.dropdown-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        
+        // Mark as selected
+        option.classList.add('selected');
+        
+        // Update button text
+        const btnText = dropdownBtn.querySelector('span');
+        btnText.textContent = label.textContent;
+        
+        // Close dropdown
+        dropdownMenu.classList.add('hidden');
+        dropdownBtn.classList.remove('active');
+        
+        // Render tools for selected subject
+        renderAllowedTools(subjectKey);
+    });
+    
+    dropdownMenu.appendChild(option);
 });
 
-subjectSelector.appendChild(subjectSelect);
+subjectSelector.appendChild(dropdownMenu);
 container.appendChild(subjectSelector);
+
+// Toggle dropdown on button click
+dropdownBtn.addEventListener('click', () => {
+    dropdownMenu.classList.toggle('hidden');
+    dropdownBtn.classList.toggle('active');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    if (!subjectSelector.contains(e.target)) {
+        dropdownMenu.classList.add('hidden');
+        dropdownBtn.classList.remove('active');
+    }
+});
 
 // Tools container (initially hidden)
 const toolsContainer = document.createElement('div');
@@ -1472,16 +1515,21 @@ toolsContainer.id = 'allowedToolsContainer';
 toolsContainer.classList.add('preset-tools-container');
 container.appendChild(toolsContainer);
 
-// Add event listener to subject selector and restore previous selection
+// Restore previous selection
 setTimeout(() => {
-    const select = document.getElementById('subjectSelect');
-    if (select) {
-        // Restore previously selected subject
-        if (currentSelectedSubject) {
-            select.value = currentSelectedSubject;
-            renderAllowedTools(currentSelectedSubject);
+    if (currentSelectedSubject) {
+        // Handle legacy multi-select: take first subject
+        const subject = Array.isArray(currentSelectedSubject) ? currentSelectedSubject[0] : currentSelectedSubject;
+        
+        // Find and select the option
+        const option = dropdownMenu.querySelector(`[data-value="${subject}"]`);
+        if (option) {
+            option.classList.add('selected');
+            const translationKey = 'subject' + subject.charAt(0).toUpperCase() + subject.slice(1);
+            const btnText = dropdownBtn.querySelector('span');
+            btnText.textContent = t(translationKey);
+            renderAllowedTools(subject);
         }
-        select.addEventListener('change', (e) => renderAllowedTools(e.target.value));
     }
 }, 0);
 }
@@ -1490,14 +1538,18 @@ function renderAllowedTools(subject) {
 const container = document.getElementById('allowedToolsContainer');
 if (!container) return;
 
-// Store the selected subject
+// Store the selected subject (single value)
 currentSelectedSubject = subject;
 
 container.innerHTML = '';
 
-if (!subject || !PRESET_GROUPS.allowedTools[subject]) return;
+if (!subject) return;
 
-PRESET_GROUPS.allowedTools[subject].forEach(key => {
+// Get tools for this subject
+const toolKeys = PRESET_GROUPS.allowedTools[subject] || [];
+
+// Render tools
+toolKeys.forEach(key => {
     const btn = document.createElement('button');
     btn.className = `preset-btn ${selectedPresets.includes(key) ? 'active' : ''}`;
     btn.innerHTML = `
@@ -1721,7 +1773,8 @@ return div;
 function updateStartUrlField() {
 const startUrlInput = document.getElementById('startUrl');
 const startUrlSelectorContainer = document.getElementById('startUrlSelectorContainer');
-const startUrlSelector = document.getElementById('startUrlSelector');
+const dropdownBtn = document.getElementById('startUrlDropdownBtn');
+const dropdownMenu = document.getElementById('startUrlDropdownMenu');
 
 if (selectedPresets.length === 0) {
     // No presets selected - clear field and hide dropdown
@@ -1739,35 +1792,84 @@ if (selectedPresets.length === 0) {
     startUrlSelectorContainer.classList.add('visible');
     
     // Clear and populate dropdown
-    startUrlSelector.innerHTML = '';
+    dropdownMenu.innerHTML = '';
     
     // Add "Custom" option as default
-    const customOption = document.createElement('option');
-    customOption.value = '';
-    customOption.textContent = currentLang === 'de' ? '🔧 Benutzerdefiniert (eigene URL eingeben)' : '🔧 Custom (enter your own URL)';
-    startUrlSelector.appendChild(customOption);
+    const customOption = document.createElement('div');
+    customOption.classList.add('dropdown-option', 'selected');
+    customOption.dataset.value = '';
+    const customLabel = document.createElement('span');
+    customLabel.textContent = currentLang === 'de' ? '🔧 Benutzerdefiniert (eigene URL eingeben)' : '🔧 Custom (enter your own URL)';
+    customOption.appendChild(customLabel);
+    customOption.addEventListener('click', () => {
+        // Remove previous selection
+        dropdownMenu.querySelectorAll('.dropdown-option').forEach(opt => opt.classList.remove('selected'));
+        customOption.classList.add('selected');
+        
+        // Update button text
+        dropdownBtn.querySelector('span').textContent = customLabel.textContent;
+        
+        // Clear input field
+        startUrlInput.value = '';
+        
+        // Close dropdown
+        dropdownMenu.classList.add('hidden');
+        dropdownBtn.classList.remove('active');
+    });
+    dropdownMenu.appendChild(customOption);
     
     // Add option for each selected preset
     selectedPresets.forEach(presetKey => {
         const preset = PRESETS[presetKey];
         if (preset && preset.startUrl) {
-            const option = document.createElement('option');
-            option.value = preset.startUrl;
+            const option = document.createElement('div');
+            option.classList.add('dropdown-option');
+            option.dataset.value = preset.startUrl;
+            
+            const label = document.createElement('span');
             const presetName = t(getPresetTranslationKey(presetKey));
-            option.textContent = `${presetName} (${preset.startUrl})`;
-            startUrlSelector.appendChild(option);
+            label.textContent = `${presetName} (${preset.startUrl})`;
+            option.appendChild(label);
+            
+            option.addEventListener('click', () => {
+                // Remove previous selection
+                dropdownMenu.querySelectorAll('.dropdown-option').forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                
+                // Update button text
+                dropdownBtn.querySelector('span').textContent = label.textContent;
+                
+                // Set URL in input field
+                startUrlInput.value = preset.startUrl;
+                
+                // Close dropdown
+                dropdownMenu.classList.add('hidden');
+                dropdownBtn.classList.remove('active');
+            });
+            
+            dropdownMenu.appendChild(option);
         }
     });
     
-    // Set to custom (empty) by default
-    startUrlSelector.value = '';
+    // Set button text to "Custom" by default
+    dropdownBtn.querySelector('span').textContent = customLabel.textContent;
     startUrlInput.value = '';
     
-    // Add change listener if not already added
-    if (!startUrlSelector.hasAttribute('data-listener-attached')) {
-        startUrlSelector.setAttribute('data-listener-attached', 'true');
-        startUrlSelector.addEventListener('change', (e) => {
-            startUrlInput.value = e.target.value;
+    // Setup dropdown toggle (only once)
+    if (!dropdownBtn.hasAttribute('data-listener-attached')) {
+        dropdownBtn.setAttribute('data-listener-attached', 'true');
+        
+        dropdownBtn.addEventListener('click', () => {
+            dropdownMenu.classList.toggle('hidden');
+            dropdownBtn.classList.toggle('active');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!startUrlSelectorContainer.contains(e.target)) {
+                dropdownMenu.classList.add('hidden');
+                dropdownBtn.classList.remove('active');
+            }
         });
     }
 }
@@ -2316,10 +2418,15 @@ const content = document.createElement('div');
 content.classList.add('url-filter-content', 'bool-group-content');
 content.style.padding = '1rem';
 
-// Toggle functionality (no lazy loading - content is already loaded in Advanced Section)
+// Toggle functionality - render content when expanding
 header.addEventListener('click', () => {
-    // Just toggle visibility - content is already rendered
+    const wasHidden = !content.classList.contains('show');
     content.classList.toggle('show');
+    
+    // When expanding, always refresh content from DOM
+    if (wasHidden && content.classList.contains('show')) {
+        renderURLFilterContent(content);
+    }
 });
 
 section.appendChild(header);
@@ -2357,8 +2464,8 @@ const sources = [
 
 const actions = [
     { key: 'all', icon: '🔍', label: currentLang === 'de' ? 'Alle' : 'All' },
-    { key: 'allow', icon: '✅', label: currentLang === 'de' ? 'Erlauben' : 'Allow' },
-    { key: 'block', icon: '🚫', label: currentLang === 'de' ? 'Blockieren' : 'Block' }
+    { key: 'allow', icon: '✓', label: currentLang === 'de' ? 'Erlauben' : 'Allow' },
+    { key: 'block', icon: '✗', label: currentLang === 'de' ? 'Blockieren' : 'Block' }
 ];
 
 // Collect all unique labels from rules for label filter (only tool-presets)
@@ -2366,8 +2473,7 @@ const allLabels = new Set();
 const excludeLabels = [
     'SharePoint Auth', 
     'SharePoint Infra',
-    'Custom Domain',      // Manual entry from "Erlaubte Domains" textarea
-    'Blocked Domain'      // Manual entry from "Blockierte Domains" textarea
+    currentLang === 'de' ? 'Manuell' : 'Custom'  // Manual/Custom entries from textareas (both allow & block)
 ];
 parsedDictStructures.urlFilterRules.forEach(rule => {
     // Get label from meta-info
@@ -2386,26 +2492,10 @@ const sortedLabels = Array.from(allLabels).sort();
 const labelFilterBar = document.createElement('div');
 labelFilterBar.classList.add('url-filter-label-bar');
 
-// Load active filters from localStorage
+// Filter states - always reset to 'all' on page load (no localStorage)
 let activeSourceFilter = 'all';
 let activeActionFilter = 'all';
 let activeLabelFilters = new Set(); // Multi-select for labels
-try {
-    const storedSource = localStorage.getItem('sebConfigURLFilterSource');
-    if (storedSource && sources.some(s => s.key === storedSource)) {
-        activeSourceFilter = storedSource;
-    }
-    const storedAction = localStorage.getItem('sebConfigURLFilterAction');
-    if (storedAction && actions.some(a => a.key === storedAction)) {
-        activeActionFilter = storedAction;
-    }
-    const storedLabels = localStorage.getItem('sebConfigURLFilterLabels');
-    if (storedLabels) {
-        activeLabelFilters = new Set(JSON.parse(storedLabels));
-    }
-} catch (e) {
-    console.warn('Could not load URL filter preferences:', e);
-}
 
 const applyFilters = () => {
     // Update source dropdown button text
@@ -2437,15 +2527,6 @@ const applyFilters = () => {
         }
     }
     
-    // Save to localStorage
-    try {
-        localStorage.setItem('sebConfigURLFilterSource', activeSourceFilter);
-        localStorage.setItem('sebConfigURLFilterAction', activeActionFilter);
-        localStorage.setItem('sebConfigURLFilterLabels', JSON.stringify(Array.from(activeLabelFilters)));
-    } catch (e) {
-        console.warn('Could not save URL filter preferences:', e);
-    }
-    
     // Filter rules by source, action, AND label
     const allCards = container.querySelectorAll('.url-filter-rule-card');
     allCards.forEach(card => {
@@ -2474,9 +2555,9 @@ const applyFilters = () => {
     });
 };
 
-// Create Source filter (dropdown like Tools)
+// Create Source filter (Single-Choice Dropdown)
 const sourceFilterWrapper = document.createElement('div');
-sourceFilterWrapper.classList.add('url-filter-source-wrapper');
+sourceFilterWrapper.classList.add('url-filter-source-wrapper', 'dropdown-container', 'single-choice');
 
 const sourceLabel = document.createElement('label');
 sourceLabel.classList.add('url-filter-dropdown-label');
@@ -2484,30 +2565,35 @@ sourceLabel.textContent = currentLang === 'de' ? '🔍 Quelle:' : '🔍 Source:'
 sourceFilterWrapper.appendChild(sourceLabel);
 
 const sourceFilterBtn = document.createElement('button');
-sourceFilterBtn.classList.add('source-filter-btn', 'url-filter-dropdown-btn');
+sourceFilterBtn.classList.add('dropdown-btn');
+sourceFilterBtn.type = 'button';
 const activeSource = sources.find(s => s.key === activeSourceFilter) || sources[0];
-sourceFilterBtn.innerHTML = `<span>${activeSource.icon} ${activeSource.label}</span><span>▼</span>`;
+sourceFilterBtn.innerHTML = `<span>${activeSource.icon} ${activeSource.label}</span>`;
 sourceFilterBtn.setAttribute('aria-label', currentLang === 'de' ? 'Quelle filtern' : 'Filter by source');
 
 const sourceDropdown = document.createElement('div');
-sourceDropdown.classList.add('source-filter-dropdown', 'url-filter-dropdown-menu', 'hidden');
+sourceDropdown.classList.add('dropdown-menu', 'hidden');
 
 sources.forEach(source => {
     const option = document.createElement('div');
-    option.classList.add('url-filter-dropdown-option');
+    option.classList.add('dropdown-option');
     if (source.key === activeSourceFilter) {
-        option.classList.add('active');
+        option.classList.add('selected');
     }
-    option.innerHTML = `${source.icon} ${source.label}`;
+    const label = document.createElement('span');
+    label.textContent = `${source.icon} ${source.label}`;
+    option.appendChild(label);
+    
     option.addEventListener('click', () => {
         activeSourceFilter = source.key;
-        sourceFilterBtn.innerHTML = `<span>${source.icon} ${source.label}</span><span>▼</span>`;
+        sourceFilterBtn.innerHTML = `<span>${source.icon} ${source.label}</span>`;
         sourceDropdown.classList.add('hidden');
-        // Update active class
-        sourceDropdown.querySelectorAll('.url-filter-dropdown-option').forEach(opt => {
-            opt.classList.remove('active');
+        sourceFilterBtn.classList.remove('active');
+        // Update selected class
+        sourceDropdown.querySelectorAll('.dropdown-option').forEach(opt => {
+            opt.classList.remove('selected');
         });
-        option.classList.add('active');
+        option.classList.add('selected');
         applyFilters();
     });
     sourceDropdown.appendChild(option);
@@ -2516,11 +2602,13 @@ sources.forEach(source => {
 sourceFilterBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     sourceDropdown.classList.toggle('hidden');
+    sourceFilterBtn.classList.toggle('active');
 });
 
 document.addEventListener('click', (e) => {
     if (!sourceFilterWrapper.contains(e.target)) {
         sourceDropdown.classList.add('hidden');
+        sourceFilterBtn.classList.remove('active');
     }
 });
 
@@ -2557,31 +2645,40 @@ actions.forEach(action => {
 
 actionFilterWrapper.appendChild(actionButtonsContainer);
 
-// Create label filter (multi-select dropdown) - styled like other dropdowns
+// Create label filter (Multi-Choice Dropdown) - ALWAYS show, even if empty
 const labelFilterWrapper = document.createElement('div');
-labelFilterWrapper.classList.add('url-filter-label-wrapper');
+labelFilterWrapper.classList.add('url-filter-label-wrapper', 'dropdown-container');
+
+const labelLabel = document.createElement('label');
+labelLabel.classList.add('url-filter-dropdown-label');
+labelLabel.textContent = currentLang === 'de' ? '🏷️ Tools:' : '🏷️ Tools:';
+labelFilterWrapper.appendChild(labelLabel);
+
+const labelFilterBtn = document.createElement('button');
+labelFilterBtn.classList.add('dropdown-btn');
+labelFilterBtn.type = 'button';
+const selectedCount = activeLabelFilters.size;
+
+// Button text based on labels availability
+if (sortedLabels.length === 0) {
+    labelFilterBtn.innerHTML = `<span>${currentLang === 'de' ? 'Keine Tools' : 'No tools'}</span>`;
+    labelFilterBtn.disabled = true;
+    labelFilterBtn.style.opacity = '0.6';
+    labelFilterBtn.style.cursor = 'not-allowed';
+} else {
+    labelFilterBtn.innerHTML = selectedCount === 0 
+        ? `<span>${currentLang === 'de' ? 'Alle' : 'All'}</span>`
+        : `<span class="label-count">${selectedCount} ${currentLang === 'de' ? 'ausgewählt' : 'selected'}</span>`;
+    labelFilterBtn.setAttribute('aria-label', currentLang === 'de' ? 'Nach Tools filtern' : 'Filter by tools');
+}
+
+const labelDropdown = document.createElement('div');
+labelDropdown.classList.add('dropdown-menu', 'hidden');
 
 if (sortedLabels.length > 0) {
-    const labelLabel = document.createElement('label');
-    labelLabel.classList.add('url-filter-dropdown-label');
-    labelLabel.textContent = currentLang === 'de' ? '🏷️ Tools:' : '🏷️ Tools:';
-    labelFilterWrapper.appendChild(labelLabel);
-    
-    const labelFilterBtn = document.createElement('button');
-    labelFilterBtn.classList.add('label-filter-btn', 'url-filter-dropdown-btn');
-    const selectedCount = activeLabelFilters.size;
-    const labelText = currentLang === 'de' ? 'Tools' : 'Tools';
-    labelFilterBtn.innerHTML = selectedCount === 0 
-        ? `<span>${currentLang === 'de' ? 'Alle' : 'All'}</span><span>▼</span>`
-        : `<span class="label-count">${selectedCount} ${currentLang === 'de' ? 'ausgewählt' : 'selected'}</span><span>▼</span>`;
-    labelFilterBtn.setAttribute('aria-label', currentLang === 'de' ? 'Nach Tools filtern' : 'Filter by tools');
-    
-    const labelDropdown = document.createElement('div');
-    labelDropdown.classList.add('label-filter-dropdown', 'url-filter-dropdown-menu', 'hidden');
-    
     // "All" option
     const allOption = document.createElement('label');
-    allOption.classList.add('label-filter-option', 'url-filter-dropdown-option');
+    allOption.classList.add('dropdown-option', 'special');
     allOption.innerHTML = `
         <input type="checkbox" value="" ${activeLabelFilters.size === 0 ? 'checked' : ''}>
         <span>${currentLang === 'de' ? '✓ Alle auswählen' : '✓ Select all'}</span>
@@ -2601,7 +2698,7 @@ if (sortedLabels.length > 0) {
     // Individual label options
     sortedLabels.forEach(label => {
         const option = document.createElement('label');
-        option.classList.add('label-filter-option', 'url-filter-dropdown-option');
+        option.classList.add('dropdown-option');
         option.innerHTML = `
             <input type="checkbox" value="${label}" ${activeLabelFilters.has(label) ? 'checked' : ''}>
             <span>${label}</span>
@@ -2622,28 +2719,30 @@ if (sortedLabels.length > 0) {
         labelDropdown.appendChild(option);
     });
     
-    // Toggle dropdown on button click
+    // Toggle dropdown on button click (only if not disabled)
     labelFilterBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        labelDropdown.classList.toggle('hidden');
+        if (!labelFilterBtn.disabled) {
+            labelDropdown.classList.toggle('hidden');
+            labelFilterBtn.classList.toggle('active');
+        }
     });
     
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
         if (!labelFilterWrapper.contains(e.target)) {
             labelDropdown.classList.add('hidden');
+            labelFilterBtn.classList.remove('active');
         }
     });
-    
-    labelFilterWrapper.appendChild(labelFilterBtn);
-    labelFilterWrapper.appendChild(labelDropdown);
 }
+
+labelFilterWrapper.appendChild(labelFilterBtn);
+labelFilterWrapper.appendChild(labelDropdown);
 
 // Add all three filters to container (in order: Aktion - Tools - Quelle)
 filterBarsContainer.appendChild(actionFilterWrapper);
-if (sortedLabels.length > 0) {
-    filterBarsContainer.appendChild(labelFilterWrapper);
-}
+filterBarsContainer.appendChild(labelFilterWrapper);
 filterBarsContainer.appendChild(sourceFilterWrapper);
 container.appendChild(filterBarsContainer);
 
@@ -2738,7 +2837,7 @@ const sourceLabels = {
     'sharepoint': 'SharePoint',
     'tool-preset': 'Tool-Preset',
     'custom': currentLang === 'de' ? 'Textfeld' : 'Text Field',
-    'custom-advanced': currentLang === 'de' ? 'Manuell' : 'Manual',
+    'custom-advanced': currentLang === 'de' ? 'Manuell ADV' : 'Custom ADV',
     'imported': currentLang === 'de' ? 'Importiert' : 'Imported'
 };
 
@@ -2749,8 +2848,15 @@ const sourceLabel = sourceLabels[source] || label;
 const modifiedText = modified ? ` <em>${currentLang === 'de' ? '(modifiziert)' : '(modified)'}</em>` : '';
 // Add label-specific class for custom domain colors
 let badgeClass = `source-${source}`;
-if (label === 'Custom Domain') badgeClass += ' label-custom-domain';
-if (label === 'Blocked Domain') badgeClass += ' label-blocked-domain';
+const manualLabel = currentLang === 'de' ? 'Manuell' : 'Custom';
+if (label === manualLabel && source === 'custom') {
+    // Determine if allow or block based on rule action
+    if (rule.action === 1) {
+        badgeClass += ' label-custom-domain'; // Allow -> Green
+    } else {
+        badgeClass += ' label-blocked-domain'; // Block -> Red
+    }
+}
 const labelBadge = `<span class="source-badge ${badgeClass}" title="${sourceLabel}">
     ${sourceIcon} ${label || sourceLabel}${modifiedText}
 </span>`;
@@ -2821,6 +2927,7 @@ const promoteCustomRule = (metaInfo) => {
         
         // Promote to custom-advanced
         metaInfo.source = 'custom-advanced';
+        metaInfo.label = currentLang === 'de' ? 'Manuell ADV' : 'Custom ADV';
         debugLog(`   📌 Promoted custom → custom-advanced: ${rule.expression}`);
     }
 };
@@ -3100,7 +3207,7 @@ function addNewURLFilterRule() {
     // Add meta-info as custom-advanced (manually created in Advanced section)
     urlFilterMetaInfo[''] = {
         source: 'custom-advanced',
-        label: currentLang === 'de' ? 'Manuell' : 'Manual'
+        label: currentLang === 'de' ? 'Manuell ADV' : 'Custom ADV'
     };
     
     debugLog('🆕 NEW CUSTOM-ADVANCED: Empty rule created, will be filled by user');
@@ -3920,7 +4027,7 @@ function syncAllURLFilterSources() {
         if (added) {
             urlFilterMetaInfo[domain] = {
                 source: 'custom',
-                label: 'Custom Domain'
+                label: currentLang === 'de' ? 'Manuell' : 'Custom'
             };
             // debugLog(`   ➕ Added custom (allow): ${domain}`);
         }
@@ -3946,7 +4053,7 @@ function syncAllURLFilterSources() {
         if (added) {
             urlFilterMetaInfo[domain] = {
                 source: 'custom',
-                label: 'Blocked Domain'
+                label: currentLang === 'de' ? 'Manuell' : 'Custom'
             };
             // debugLog(`   ➕ Added custom (block): ${domain}`);
         }
@@ -4021,6 +4128,9 @@ function syncAllURLFilterSources() {
     // STEP 6: Refresh UI view from DOM (Single Source of Truth)
     // ========================================================================
     refreshURLFilterViewFromDOM();
+    
+    // Update URL filter header count (even if collapsed)
+    updateURLFilterCount();
     
     // Re-render URL filter section if it's currently visible
     const urlFilterContent = document.querySelector('.url-filter-content.show');
@@ -5329,9 +5439,11 @@ if (advancedURLFilterLink) {
     advancedURLFilterLink.addEventListener('click', async (e) => {
         e.preventDefault();
         
-        // 1. Expand advanced section if not already expanded
+        // 1. Expand advanced section ONLY if currently collapsed
         const advancedContent = document.getElementById('advancedContent');
-        if (advancedContent && !advancedContent.classList.contains('show')) {
+        const wasCollapsed = advancedContent && !advancedContent.classList.contains('expanded');
+        
+        if (wasCollapsed) {
             document.getElementById('advancedHeader')?.click();
             // Wait for animation
             await new Promise(resolve => setTimeout(resolve, 300));
