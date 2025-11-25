@@ -2029,6 +2029,87 @@ textarea {
     font-size: 1.1em;
 }
 
+/* URL Filter Bars Container - CSP Compliant */
+.url-filter-bars-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.url-filter-source-wrapper,
+.url-filter-action-wrapper,
+.url-filter-label-wrapper {
+    flex: 1;
+    min-width: 180px;
+    position: relative;
+}
+
+.url-filter-dropdown-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.url-filter-dropdown-btn {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    font-size: 0.95em;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.url-filter-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-top: 2px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.url-filter-dropdown-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.url-filter-dropdown-option:hover {
+    background: #f0f0f0;
+}
+
+.url-filter-dropdown-option.active {
+    background: #e3f2fd;
+}
+
+.url-filter-dropdown-option input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+/* Action filter buttons */
+.action-filter-btn {
+    transition: all 0.2s;
+}
+
+.action-filter-btn.active {
+    background: #2196F3 !important;
+    color: white !important;
+    border-color: #2196F3 !important;
+}
+
 .source-badge.source-imported {
     background: #9c27b0;
 }
