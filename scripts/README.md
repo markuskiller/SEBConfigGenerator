@@ -195,7 +195,7 @@ which jq
    bash scripts/build-service-presets.sh
    bash scripts/build-translations.sh
    ```
-3. Generierte Files stagen und Merge abschließen
+3. Generierte Files stagen und Merge abschliessen
 
 ---
 
