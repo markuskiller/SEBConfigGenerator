@@ -3,7 +3,7 @@
    ============================================================================
    Migration von alter Farbpalette (#2c3e5a Navy) zu neuer Palette (#3A4A6B).
    ALLE Design-Entscheidungen basieren auf den CSS Custom Properties unten.
-   KEINE Farben außerhalb dieser Variablen verwenden.
+   KEINE Farben ausserhalb dieser Variablen verwenden.
    
    Haupt-Design-Farbe: var(--color-primary) = #3A4A6B (Dunkelblau)
    Diese Farbe soll im gesamten Tool dominant präsent sein.
@@ -17,7 +17,7 @@
   
   /* ========== HINTERGRUND & OBERFLÄCHEN ========== */
   --color-background: #F9F7F3;        /* Hintergrund (hell, warm) */
-  --color-surface: #FFFFFF;           /* Weiß (Cards, Panels) */
+  --color-surface: #FFFFFF;           /* Weiss (Cards, Panels) */
   
   /* ========== TEXT ========== */
   --color-text-primary: #2E2E2E;      /* Haupttext (dunkel) */
@@ -2579,7 +2579,7 @@ textarea {
 }
 
 /* ========== GENERISCHES CUSTOM DROPDOWN SYSTEM ========== */
-/* Single-Choice: Klick wählt aus + schließt Dropdown (wie native select)
+/* Single-Choice: Klick wählt aus + schliesst Dropdown (wie native select)
    Multi-Choice: Checkboxes für mehrere Auswahlen
    Verwendet für: Subject Select, Start-URL, Label Filter, URL Filter */
 
