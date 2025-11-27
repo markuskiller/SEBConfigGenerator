@@ -1,5 +1,5 @@
 # Cloudflare Pages Security Headers
-# Version: v0.22.2
+# Version: v0.23.0rc1
 # 
 # This file configures HTTP security headers for Cloudflare Pages deployment.
 # Documentation: https://developers.cloudflare.com/pages/configuration/headers/
@@ -16,6 +16,21 @@
   Cache-Control: no-cache, no-store, must-revalidate, max-age=0
   Pragma: no-cache
   Expires: 0
+
+# HTML files with UTF-8 charset
+/*.html
+  Content-Type: text/html; charset=utf-8
+
+# CSS files with UTF-8 charset
+/css/*.css
+  Content-Type: text/css; charset=utf-8
+
+# JavaScript files with UTF-8 charset
+/js/*.js
+  Content-Type: text/javascript; charset=utf-8
+
+/templates/generated/*.js
+  Content-Type: text/javascript; charset=utf-8
 
 # Static assets - long cache duration
 /css/*

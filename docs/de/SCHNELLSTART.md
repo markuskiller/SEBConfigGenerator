@@ -112,6 +112,7 @@ Schema: `Fach_Klasse_Datum_Thema`
 **Datenschutz:** 
 - ✅ 100% lokal - keine Datenübermittlung
 - ✅ Kann offline verwendet werden
+- 💾 Lokale Speicherung: Spracheinstellung, Favoriten, Übersetzungsanzeige, URL-Filter (nur Präferenzen, keine Konfigurationsdaten)
 
 **Vorbereitung:**
 - Testen Sie die Konfiguration selbst vorher

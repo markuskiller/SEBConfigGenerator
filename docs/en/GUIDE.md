@@ -109,7 +109,7 @@ Alternative (offline): Download the [ZIP file](https://github.com/markuskiller/S
 
 ---
 
-⚠️ **Privacy:** With both methods, **no data is transmitted**, all processing happens **locally in your browser**. This can be verified through code review, e.g., by common generative AI models (e.g., ChatGPT, Claude.ai, Gemini, ...). The entire code is open source and available at [github.com/markuskiller/SEBConfigGenerator](https://github.com/markuskiller/SEBConfigGenerator).
+⚠️ **Privacy:** With both methods, **no data is transmitted**, all processing happens **locally in your browser**. Only the following **preferences** are stored locally in your browser (not configuration data): language setting, favorites, translation display, and active URL filter. This can be verified through code review, e.g., by common generative AI models (e.g., ChatGPT, Claude.ai, Gemini, ...). The entire code is open source and available at [github.com/markuskiller/SEBConfigGenerator](https://github.com/markuskiller/SEBConfigGenerator).
 
 ---
 
