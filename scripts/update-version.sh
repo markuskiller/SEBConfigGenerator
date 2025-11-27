@@ -92,36 +92,41 @@ echo ""
 
 # Update js/app.js (4 locations)
 echo "📝 Updating js/app.js..."
-sed -i '' "3s|^// Version: .*|// Version: $NEW_VERSION|" "$APP_FILE"
-sed -i '' "4s|^// Build: .*|// Build: $BUILD_TIMESTAMP|" "$APP_FILE"
-sed -i '' "s|const APP_VERSION = 'v[^']*';|const APP_VERSION = '$NEW_VERSION';|" "$APP_FILE"
-sed -i '' "s|const BUILD_DATE = new Date('[^']*');|const BUILD_DATE = new Date('$BUILD_ISO');|" "$APP_FILE"
+sed -i.bak "3s|^// Version: .*|// Version: ${NEW_VERSION}|" "${APP_FILE}"
+sed -i.bak "4s|^// Build: .*|// Build: ${BUILD_TIMESTAMP}|" "${APP_FILE}"
+sed -i.bak "s|^const APP_VERSION = 'v[^']*';|const APP_VERSION = '${NEW_VERSION}';|" "${APP_FILE}"
+sed -i.bak "s|^const BUILD_DATE = new Date('[^']*');|const BUILD_DATE = new Date('${BUILD_ISO}');|" "${APP_FILE}"
+rm -f "${APP_FILE}.bak"
 
 # Update configs/apache/.htaccess
 if [ -f "$APACHE_FILE" ]; then
     echo "📝 Updating configs/apache/.htaccess..."
-    sed -i '' "s|^# Version: v.*|# Version: $NEW_VERSION|" "$APACHE_FILE"
-    sed -i '' "s|^# Updated: .*|# Updated: $(date +"%Y-%m-%d")|" "$APACHE_FILE"
+    sed -i.bak "s|^# Version: v.*|# Version: ${NEW_VERSION}|" "${APACHE_FILE}"
+    sed -i.bak "s|^# Updated: .*|# Updated: $(date +"%Y-%m-%d")|" "${APACHE_FILE}"
+    rm -f "${APACHE_FILE}.bak"
 fi
 
 # Update configs/nginx/sebconfig.conf
 if [ -f "$NGINX_FILE" ]; then
     echo "📝 Updating configs/nginx/sebconfig.conf..."
-    sed -i '' "s|^# Version: v.*|# Version: $NEW_VERSION|" "$NGINX_FILE"
-    sed -i '' "s|^# Updated: .*|# Updated: $(date +"%Y-%m-%d")|" "$NGINX_FILE"
+    sed -i.bak "s|^# Version: v.*|# Version: ${NEW_VERSION}|" "${NGINX_FILE}"
+    sed -i.bak "s|^# Updated: .*|# Updated: $(date +"%Y-%m-%d")|" "${NGINX_FILE}"
+    rm -f "${NGINX_FILE}.bak"
 fi
 
 # Update configs/README.md
 if [ -f "$README_FILE" ]; then
     echo "📝 Updating configs/README.md..."
-    sed -i '' "s|^\*\*Version:\*\* v.*|**Version:** $NEW_VERSION  |" "$README_FILE"
-    sed -i '' "s|^\*\*Last Updated:\*\* .*|**Last Updated:** $(date +"%Y-%m-%d")  |" "$README_FILE"
+    sed -i.bak "s|^\\*\\*Version:\\*\\* v.*|**Version:** ${NEW_VERSION}  |" "${README_FILE}"
+    sed -i.bak "s|^\\*\\*Last Updated:\\*\\* .*|**Last Updated:** $(date +"%Y-%m-%d")  |" "${README_FILE}"
+    rm -f "${README_FILE}.bak"
 fi
 
 # Update _headers
 if [ -f "$HEADERS_FILE" ]; then
     echo "📝 Updating _headers..."
-    sed -i '' "s|^# Version: v.*|# Version: $NEW_VERSION|" "$HEADERS_FILE"
+    sed -i.bak "s|^# Version: v.*|# Version: ${NEW_VERSION}|" "${HEADERS_FILE}"
+    rm -f "${HEADERS_FILE}.bak"
 fi
 
 echo ""

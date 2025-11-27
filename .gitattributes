@@ -1,2 +1,21 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Shell scripts must always use LF (Unix line endings)
+*.sh text eol=lf
+
+# Python scripts use LF
+*.py text eol=lf
+
+# Windows batch files use CRLF
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# JSON and JavaScript use LF
+*.json text eol=lf
+*.js text eol=lf
+
+# HTML, CSS, Markdown use LF
+*.html text eol=lf
+*.css text eol=lf
+*.md text eol=lf

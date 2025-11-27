@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.22.2
-// Build: 2025-11-21 23:53
+// Version: v0.23.0
+// Build: 2025-11-27 23:49
 
 // ============================================================================
 
@@ -58,17 +58,13 @@ if (DEBUG_MODE) {
 //
 // DO NOT define PRESETS, SUBJECTS, or PRESET_GROUPS here - they come from templates!
 
-const SECURITY_LEVELS = {
-relaxed: {
-    settings: {allowSwitchToApplications:false,allowQuit:true,browserViewMode:0,enableBrowserWindowToolbar:true,showMenuBar:false}
-},
-balanced: {
-    settings: {allowSwitchToApplications:false,allowQuit:true,browserViewMode:0,enableBrowserWindowToolbar:true,showMenuBar:false}
-},
-strict: {
-    settings: {allowSwitchToApplications:false,allowQuit:false,browserViewMode:1,enableBrowserWindowToolbar:false,showMenuBar:false}
-}
-};
+// ============================================================================
+// SECURITY LEVELS CONFIGURATION
+// ============================================================================
+// SECURITY_LEVELS is loaded from external file:
+// - templates/generated/security-levels.js
+// Generated from: templates/source/security-levels.json
+// To modify security levels, edit the JSON file and run: bash scripts/build-security-levels.sh
 
 // ============================================================================
 // WIKIPEDIA ARTICLE MAPPING
@@ -205,9 +201,16 @@ try {
         // Note: Only use simple path-based extraction if we don't have wd= parameter
         // (wd= parameter parsing below is more accurate for browser links)
         if (!result.notebook && !webUrl.includes('wd=')) {
-            const notebookMatch = webUrl.match(/\/([^\/]+)-Notizbuch/i);
-            if (notebookMatch) {
-                result.notebook = decodeURIComponent(notebookMatch[1] + '-Notizbuch');
+            // Try to extract notebook name from /SiteAssets/ path
+            const siteAssetsMatch = parsed.pathname.match(/\/SiteAssets\/([^\/]+)/);
+            if (siteAssetsMatch) {
+                result.notebook = decodeURIComponent(siteAssetsMatch[1]);
+            } else {
+                // Fallback to old pattern for -Notizbuch URLs
+                const notebookMatch = webUrl.match(/\/([^\/]+)-Notizbuch/i);
+                if (notebookMatch) {
+                    result.notebook = decodeURIComponent(notebookMatch[1] + '-Notizbuch');
+                }
             }
         }
         
@@ -313,19 +316,261 @@ try {
 }
 
 // ============================================================================
-// XML PARSER FOR BOOLEAN OPTIONS
+// CONFIG STATE MANAGEMENT - XML DOM Operations (Single Source of Truth)
+// ============================================================================
+
+// Initialize XML DOM from template
+function initializeConfigDOM() {
+    if (typeof exampleConfigXML === 'undefined') {
+        console.error('❌ exampleConfigXML not found! Make sure xml-data.js is loaded.');
+        return false;
+    }
+    
+    const parser = new DOMParser();
+    configState.xmlDoc = parser.parseFromString(exampleConfigXML, 'application/xml');
+    
+    // Check for parsing errors
+    const parseError = configState.xmlDoc.getElementsByTagName('parsererror');
+    if (parseError.length > 0) {
+        console.error('❌ XML parsing error:', parseError[0].textContent);
+        return false;
+    }
+    
+    // Get root dict element
+    const plistElement = configState.xmlDoc.documentElement;
+    configState.rootDict = plistElement.querySelector(':scope > dict');
+    
+    if (!configState.rootDict) {
+        console.error('❌ No root <dict> found in XML');
+        return false;
+    }
+    
+    configState.loaded = true;
+    debugLog('✅ Config DOM initialized');
+    return true;
+}
+
+// Get value from DOM (supports all simple types: boolean, integer, string, real, date, data)
+function getConfigValue(key) {
+    if (!configState.loaded) return undefined;
+    
+    const { children } = configState.rootDict;
+    for (let i = 0; i < children.length; i++) {
+        if (children[i].tagName === 'key' && children[i].textContent.trim() === key) {
+            const nextElement = children[i].nextElementSibling;
+            if (!nextElement) return undefined;
+            
+            switch (nextElement.tagName) {
+                case 'true':
+                    return true;
+                case 'false':
+                    return false;
+                case 'integer':
+                    return parseInt(nextElement.textContent, 10);
+                case 'real':
+                    return parseFloat(nextElement.textContent);
+                case 'string':
+                case 'date':
+                case 'data':
+                    return nextElement.textContent;
+                default:
+                    return undefined;
+            }
+        }
+    }
+    return undefined;
+}
+
+// Get boolean value from DOM (convenience wrapper)
+function getConfigBooleanValue(key) {
+    const value = getConfigValue(key);
+    return typeof value === 'boolean' ? value : undefined;
+}
+
+// Set value in DOM with automatic type detection
+function setConfigValue(key, value) {
+    if (!configState.loaded) return false;
+    
+    // Determine XML type from value
+    let xmlType;
+    let xmlValue;
+    
+    if (typeof value === 'boolean') {
+        xmlType = value ? 'true' : 'false';
+        xmlValue = null; // Self-closing tag
+    } else if (typeof value === 'number' && Number.isInteger(value)) {
+        xmlType = 'integer';
+        xmlValue = String(value);
+    } else if (typeof value === 'number') {
+        xmlType = 'real';
+        xmlValue = String(value);
+    } else if (typeof value === 'string') {
+        xmlType = 'string';
+        xmlValue = value;
+    } else {
+        console.error(`Unsupported value type for ${key}:`, typeof value);
+        return false;
+    }
+    
+    const { children } = configState.rootDict;
+    for (let i = 0; i < children.length; i++) {
+        if (children[i].tagName === 'key' && children[i].textContent.trim() === key) {
+            const nextElement = children[i].nextElementSibling;
+            if (nextElement) {
+                // Replace with new element
+                const newElement = configState.xmlDoc.createElement(xmlType);
+                if (xmlValue !== null) {
+                    newElement.textContent = xmlValue;
+                }
+                configState.rootDict.replaceChild(newElement, nextElement);
+                debugLog(`✅ Set ${key} = ${value} (${xmlType})`);
+                return true;
+            }
+        }
+    }
+    
+    // Key not found - add it
+    const keyElement = configState.xmlDoc.createElement('key');
+    keyElement.textContent = key;
+    const valueElement = configState.xmlDoc.createElement(xmlType);
+    if (xmlValue !== null) {
+        valueElement.textContent = xmlValue;
+    }
+    configState.rootDict.appendChild(keyElement);
+    configState.rootDict.appendChild(valueElement);
+    debugLog(`✅ Added ${key} = ${value} (${xmlType})`);
+    return true;
+}
+
+// Set value of a boolean option in DOM (convenience wrapper)
+function setConfigBooleanValue(key, value) {
+    return setConfigValue(key, Boolean(value));
+}
+
+// Get all config keys from DOM (boolean, integer, string - excludes arrays and dicts)
+function getAllConfigBooleanKeys() {
+    if (!configState.loaded) return [];
+    
+    const keys = [];
+    const { children } = configState.rootDict;
+    
+    // Value types we want to export (simple types, not complex structures)
+    const simpleValueTypes = new Set(['true', 'false', 'integer', 'string', 'real', 'date', 'data']);
+    
+    for (let i = 0; i < children.length; i++) {
+        if (children[i].tagName === 'key') {
+            const keyName = children[i].textContent.trim();
+            const nextElement = children[i].nextElementSibling;
+            
+            // Include all simple value types (not arrays or dicts)
+            if (nextElement && simpleValueTypes.has(nextElement.tagName)) {
+                keys.push(keyName);
+            }
+        }
+    }
+    
+    return keys;
+}
+
+// Serialize a DOM element (array or dict) to XML string recursively
+function serializeDOMElement(element, indent = '\t') {
+    if (!element) return '';
+    
+    const serializer = new XMLSerializer();
+    let xml = serializer.serializeToString(element);
+    
+    // Format with proper indentation
+    xml = xml.replace(/></g, '>\n' + indent + '<');
+    
+    return xml;
+}
+
+// Get all complex structures (arrays and dicts) from DOM
+function getAllComplexStructures() {
+    if (!configState.loaded) return {};
+    
+    const structures = {};
+    const { children } = configState.rootDict;
+    
+    for (let i = 0; i < children.length; i++) {
+        if (children[i].tagName === 'key') {
+            const keyName = children[i].textContent.trim();
+            const nextElement = children[i].nextElementSibling;
+            
+            // Only include arrays and dicts
+            if (nextElement && (nextElement.tagName === 'array' || nextElement.tagName === 'dict')) {
+                structures[keyName] = nextElement;
+            }
+        }
+    }
+    
+    return structures;
+}
+
+// Export config as XML string
+function exportConfigXML() {
+    if (!configState.loaded) {
+        console.error('❌ Config not loaded');
+        return null;
+    }
+    
+    const serializer = new XMLSerializer();
+    return serializer.serializeToString(configState.xmlDoc);
+}
+
+// Sync UI Checkboxes with DOM (Single Source of Truth)
+function syncUICheckboxesFromDOM() {
+    if (!configState.loaded) {
+        console.warn('⚠️ DOM not loaded yet, cannot sync checkboxes');
+        return;
+    }
+    
+    // Map of checkbox IDs to their corresponding DOM keys
+    const checkboxMappings = {
+        'allowDownloads': 'allowDownloads',
+        'allowSpellCheck': 'allowSpellCheck',
+        'showReloadButton': 'showReloadButton',
+        'allowBackForward': 'allowBrowsingBackForward'
+    };
+    
+    // Initialize checkboxes from DOM
+    Object.entries(checkboxMappings).forEach(([checkboxId, domKey]) => {
+        const checkbox = document.getElementById(checkboxId);
+        if (checkbox) {
+            const value = getConfigValue(domKey);
+            checkbox.checked = value === true;
+            
+            // Add event listener to write changes back to DOM and update all tiles
+            checkbox.addEventListener('change', (e) => {
+                setConfigBooleanValue(domKey, e.target.checked);
+                updateAllTilesForOption(domKey); // Sync with all tiles (including "Meine Favoriten")
+                debugLog(`✏️ UI Checkbox ${checkboxId} -> DOM ${domKey}:`, e.target.checked);
+            });
+        }
+    });
+    
+    debugLog('✅ UI Checkboxes synced with DOM');
+}
+
+// ============================================================================
+// XML PARSER FOR BOOLEAN OPTIONS (LEGACY - being migrated to configState)
 // ============================================================================
 async function loadAndParseBooleanOptions() {
 try {
     debugLog('📥 Loading XML template from embedded data...');
     
-    // Check if EXAMPLE_CONFIG_XML is available (loaded from xml-data.js)
-    if (typeof EXAMPLE_CONFIG_XML === 'undefined') {
-        console.error('❌ EXAMPLE_CONFIG_XML not found! Make sure xml-data.js is loaded.');
+    // Initialize config DOM if not done yet
+    if (!configState.loaded && !initializeConfigDOM()) {
         return false;
     }
     
-    const xmlText = EXAMPLE_CONFIG_XML;
+    // Check if exampleConfigXML is available (loaded from xml-data.js)
+    if (typeof exampleConfigXML === 'undefined') {
+        console.error('❌ exampleConfigXML not found! Make sure xml-data.js is loaded.');
+        return false;
+    }
+    
+    const xmlText = exampleConfigXML;
     debugLog('📝 XML text length:', xmlText.length);
     debugLog('📝 First 200 chars:', xmlText.substring(0, 200));
     
@@ -423,13 +668,9 @@ try {
         groups[group].options.push(opt);
     });
     
-    // Store parsed data
+    // Store parsed data (only groups for UI rendering)
     parsedBooleanOptions.groups = groups;
-    parsedBooleanOptions.options = {};
-    options.forEach(opt => {
-        parsedBooleanOptions.options[opt.key] = opt.defaultValue;
-        parsedBooleanOptions.userSelections[opt.key] = opt.defaultValue; // Initialize with defaults
-    });
+    // Note: Option values are stored in configState.xmlDoc (DOM), not here
     
     debugLog(`✅ Parsed ${options.length} boolean options from XML`);
     debugLog('📊 Groups distribution:');
@@ -451,17 +692,17 @@ try {
     debugLog('📦 Parsing dict array structures from XML...');
     
     // Check if XML is available
-    if (typeof EXAMPLE_CONFIG_XML === 'undefined') {
-        console.error('❌ EXAMPLE_CONFIG_XML not found!');
+    if (typeof exampleConfigXML === 'undefined') {
+        console.error('❌ exampleConfigXML not found!');
         return false;
     }
     
     // Parse XML
     const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(EXAMPLE_CONFIG_XML, 'application/xml');
+    const xmlDoc = parser.parseFromString(exampleConfigXML, 'application/xml');
     
     // Helper function to parse a dict element
-    function parseDict(dictElement) {
+    const parseDict = (dictElement) => {
         const dict = {};
         let currentKey = null;
         
@@ -485,10 +726,10 @@ try {
             }
         }
         return dict;
-    }
+    };
     
     // Helper function to categorize a process
-    function categorizeProcess(executable, identifier, description) {
+    const categorizeProcess = (executable, identifier, description) => {
         const name = (executable || '').toLowerCase();
         const id = (identifier || '').toLowerCase();
         const desc = (description || '').toLowerCase();
@@ -596,6 +837,17 @@ try {
             
             for (let dict of dicts) {
                 const parsed = parseDict(dict);
+                // Mark XML template rules as 'imported' so they survive syncAllURLFilterSources() filter
+                parsed.source = 'imported';
+                
+                // Check if this is an example.com rule (should stay inactive)
+                const isExampleRule = parsed.expression && parsed.expression.toLowerCase().includes('example.com');
+                
+                // Activate all XML template rules by default, except example.com rules
+                if (!isExampleRule && (parsed.active === false || parsed.active === undefined)) {
+                    parsed.active = true;
+                }
+                
                 parsedDictStructures.urlFilterRules.push(parsed);
             }
             
@@ -804,23 +1056,50 @@ debugLog(`✅ Switched to ${platform} platform`);
 
 // Generate human-readable label from key name
 function generateOptionLabel(key) {
-// Remove common prefixes
-let label = key.replace(/^(allow|enable|show|display|disable|hide|block|force|create|detect|mobile|browser|new|exam|inside|config)/, '');
-
-// Insert spaces before capital letters
-label = label.replace(/([A-Z])/g, ' $1').trim();
-
-// Capitalize first letter
-label = label.charAt(0).toUpperCase() + label.slice(1);
-
-return label || key;
+    // Priority 1: Check translations.optionLabels for direct key mapping
+    if (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[currentLang]) {
+        const { optionLabels } = TRANSLATIONS[currentLang];
+        if (optionLabels && optionLabels[key]) {
+            return optionLabels[key];
+        }
+    }
+    
+    // Priority 2: Check SEB_OPTION_LABELS (legacy, contains long menu paths)
+    let fullLabel = null;
+    if (typeof SEB_OPTION_LABELS !== 'undefined' && SEB_OPTION_LABELS[currentLang]) {
+        const labels = SEB_OPTION_LABELS[currentLang];
+        if (labels[key]) {
+            fullLabel = labels[key];
+        }
+    }
+    
+    // If we have a full translated label, extract the main part (before parentheses)
+    if (fullLabel) {
+        // Remove content in parentheses and trailing platform indicators
+        return fullLabel
+            .replace(/\s*\([^)]*\)\s*$/g, '')  // Remove trailing parentheses like "(Win)" or "(insecure)"
+            .replace(/\s+(Win|Mac|iOS|iPadOS)$/g, '')  // Remove trailing platform names
+            .trim();
+    }
+    
+    // Priority 3: Fallback - Generate label from key
+    // Remove common prefixes
+    let label = key.replace(/^(allow|enable|show|display|disable|hide|block|force|create|detect|mobile|browser|new|exam|inside|config)/, '');
+    
+    // Insert spaces before capital letters
+    label = label.replace(/([A-Z])/g, ' $1').trim();
+    
+    // Capitalize first letter
+    label = label.charAt(0).toUpperCase() + label.slice(1);
+    
+    return label || key;
 }
 
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.22.2';
-const BUILD_DATE = new Date('2025-11-21T23:53:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.23.0';
+const BUILD_DATE = new Date('2025-11-27T23:49:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -844,18 +1123,65 @@ let selectedPresets = []; // Start with no preset selected - user must choose
 let currentSecurityLevel = 'balanced';
 let currentSelectedSubject = ''; // Track selected subject for allowed tools
 
+// Boolean options favorites (stored in localStorage)
+// One default favorite that persists across reloads
+const DEFAULT_FAVORITE = 'browserWindowAllowAddressBar';
+let booleanOptionsFavorites = new Set([DEFAULT_FAVORITE]);
+try {
+    const stored = localStorage.getItem('sebConfigFavorites');
+    if (stored) {
+        const customFavorites = new Set(JSON.parse(stored));
+        // Merge default with custom favorites
+        booleanOptionsFavorites = new Set([DEFAULT_FAVORITE, ...customFavorites]);
+    }
+} catch (e) {
+    console.warn('Could not load favorites from localStorage:', e);
+}
+
+// Translation toggle for Advanced Options (Boolean Options)
+// true = show translated labels, false = show original English labels
+let showTranslatedLabels = true;
+try {
+    const stored = localStorage.getItem('sebConfigShowTranslations');
+    if (stored !== null) {
+        showTranslatedLabels = JSON.parse(stored);
+    }
+} catch (e) {
+    console.warn('Could not load translation preference:', e);
+}
+
 // SharePoint link state
 let sharepointConfig = {
 onenote: { parsedLink: null, restrictions: {} },
 word: { parsedLink: null, restrictions: {} }
 };
 
-// Boolean options parsed from XML template (lazy loaded on demand)
+// ============================================================================
+// CONFIG STATE - XML DOM as Single Source of Truth
+// ============================================================================
+let configState = {
+    xmlDoc: null,           // Parsed XML DOM (Single Source of Truth)
+    rootDict: null,         // Root <dict> element for quick access
+    loaded: false,          // Track if XML has been parsed
+    
+    // Metadata (not in XML, separate layer)
+    metadata: {
+        booleanOptions: new Map(),  // key -> { group, location, ... }
+        dictStructures: new Map()   // For process lists, etc.
+    }
+};
+
+// URL Filter Meta Information (UI Context - Not stored in DOM)
+// Maps expression to UI-related metadata
+// Key: expression (e.g., "*.cambridge.org")
+// Value: { source, label, presetKey, modified }
+let urlFilterMetaInfo = {};
+
+// Legacy structures (will be replaced by configState)
+// TODO: Remove after full migration
 let parsedBooleanOptions = {
-loaded: false, // Track if options have been loaded
-groups: {},
-options: {},
-userSelections: {} // Track user's checkbox selections
+    loaded: false, // Track if options have been loaded
+    groups: {}     // Group structure for UI rendering (values stored in DOM)
 };
 
 // Dict structures parsed from XML template (lazy loaded on demand)
@@ -934,6 +1260,8 @@ if (parsedBooleanOptions.loaded) {
 // Re-render dynamic content
 renderPresets();
 renderSecurityLevels();
+renderSecurityLevelDetails();
+renderFavoritesInMainUI(); // Update favorites in main UI
 updateStartUrlField(); // Update start URL dropdown labels
 
 // Save language preference
@@ -1058,6 +1386,7 @@ if (!experimentalWarning) {
     
     const warningLink = document.createElement('a');
     warningLink.href = '#networkCaptureHelper';
+    warningLink.setAttribute('aria-label', 'Network Capture Helper'); // Accessibility: Provide text for empty link
     experimentalWarning.appendChild(warningLink);
     
     container.appendChild(experimentalWarning);
@@ -1105,38 +1434,81 @@ group3Title.classList.add('preset-group-title', 'spacing-top');
 group3Title.innerHTML = `📚 ${t('groupAllowedTools')}`;
 container.appendChild(group3Title);
 
-// Subject selector - dynamically generated from SUBJECTS configuration
+// Subject selector - Single-Choice Custom Dropdown
 const subjectSelector = document.createElement('div');
-subjectSelector.classList.add('preset-subject-selector');
+subjectSelector.classList.add('preset-subject-selector', 'dropdown-container', 'single-choice');
 
-const subjectLabel = document.createElement('label');
+const subjectLabel = document.createElement('span');
 subjectLabel.classList.add('preset-subject-label');
-subjectLabel.setAttribute('for', 'subjectSelect');
 subjectLabel.textContent = `${t('selectSubject')}:`;
 subjectSelector.appendChild(subjectLabel);
 
-const subjectSelect = document.createElement('select');
-subjectSelect.id = 'subjectSelect';
-subjectSelect.classList.add('preset-subject-select');
+// Dropdown Button
+const dropdownBtn = document.createElement('button');
+dropdownBtn.type = 'button';
+dropdownBtn.id = 'subjectDropdownBtn';
+dropdownBtn.classList.add('dropdown-btn');
+dropdownBtn.innerHTML = `<span>${t('selectSubject')}</span>`;
+subjectSelector.appendChild(dropdownBtn);
 
-// Default option
-const defaultOption = document.createElement('option');
-defaultOption.value = '';
-defaultOption.textContent = `-- ${t('selectSubject')} --`;
-subjectSelect.appendChild(defaultOption);
+// Dropdown Menu
+const dropdownMenu = document.createElement('div');
+dropdownMenu.id = 'subjectDropdownMenu';
+dropdownMenu.classList.add('dropdown-menu', 'hidden');
 
-// Dynamically add options from SUBJECTS configuration
+// Add options from SUBJECTS configuration
 Object.keys(SUBJECTS).forEach(subjectKey => {
-    const option = document.createElement('option');
-    option.value = subjectKey;
-    // Capitalize first letter for translation key: german -> subjectGerman
+    const option = document.createElement('div');
+    option.classList.add('dropdown-option');
+    option.dataset.value = subjectKey;
+    
+    const label = document.createElement('span');
     const translationKey = 'subject' + subjectKey.charAt(0).toUpperCase() + subjectKey.slice(1);
-    option.textContent = t(translationKey);
-    subjectSelect.appendChild(option);
+    label.textContent = t(translationKey);
+    
+    option.appendChild(label);
+    
+    // Click handler - Single-Choice: Select + Close
+    option.addEventListener('click', () => {
+        // Remove previous selection
+        dropdownMenu.querySelectorAll('.dropdown-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        
+        // Mark as selected
+        option.classList.add('selected');
+        
+        // Update button text
+        const btnText = dropdownBtn.querySelector('span');
+        btnText.textContent = label.textContent;
+        
+        // Close dropdown
+        dropdownMenu.classList.add('hidden');
+        dropdownBtn.classList.remove('active');
+        
+        // Render tools for selected subject
+        renderAllowedTools(subjectKey);
+    });
+    
+    dropdownMenu.appendChild(option);
 });
 
-subjectSelector.appendChild(subjectSelect);
+subjectSelector.appendChild(dropdownMenu);
 container.appendChild(subjectSelector);
+
+// Toggle dropdown on button click
+dropdownBtn.addEventListener('click', () => {
+    dropdownMenu.classList.toggle('hidden');
+    dropdownBtn.classList.toggle('active');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    if (!subjectSelector.contains(e.target)) {
+        dropdownMenu.classList.add('hidden');
+        dropdownBtn.classList.remove('active');
+    }
+});
 
 // Tools container (initially hidden)
 const toolsContainer = document.createElement('div');
@@ -1144,16 +1516,21 @@ toolsContainer.id = 'allowedToolsContainer';
 toolsContainer.classList.add('preset-tools-container');
 container.appendChild(toolsContainer);
 
-// Add event listener to subject selector and restore previous selection
+// Restore previous selection
 setTimeout(() => {
-    const select = document.getElementById('subjectSelect');
-    if (select) {
-        // Restore previously selected subject
-        if (currentSelectedSubject) {
-            select.value = currentSelectedSubject;
-            renderAllowedTools(currentSelectedSubject);
+    if (currentSelectedSubject) {
+        // Handle legacy multi-select: take first subject
+        const subject = Array.isArray(currentSelectedSubject) ? currentSelectedSubject[0] : currentSelectedSubject;
+        
+        // Find and select the option
+        const option = dropdownMenu.querySelector(`[data-value="${subject}"]`);
+        if (option) {
+            option.classList.add('selected');
+            const translationKey = 'subject' + subject.charAt(0).toUpperCase() + subject.slice(1);
+            const btnText = dropdownBtn.querySelector('span');
+            btnText.textContent = t(translationKey);
+            renderAllowedTools(subject);
         }
-        select.addEventListener('change', (e) => renderAllowedTools(e.target.value));
     }
 }, 0);
 }
@@ -1162,14 +1539,18 @@ function renderAllowedTools(subject) {
 const container = document.getElementById('allowedToolsContainer');
 if (!container) return;
 
-// Store the selected subject
+// Store the selected subject (single value)
 currentSelectedSubject = subject;
 
 container.innerHTML = '';
 
-if (!subject || !PRESET_GROUPS.allowedTools[subject]) return;
+if (!subject) return;
 
-PRESET_GROUPS.allowedTools[subject].forEach(key => {
+// Get tools for this subject
+const toolKeys = PRESET_GROUPS.allowedTools[subject] || [];
+
+// Render tools
+toolKeys.forEach(key => {
     const btn = document.createElement('button');
     btn.className = `preset-btn ${selectedPresets.includes(key) ? 'active' : ''}`;
     btn.innerHTML = `
@@ -1185,6 +1566,7 @@ function renderSecurityLevels() {
 const container = document.getElementById('securityLevel');
 container.innerHTML = '';
 
+// Predefined levels
 ['relaxed', 'balanced', 'strict'].forEach(key => {
     const div = document.createElement('div');
     div.className = `security-option ${key === currentSecurityLevel ? 'active' : ''}`;
@@ -1195,6 +1577,19 @@ container.innerHTML = '';
     div.addEventListener('click', () => selectSecurityLevel(key));
     container.appendChild(div);
 });
+
+// Custom level indicator (if active)
+if (currentSecurityLevel === 'custom') {
+    const div = document.createElement('div');
+    div.className = 'security-option active';
+    div.style.borderColor = '#9C27B0';
+    div.innerHTML = `
+        <h4>${t('securityLevelCustom')}</h4>
+        <p>${t('securityLevelCustomDescription')}</p>
+    `;
+    div.style.cursor = 'default';
+    container.appendChild(div);
+}
 
 // Show/update experimental warning for relaxed and strict levels
 updateSecurityLevelWarning();
@@ -1227,14 +1622,31 @@ container.appendChild(title);
 const optionsDiv = document.createElement('div');
 optionsDiv.classList.add('preset-tool-options');
 
-// School SharePoint option
+// School SharePoint option - DEFAULT CHECKED
 if (parsedLink.domain) {
+    // Initialize restrictions if not set and set schoolSharepoint as default
+    if (!sharepointConfig[serviceType].restrictions) {
+        sharepointConfig[serviceType].restrictions = {};
+    }
+    // Set default: schoolSharepoint = true (if no other restriction is already set)
+    const hasAnyRestriction = Object.keys(sharepointConfig[serviceType].restrictions).some(
+        key => sharepointConfig[serviceType].restrictions[key] === true
+    );
+    if (!hasAnyRestriction) {
+        sharepointConfig[serviceType].restrictions.schoolSharepoint = true;
+    }
+    
     const checkbox = createSharePointCheckbox(
         serviceType,
         'schoolSharepoint',
         t('restrictToSchoolSharepoint'),
         `${t('sharepointDetected')}: ${parsedLink.domain}`
     );
+    // Set checked state based on config
+    const checkboxInput = checkbox.querySelector('input');
+    if (checkboxInput) {
+        checkboxInput.checked = sharepointConfig[serviceType].restrictions.schoolSharepoint || false;
+    }
     optionsDiv.appendChild(checkbox);
 }
 
@@ -1323,7 +1735,23 @@ checkbox.addEventListener('change', () => {
     if (!sharepointConfig[serviceType].restrictions) {
         sharepointConfig[serviceType].restrictions = {};
     }
+    
+    // Radio-button behavior: only one restriction level can be active at a time
+    if (checkbox.checked) {
+        // Uncheck all other SharePoint restriction checkboxes for this service
+        const allCheckboxes = document.querySelectorAll(`input[id^="sp_${serviceType}_"]`);
+        allCheckboxes.forEach(cb => {
+            if (cb !== checkbox && cb.checked) {
+                cb.checked = false;
+                // Update restriction state
+                const cbRestrictionType = cb.id.replace(`sp_${serviceType}_`, '');
+                sharepointConfig[serviceType].restrictions[cbRestrictionType] = false;
+            }
+        });
+    }
+    
     sharepointConfig[serviceType].restrictions[restrictionType] = checkbox.checked;
+    syncAllURLFilterSources();
     updatePreview();
 });
 
@@ -1333,7 +1761,7 @@ labelEl.classList.add('preset-option-label');
 labelEl.textContent = label;
 
 const infoEl = document.createElement('div');
-infoEl.classList.add('preset-option-info');
+infoEl.classList.add('preset-option-info', 'sharepoint-detected-value');
 infoEl.textContent = detectedInfo;
 
 div.appendChild(checkbox);
@@ -1346,7 +1774,8 @@ return div;
 function updateStartUrlField() {
 const startUrlInput = document.getElementById('startUrl');
 const startUrlSelectorContainer = document.getElementById('startUrlSelectorContainer');
-const startUrlSelector = document.getElementById('startUrlSelector');
+const dropdownBtn = document.getElementById('startUrlDropdownBtn');
+const dropdownMenu = document.getElementById('startUrlDropdownMenu');
 
 if (selectedPresets.length === 0) {
     // No presets selected - clear field and hide dropdown
@@ -1364,35 +1793,84 @@ if (selectedPresets.length === 0) {
     startUrlSelectorContainer.classList.add('visible');
     
     // Clear and populate dropdown
-    startUrlSelector.innerHTML = '';
+    dropdownMenu.innerHTML = '';
     
     // Add "Custom" option as default
-    const customOption = document.createElement('option');
-    customOption.value = '';
-    customOption.textContent = currentLang === 'de' ? '🔧 Benutzerdefiniert (eigene URL eingeben)' : '🔧 Custom (enter your own URL)';
-    startUrlSelector.appendChild(customOption);
+    const customOption = document.createElement('div');
+    customOption.classList.add('dropdown-option', 'selected');
+    customOption.dataset.value = '';
+    const customLabel = document.createElement('span');
+    customLabel.textContent = currentLang === 'de' ? '🔧 Benutzerdefiniert (eigene URL eingeben)' : '🔧 Custom (enter your own URL)';
+    customOption.appendChild(customLabel);
+    customOption.addEventListener('click', () => {
+        // Remove previous selection
+        dropdownMenu.querySelectorAll('.dropdown-option').forEach(opt => opt.classList.remove('selected'));
+        customOption.classList.add('selected');
+        
+        // Update button text
+        dropdownBtn.querySelector('span').textContent = customLabel.textContent;
+        
+        // Clear input field
+        startUrlInput.value = '';
+        
+        // Close dropdown
+        dropdownMenu.classList.add('hidden');
+        dropdownBtn.classList.remove('active');
+    });
+    dropdownMenu.appendChild(customOption);
     
     // Add option for each selected preset
     selectedPresets.forEach(presetKey => {
         const preset = PRESETS[presetKey];
         if (preset && preset.startUrl) {
-            const option = document.createElement('option');
-            option.value = preset.startUrl;
+            const option = document.createElement('div');
+            option.classList.add('dropdown-option');
+            option.dataset.value = preset.startUrl;
+            
+            const label = document.createElement('span');
             const presetName = t(getPresetTranslationKey(presetKey));
-            option.textContent = `${presetName} (${preset.startUrl})`;
-            startUrlSelector.appendChild(option);
+            label.textContent = `${presetName} (${preset.startUrl})`;
+            option.appendChild(label);
+            
+            option.addEventListener('click', () => {
+                // Remove previous selection
+                dropdownMenu.querySelectorAll('.dropdown-option').forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                
+                // Update button text
+                dropdownBtn.querySelector('span').textContent = label.textContent;
+                
+                // Set URL in input field
+                startUrlInput.value = preset.startUrl;
+                
+                // Close dropdown
+                dropdownMenu.classList.add('hidden');
+                dropdownBtn.classList.remove('active');
+            });
+            
+            dropdownMenu.appendChild(option);
         }
     });
     
-    // Set to custom (empty) by default
-    startUrlSelector.value = '';
+    // Set button text to "Custom" by default
+    dropdownBtn.querySelector('span').textContent = customLabel.textContent;
     startUrlInput.value = '';
     
-    // Add change listener if not already added
-    if (!startUrlSelector.hasAttribute('data-listener-attached')) {
-        startUrlSelector.setAttribute('data-listener-attached', 'true');
-        startUrlSelector.addEventListener('change', (e) => {
-            startUrlInput.value = e.target.value;
+    // Setup dropdown toggle (only once)
+    if (!dropdownBtn.hasAttribute('data-listener-attached')) {
+        dropdownBtn.setAttribute('data-listener-attached', 'true');
+        
+        dropdownBtn.addEventListener('click', () => {
+            dropdownMenu.classList.toggle('hidden');
+            dropdownBtn.classList.toggle('active');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!startUrlSelectorContainer.contains(e.target)) {
+                dropdownMenu.classList.add('hidden');
+                dropdownBtn.classList.remove('active');
+            }
         });
     }
 }
@@ -1503,12 +1981,369 @@ if (totalSelected > 1) {
 }
 
 renderPresets();
+syncAllURLFilterSources();
 updatePreview();
 }
 
 function selectSecurityLevel(key) {
+// Warn user about strict level consequences
+if (key === 'strict') {
+    const confirmStrict = confirm(
+        `${t('securityStrictWarningTitle')}\n\n${t('securityStrictWarningText')}\n\n${t('securityStrictWarningConfirm')}`
+    );
+    
+    if (!confirmStrict) {
+        // User cancelled - stay on current level
+        return;
+    }
+}
+
 currentSecurityLevel = key;
+
+// Apply security level settings to DOM (Single Source of Truth)
+if (key !== 'custom' && SECURITY_LEVELS[key]) {
+    const levelSettings = SECURITY_LEVELS[key].settings;
+    Object.keys(levelSettings).forEach(optKey => {
+        // Use setConfigValue to handle integers (like browserViewMode) correctly
+        setConfigValue(optKey, levelSettings[optKey]);
+    });
+}
+
 renderSecurityLevels();
+renderSecurityLevelDetails();
+renderBooleanOptions(); // Re-render to show updated checkboxes
+}
+
+// Detect if current settings match a predefined security level
+// Reads from DOM (Single Source of Truth)
+function detectSecurityLevel() {
+    const securityLevelKeys = Object.keys(SECURITY_LEVELS);
+    
+    for (const levelKey of securityLevelKeys) {
+        const levelSettings = SECURITY_LEVELS[levelKey].settings;
+        let matches = true;
+        
+        for (const [key, value] of Object.entries(levelSettings)) {
+            // Use generic getConfigValue to handle both booleans and integers
+            if (getConfigValue(key) !== value) {
+                matches = false;
+                break;
+            }
+        }
+        
+        if (matches) {
+            return levelKey;
+        }
+    }
+    
+    return 'custom';
+}
+
+// Called when any security-level-relevant option changes
+function onSecurityRelevantOptionChange() {
+    const detectedLevel = detectSecurityLevel();
+    if (detectedLevel !== currentSecurityLevel) {
+        currentSecurityLevel = detectedLevel;
+        renderSecurityLevels();
+        renderSecurityLevelDetails();
+    }
+}
+
+// Generic function to create a boolean option tile (reusable)
+// Uses configState DOM as single source of truth
+function createBooleanOptionTile(optionKey, showFavoriteButton = true, context = '') {
+    const optionDiv = document.createElement('div');
+    optionDiv.classList.add('bool-option-item');
+    optionDiv.dataset.optionKey = optionKey;
+    
+    // Generate unique ID based on context to avoid duplicates
+    const uniqueId = context ? `bool_${context}_${optionKey}` : `bool_${optionKey}`;
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = uniqueId;
+    // Read from DOM (Single Source of Truth)
+    checkbox.checked = getConfigBooleanValue(optionKey) || false;
+    checkbox.classList.add('bool-option-checkbox');
+    checkbox.addEventListener('change', (e) => {
+        // Write to DOM (Single Source of Truth)
+        setConfigBooleanValue(optionKey, e.target.checked);
+        
+        // Check if this is a security-relevant option
+        const isSecurityRelevant = Object.keys(SECURITY_LEVELS).some(level =>
+            SECURITY_LEVELS[level].settings.hasOwnProperty(optionKey)
+        );
+        
+        if (isSecurityRelevant) {
+            onSecurityRelevantOptionChange();
+        }
+        
+        // Update all instances of this tile
+        updateAllTilesForOption(optionKey);
+    });
+    
+    const label = document.createElement('label');
+    label.htmlFor = uniqueId;
+    label.classList.add('bool-option-label');
+    
+    const labelText = document.createElement('div');
+    labelText.classList.add('bool-option-label-text');
+    // showFavoriteButton = true → Advanced Options (with star button) → use translation toggle
+    // showFavoriteButton = false → Favorites section (no star button) → always translate
+    const useTranslation = showFavoriteButton ? showTranslatedLabels : true;
+    labelText.textContent = useTranslation ? generateOptionLabel(optionKey) : optionKey;
+    
+    const keyName = document.createElement('div');
+    keyName.classList.add('bool-option-key');
+    keyName.textContent = optionKey;
+    
+    label.appendChild(labelText);
+    label.appendChild(keyName);
+    
+    optionDiv.appendChild(checkbox);
+    optionDiv.appendChild(label);
+    
+    // Add favorite button if requested
+    if (showFavoriteButton) {
+        const favoriteBtn = document.createElement('button');
+        favoriteBtn.classList.add('bool-option-favorite');
+        favoriteBtn.innerHTML = booleanOptionsFavorites.has(optionKey) ? '⭐' : '☆';
+        favoriteBtn.title = currentLang === 'de' ? 'Zu Favoriten hinzufügen/entfernen' : 'Add/remove from favorites';
+        favoriteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleFavorite(optionKey);
+        });
+        optionDiv.appendChild(favoriteBtn);
+    }
+    
+    return optionDiv;
+}
+
+// Update all tiles displaying a specific option
+// Reads from DOM (Single Source of Truth) and syncs all UI elements
+function updateAllTilesForOption(optionKey) {
+    const isChecked = getConfigBooleanValue(optionKey);
+    
+    // Update all tiles with this option
+    const allTiles = document.querySelectorAll(`[data-option-key="${optionKey}"]`);
+    allTiles.forEach(tile => {
+        const checkbox = tile.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+            checkbox.checked = isChecked;
+        }
+    });
+    
+    // Update static checkboxes in "Zusätzliche Optionen" section
+    // Map: domKey → checkboxId
+    const domKeyToCheckboxId = {
+        'allowDownloads': 'allowDownloads',
+        'allowSpellCheck': 'allowSpellCheck',
+        'showReloadButton': 'showReloadButton',
+        'allowBrowsingBackForward': 'allowBackForward'
+    };
+    
+    // Find matching static checkbox for this domKey
+    const checkboxId = domKeyToCheckboxId[optionKey];
+    if (checkboxId) {
+        const staticCheckbox = document.getElementById(checkboxId);
+        if (staticCheckbox) {
+            staticCheckbox.checked = isChecked;
+        }
+    }
+}
+
+// Toggle favorite status
+function toggleFavorite(optionKey) {
+    if (booleanOptionsFavorites.has(optionKey)) {
+        booleanOptionsFavorites.delete(optionKey);
+    } else {
+        booleanOptionsFavorites.add(optionKey);
+    }
+    
+    // Save to localStorage
+    try {
+        localStorage.setItem('sebConfigFavorites', JSON.stringify([...booleanOptionsFavorites]));
+    } catch (e) {
+        console.warn('Could not save favorites to localStorage:', e);
+    }
+    
+    // Update star icons for all tiles with this option key (in all locations)
+    document.querySelectorAll(`[data-option-key="${optionKey}"]`).forEach(tile => {
+        const starBtn = tile.querySelector('.bool-option-favorite');
+        if (starBtn) {
+            starBtn.innerHTML = booleanOptionsFavorites.has(optionKey) ? '⭐' : '☆';
+        }
+    });
+    
+    // Re-render favorites in main UI (outside Boolean Options)
+    renderFavoritesInMainUI();
+}
+
+// Render favorites group
+function renderFavoritesGroup(container) {
+    const groupDiv = document.createElement('div');
+    groupDiv.classList.add('bool-group-container');
+    groupDiv.style.borderLeft = '3px solid #FFB300';
+    
+    const groupHeader = document.createElement('div');
+    groupHeader.classList.add('bool-group-header');
+    groupHeader.innerHTML = `
+        <strong>${t('favoritesGroup')}</strong>
+        <span>(${booleanOptionsFavorites.size} ${currentLang === 'de' ? 'Optionen' : 'options'})</span>
+    `;
+    
+    const groupContent = document.createElement('div');
+    groupContent.classList.add('bool-group-content'); // Start collapsed, user can open manually
+    
+    // Allow toggling favorites group
+    groupHeader.addEventListener('click', () => {
+        groupContent.classList.toggle('show');
+    });
+    
+    if (booleanOptionsFavorites.size === 0) {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.classList.add('empty-message');
+        emptyMsg.textContent = t('noFavorites');
+        groupContent.appendChild(emptyMsg);
+    } else {
+        const optionsGrid = document.createElement('div');
+        optionsGrid.classList.add('bool-options-grid');
+        
+        [...booleanOptionsFavorites].forEach(key => {
+            const tile = createBooleanOptionTile(key, true, 'favorites');
+            optionsGrid.appendChild(tile);
+        });
+        
+        groupContent.appendChild(optionsGrid);
+    }
+    
+    groupDiv.appendChild(groupHeader);
+    groupDiv.appendChild(groupContent);
+    container.appendChild(groupDiv);
+}
+
+// Render custom favorites in main UI ("Meine Favoriten" section)
+function renderFavoritesInMainUI() {
+    const container = document.getElementById('myFavoritesContainer');
+    if (!container) {
+        console.error('❌ myFavoritesContainer not found!');
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    // Only show section if there are custom favorites
+    if (booleanOptionsFavorites.size === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    
+    // Title
+    const titleDiv = document.createElement('div');
+    titleDiv.classList.add('form-group-label');
+    titleDiv.textContent = currentLang === 'de' ? 'Meine Favoriten' : 'My Favorites';
+    container.appendChild(titleDiv);
+    
+    // Render favorites as tiles (identical to Boolean Options tiles with location tooltips)
+    const tilesGrid = document.createElement('div');
+    tilesGrid.classList.add('bool-options-grid');
+    tilesGrid.style.marginTop = '0.5rem';
+    
+    [...booleanOptionsFavorites].forEach(key => {
+        // Create tile with location tooltip
+        const tile = createBooleanOptionTile(key, true, 'favorites-main');
+        
+        // Add location tooltip to label (same as in Boolean Options)
+        const label = tile.querySelector('.bool-option-label');
+        if (label && !label.querySelector('.bool-option-tooltip')) {
+            const tooltip = document.createElement('div');
+            tooltip.classList.add('bool-option-tooltip');
+            
+            // Get English location (always shown as gray text)
+            const englishLocation = getOptionLocation(key);
+            if (englishLocation) {
+                // Gray text: always English (matches SEB Config Tool)
+                tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${englishLocation}`;
+                
+                // Tooltip hover: German if language is DE, otherwise English
+                if (currentLang === 'de') {
+                    const germanLocation = getLocalizedLocation(key);
+                    tooltip.title = germanLocation;
+                } else {
+                    tooltip.title = englishLocation;
+                }
+            } else {
+                // Use translated hint texts for undocumented options
+                const notDocText = getTranslatedText('notDocumented');
+                const notDocHint = getTranslatedText('notDocumentedHint');
+                tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${notDocText}`;
+                tooltip.title = notDocHint;
+                tooltip.classList.add('undocumented');
+            }
+            
+            label.appendChild(tooltip);
+        }
+        
+        tilesGrid.appendChild(tile);
+    });
+    
+    container.appendChild(tilesGrid);
+}
+
+function renderSecurityLevelDetails() {
+    const container = document.getElementById('securityLevelDetailsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Get security-relevant option keys
+    const securityRelevantKeys = new Set();
+    Object.values(SECURITY_LEVELS).forEach(level => {
+        Object.keys(level.settings).forEach(key => securityRelevantKeys.add(key));
+    });
+    
+    if (securityRelevantKeys.size === 0) return;
+    
+    // Create collapsible group header
+    const groupHeader = document.createElement('div');
+    groupHeader.classList.add('bool-group-header');
+    groupHeader.innerHTML = `
+        <strong>${t('securityLevelAffectedOptions')}</strong>
+        <span>(${securityRelevantKeys.size} ${currentLang === 'de' ? 'Optionen' : 'options'})</span>
+    `;
+    
+    // Create collapsible content
+    const groupContent = document.createElement('div');
+    groupContent.classList.add('bool-group-content');
+    // Start collapsed
+    
+    // Toggle functionality
+    groupHeader.addEventListener('click', () => {
+        groupContent.classList.toggle('show');
+    });
+    
+    // Info box
+    const infoBox = document.createElement('div');
+    infoBox.classList.add('preset-info-box');
+    infoBox.style.marginBottom = '1rem';
+    infoBox.innerHTML = `<strong>ℹ️</strong> ${t('securityLevelAffectedOptionsInfo')}`;
+    groupContent.appendChild(infoBox);
+    
+    // Create options grid using shared tiles
+    const optionsGrid = document.createElement('div');
+    optionsGrid.classList.add('bool-options-grid');
+    
+    [...securityRelevantKeys].forEach(key => {
+        const tile = createBooleanOptionTile(key, true, 'security-level');
+        optionsGrid.appendChild(tile);
+    });
+    
+    groupContent.appendChild(optionsGrid);
+    
+    container.appendChild(groupHeader);
+    container.appendChild(groupContent);
 }
 
 function updateSecurityLevelWarning() {
@@ -1584,40 +2419,15 @@ const content = document.createElement('div');
 content.classList.add('url-filter-content', 'bool-group-content');
 content.style.padding = '1rem';
 
-// Toggle functionality with lazy loading
-let contentLoaded = false;
-header.addEventListener('click', async () => {
-    const isExpanding = !content.classList.contains('show');
-    
-    if (isExpanding && !contentLoaded) {
-        // Lazy load dict structures if not already loaded
-        if (!parsedDictStructures.loaded) {
-            debugLog('🔄 Lazy loading dict structures for URL filter rules...');
-            content.innerHTML = '<div class="loading-indicator">⏳ ' + 
-                (currentLang === 'de' ? 'Lade Filter-Regeln...' : 'Loading filter rules...') + '</div>';
-            content.classList.add('show');
-            
-            await parseXMLDictArrays();
-            parsedDictStructures.loaded = true;
-            debugLog('✅ Dict structures loaded');
-        }
-        
-        // Render content
-        debugLog('🔄 Rendering URL filter rules content...');
-        renderURLFilterContent(content);
-        contentLoaded = true;
-        
-        // Update count badge with actual numbers
-        const countSpan = header.querySelector('span');
-        const ruleCount = parsedDictStructures.urlFilterRules.length;
-        const autoGenText = currentLang === 'de' 
-            ? `+ ${getAllDomains().length} automatisch generiert` 
-            : `+ ${getAllDomains().length} auto-generated`;
-        countSpan.textContent = `(${ruleCount} ${currentLang === 'de' ? 'manuell' : 'manual'} ${autoGenText})`;
-    }
-    
-    // Toggle visibility
+// Toggle functionality - render content when expanding
+header.addEventListener('click', () => {
+    const wasHidden = !content.classList.contains('show');
     content.classList.toggle('show');
+    
+    // When expanding, always refresh content from DOM
+    if (wasHidden && content.classList.contains('show')) {
+        renderURLFilterContent(content);
+    }
 });
 
 section.appendChild(header);
@@ -1628,21 +2438,331 @@ debugLog('✅ URL filter rules section shell created (lazy loading enabled)');
 }
 
 function renderURLFilterContent(container) {
+// CRITICAL: Refresh view from DOM first (Single Source of Truth)
+refreshURLFilterViewFromDOM();
+
 container.innerHTML = '';
 
 // Info box
 const infoBox = document.createElement('div');
-infoBox.style.cssText = `
-    background: #e3f2fd;
-    border-left: 4px solid #2196f3;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border-radius: 4px;
-`;
+infoBox.classList.add('url-filter-info-box');
 infoBox.innerHTML = currentLang === 'de'
     ? '<strong>ℹ️ Hinweis:</strong> Manuelle Filter-Regeln werden zusätzlich zu den automatisch generierten Preset-Domains verwendet. Regex-Patterns sind fortgeschrittene Optionen für erfahrene Nutzer.'
     : '<strong>ℹ️ Note:</strong> Manual filter rules are used in addition to auto-generated preset domains. Regex patterns are advanced options for experienced users.';
 container.appendChild(infoBox);
+
+// Filter dropdowns container (all in one row)
+const filterBarsContainer = document.createElement('div');
+filterBarsContainer.classList.add('url-filter-bars-container');
+
+const sources = [
+    { key: 'all', icon: '🔍', label: currentLang === 'de' ? 'Alle' : 'All' },
+    { key: 'tool-preset', icon: '📦', label: currentLang === 'de' ? 'Tool-Presets' : 'Tool Presets' },
+    { key: 'sharepoint', icon: '🔄', label: 'SharePoint' },
+    { key: 'custom', icon: '✏️', label: currentLang === 'de' ? 'Manuell' : 'Custom' },
+    { key: 'imported', icon: '📄', label: currentLang === 'de' ? 'Importiert' : 'Imported' }
+];
+
+const actions = [
+    { key: 'all', icon: '🔍', label: currentLang === 'de' ? 'Alle' : 'All' },
+    { key: 'allow', icon: '✓', label: currentLang === 'de' ? 'Erlauben' : 'Allow' },
+    { key: 'block', icon: '✗', label: currentLang === 'de' ? 'Blockieren' : 'Block' }
+];
+
+// Collect all unique labels from rules for label filter (only tool-presets)
+const allLabels = new Set();
+const excludeLabels = [
+    'SharePoint Auth', 
+    'SharePoint Infra',
+    currentLang === 'de' ? 'Manuell' : 'Custom'  // Manual/Custom entries from textareas (both allow & block)
+];
+parsedDictStructures.urlFilterRules.forEach(rule => {
+    // Get label from meta-info
+    const metaInfo = urlFilterMetaInfo[rule.expression];
+    const label = metaInfo?.label;
+    const source = metaInfo?.source;
+    
+    // Only show tool-preset labels in Tools filter (exclude manual/sharepoint/imported)
+    if (label && source === 'tool-preset' && !excludeLabels.includes(label)) {
+        allLabels.add(label);
+    }
+});
+const sortedLabels = Array.from(allLabels).sort();
+
+// Label filter (multi-select dropdown)
+const labelFilterBar = document.createElement('div');
+labelFilterBar.classList.add('url-filter-label-bar');
+
+// Filter states - always reset to 'all' on page load (no localStorage)
+let activeSourceFilter = 'all';
+let activeActionFilter = 'all';
+let activeLabelFilters = new Set(); // Multi-select for labels
+
+const applyFilters = () => {
+    // Update source dropdown button text
+    const sourceFilterBtn = container.querySelector('.source-filter-btn');
+    if (sourceFilterBtn) {
+        const activeSource = sources.find(s => s.key === activeSourceFilter) || sources[0];
+        sourceFilterBtn.innerHTML = `<span>${activeSource.icon} ${activeSource.label}</span><span>▼</span>`;
+    }
+    
+    // Update action button styles
+    const actionButtons = container.querySelectorAll('.action-filter-btn');
+    actionButtons.forEach(btn => {
+        const btnAction = btn.getAttribute('data-action');
+        if (btnAction === activeActionFilter) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Update label filter button text
+    const labelFilterBtn = container.querySelector('.label-filter-btn');
+    if (labelFilterBtn) {
+        const selectedCount = activeLabelFilters.size;
+        if (selectedCount === 0) {
+            labelFilterBtn.innerHTML = `<span>${currentLang === 'de' ? 'Alle' : 'All'}</span><span>▼</span>`;
+        } else {
+            labelFilterBtn.innerHTML = `<span>${selectedCount} ${currentLang === 'de' ? 'ausgewählt' : 'selected'}</span><span>▼</span>`;
+        }
+    }
+    
+    // Filter rules by source, action, AND label
+    const allCards = container.querySelectorAll('.url-filter-rule-card');
+    allCards.forEach(card => {
+        const cardSource = card.getAttribute('data-source');
+        const cardAction = card.getAttribute('data-action');
+        const cardLabel = card.getAttribute('data-label');
+        
+        // 'custom' filter matches both 'custom' and 'custom-advanced'
+        let sourceMatch;
+        if (activeSourceFilter === 'all') {
+            sourceMatch = true;
+        } else if (activeSourceFilter === 'custom') {
+            sourceMatch = cardSource === 'custom' || cardSource === 'custom-advanced';
+        } else {
+            sourceMatch = cardSource === activeSourceFilter;
+        }
+        
+        const actionMatch = activeActionFilter === 'all' || cardAction === activeActionFilter;
+        const labelMatch = activeLabelFilters.size === 0 || activeLabelFilters.has(cardLabel);
+        
+        if (sourceMatch && actionMatch && labelMatch) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+};
+
+// Create Source filter (Single-Choice Dropdown)
+const sourceFilterWrapper = document.createElement('div');
+sourceFilterWrapper.classList.add('url-filter-source-wrapper', 'dropdown-container', 'single-choice');
+
+const sourceLabel = document.createElement('span');
+sourceLabel.classList.add('url-filter-dropdown-label');
+sourceLabel.textContent = currentLang === 'de' ? '🔍 Quelle:' : '🔍 Source:';
+sourceFilterWrapper.appendChild(sourceLabel);
+
+const sourceFilterBtn = document.createElement('button');
+sourceFilterBtn.classList.add('dropdown-btn');
+sourceFilterBtn.type = 'button';
+const activeSource = sources.find(s => s.key === activeSourceFilter) || sources[0];
+sourceFilterBtn.innerHTML = `<span>${activeSource.icon} ${activeSource.label}</span>`;
+sourceFilterBtn.setAttribute('aria-label', currentLang === 'de' ? 'Quelle filtern' : 'Filter by source');
+
+const sourceDropdown = document.createElement('div');
+sourceDropdown.classList.add('dropdown-menu', 'hidden');
+
+sources.forEach(source => {
+    const option = document.createElement('div');
+    option.classList.add('dropdown-option');
+    if (source.key === activeSourceFilter) {
+        option.classList.add('selected');
+    }
+    const label = document.createElement('span');
+    label.textContent = `${source.icon} ${source.label}`;
+    option.appendChild(label);
+    
+    option.addEventListener('click', () => {
+        activeSourceFilter = source.key;
+        sourceFilterBtn.innerHTML = `<span>${source.icon} ${source.label}</span>`;
+        sourceDropdown.classList.add('hidden');
+        sourceFilterBtn.classList.remove('active');
+        // Update selected class
+        sourceDropdown.querySelectorAll('.dropdown-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        option.classList.add('selected');
+        applyFilters();
+    });
+    sourceDropdown.appendChild(option);
+});
+
+sourceFilterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    sourceDropdown.classList.toggle('hidden');
+    sourceFilterBtn.classList.toggle('active');
+});
+
+document.addEventListener('click', (e) => {
+    if (!sourceFilterWrapper.contains(e.target)) {
+        sourceDropdown.classList.add('hidden');
+        sourceFilterBtn.classList.remove('active');
+    }
+});
+
+sourceFilterWrapper.appendChild(sourceFilterBtn);
+sourceFilterWrapper.appendChild(sourceDropdown);
+
+// Create Action filter (buttons)
+const actionFilterWrapper = document.createElement('div');
+actionFilterWrapper.classList.add('url-filter-action-wrapper');
+const actionLabel = document.createElement('span');
+actionLabel.classList.add('url-filter-dropdown-label');
+actionLabel.textContent = currentLang === 'de' ? '⚡ Aktion:' : '⚡ Action:';
+actionFilterWrapper.appendChild(actionLabel);
+
+const actionButtonsContainer = document.createElement('div');
+actionButtonsContainer.style.display = 'flex';
+actionButtonsContainer.style.gap = '5px';
+
+actions.forEach(action => {
+    const btn = document.createElement('button');
+    btn.classList.add('action-filter-btn', 'url-filter-dropdown-btn');
+    btn.style.flex = '1';
+    if (action.key === activeActionFilter) {
+        btn.classList.add('active');
+    }
+    btn.innerHTML = `${action.icon} ${action.label}`;
+    btn.setAttribute('data-action', action.key);
+    btn.addEventListener('click', () => {
+        activeActionFilter = action.key;
+        applyFilters();
+    });
+    actionButtonsContainer.appendChild(btn);
+});
+
+actionFilterWrapper.appendChild(actionButtonsContainer);
+
+// Create label filter (Multi-Choice Dropdown) - ALWAYS show, even if empty
+const labelFilterWrapper = document.createElement('div');
+labelFilterWrapper.classList.add('url-filter-label-wrapper', 'dropdown-container');
+
+const labelLabel = document.createElement('span');
+labelLabel.classList.add('url-filter-dropdown-label');
+labelLabel.textContent = currentLang === 'de' ? '🏷️ Tools:' : '🏷️ Tools:';
+labelFilterWrapper.appendChild(labelLabel);
+
+const labelFilterBtn = document.createElement('button');
+labelFilterBtn.classList.add('dropdown-btn');
+labelFilterBtn.type = 'button';
+const selectedCount = activeLabelFilters.size;
+
+// Button text based on labels availability
+if (sortedLabels.length === 0) {
+    labelFilterBtn.innerHTML = `<span>${currentLang === 'de' ? 'Keine Tools' : 'No tools'}</span>`;
+    labelFilterBtn.disabled = true;
+    labelFilterBtn.style.opacity = '0.6';
+    labelFilterBtn.style.cursor = 'not-allowed';
+} else {
+    labelFilterBtn.innerHTML = selectedCount === 0 
+        ? `<span>${currentLang === 'de' ? 'Alle' : 'All'}</span>`
+        : `<span class="label-count">${selectedCount} ${currentLang === 'de' ? 'ausgewählt' : 'selected'}</span>`;
+    labelFilterBtn.setAttribute('aria-label', currentLang === 'de' ? 'Nach Tools filtern' : 'Filter by tools');
+}
+
+const labelDropdown = document.createElement('div');
+labelDropdown.classList.add('dropdown-menu', 'hidden');
+
+if (sortedLabels.length > 0) {
+    // "All" option
+    const allOption = document.createElement('label');
+    allOption.classList.add('dropdown-option', 'special');
+    allOption.innerHTML = `
+        <input type="checkbox" id="label-filter-all" name="label-filter-all" value="" ${activeLabelFilters.size === 0 ? 'checked' : ''}>
+        <span>${currentLang === 'de' ? '✓ Alle auswählen' : '✓ Select all'}</span>
+    `;
+    allOption.querySelector('input').addEventListener('change', (e) => {
+        if (e.target.checked) {
+            activeLabelFilters.clear();
+            labelDropdown.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                if (cb.value === '') cb.checked = true;
+                else cb.checked = false;
+            });
+        }
+        applyFilters();
+    });
+    labelDropdown.appendChild(allOption);
+    
+    // Individual label options
+    sortedLabels.forEach(label => {
+        const option = document.createElement('label');
+        option.classList.add('dropdown-option');
+        const filterId = `label-filter-${label.replace(/[^a-zA-Z0-9]/g, '-')}`;
+        option.innerHTML = `
+            <input type="checkbox" id="${filterId}" name="${filterId}" value="${label}" ${activeLabelFilters.has(label) ? 'checked' : ''}>
+            <span>${label}</span>
+        `;
+        option.querySelector('input').addEventListener('change', (e) => {
+            const allCheckbox = labelDropdown.querySelector('input[value=""]');
+            if (e.target.checked) {
+                activeLabelFilters.add(label);
+                allCheckbox.checked = false;
+            } else {
+                activeLabelFilters.delete(label);
+                if (activeLabelFilters.size === 0) {
+                    allCheckbox.checked = true;
+                }
+            }
+            applyFilters();
+        });
+        labelDropdown.appendChild(option);
+    });
+    
+    // Toggle dropdown on button click (only if not disabled)
+    labelFilterBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!labelFilterBtn.disabled) {
+            labelDropdown.classList.toggle('hidden');
+            labelFilterBtn.classList.toggle('active');
+        }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!labelFilterWrapper.contains(e.target)) {
+            labelDropdown.classList.add('hidden');
+            labelFilterBtn.classList.remove('active');
+        }
+    });
+}
+
+labelFilterWrapper.appendChild(labelFilterBtn);
+labelFilterWrapper.appendChild(labelDropdown);
+
+// Add all three filters to container (in order: Aktion - Tools - Quelle)
+filterBarsContainer.appendChild(actionFilterWrapper);
+filterBarsContainer.appendChild(labelFilterWrapper);
+filterBarsContainer.appendChild(sourceFilterWrapper);
+container.appendChild(filterBarsContainer);
+
+// Apply initial filters (important if loaded from localStorage)
+if (activeSourceFilter !== 'all' || activeActionFilter !== 'all' || activeLabelFilters.size > 0) {
+    // Defer to next tick to ensure all cards are rendered
+    setTimeout(() => applyFilters(), 0);
+}
+
+// Warning container for duplicates (hidden by default)
+const warningDiv = document.createElement('div');
+warningDiv.id = 'urlFilterDuplicateWarning';
+warningDiv.classList.add('preset-category-warning', 'hidden');
+warningDiv.innerHTML = `
+    <strong>⚠️ ${currentLang === 'de' ? 'Duplikate gefunden' : 'Duplicates Found'}</strong>
+    <div id="urlFilterDuplicateWarningText"></div>
+`;
+container.appendChild(warningDiv);
 
 // Rules list
 const rulesList = document.createElement('div');
@@ -1651,13 +2771,14 @@ rulesList.id = 'urlFilterRulesList';
 
 if (parsedDictStructures.urlFilterRules.length === 0) {
     const emptyMsg = document.createElement('div');
-    emptyMsg.style.cssText = 'padding: 2rem; text-align: center; color: #666;';
+    emptyMsg.classList.add('empty-message-center');
     emptyMsg.textContent = currentLang === 'de' 
         ? 'Keine manuellen Filter-Regeln vorhanden. Klicken Sie "+ Neue Regel", um eine hinzuzufügen.'
         : 'No manual filter rules defined. Click "+ New Rule" to add one.';
     rulesList.appendChild(emptyMsg);
 } else {
     parsedDictStructures.urlFilterRules.forEach((rule, index) => {
+        // No need to skip deleted - DOM doesn't contain them
         const ruleCard = createURLFilterRuleCard(rule, index);
         rulesList.appendChild(ruleCard);
     });
@@ -1667,107 +2788,319 @@ container.appendChild(rulesList);
 
 // Add new rule button
 const addButton = document.createElement('button');
-addButton.classList.add('btn', 'btn-secondary');
-addButton.style.cssText = 'margin-top: 1rem;';
+addButton.classList.add('btn', 'btn-secondary', 'mt-1');
 addButton.innerHTML = `➕ ${currentLang === 'de' ? 'Neue Regel' : 'New Rule'}`;
 addButton.addEventListener('click', addNewURLFilterRule);
 container.appendChild(addButton);
+
+// Check for duplicates and show warning if any
+checkURLFilterDuplicates();
 }
 
 function createURLFilterRuleCard(rule, index) {
 const card = document.createElement('div');
 card.classList.add('url-filter-rule-card');
-card.style.cssText = `
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-`;
 
-const actionColor = rule.action === 1 ? '#4caf50' : '#f44336';
-const actionLabel = rule.action === 1 
-    ? (currentLang === 'de' ? '✓ Erlauben' : '✓ Allow') 
-    : (currentLang === 'de' ? '✗ Blockieren' : '✗ Block');
+// Get meta-info from separate structure (UI context)
+const metaInfo = urlFilterMetaInfo[rule.expression] || {};
+const source = metaInfo.source || 'custom';
+const label = metaInfo.label || '';
+const modified = metaInfo.modified || false;
+
+card.setAttribute('data-source', source);
+
+const actionClass = rule.action === 1 ? 'allow' : 'block';
+const actionFilterValue = rule.action === 1 ? 'allow' : 'block';
+card.setAttribute('data-action', actionFilterValue);
+
+// Add label attribute for filtering
+if (label) {
+    card.setAttribute('data-label', label);
+}
+
+const isEditable = true; // All rules are editable
+
+// Generate unique IDs for form elements
+const activeId = `url-filter-active-${index}`;
+const regexId = `url-filter-regex-${index}`;
+const expressionId = `url-filter-expression-${index}`;
+const actionId = `url-filter-action-${index}`;
+
+// Source icons and labels
+const sourceIcons = {
+    'sharepoint': '🔄',
+    'tool-preset': '📦',
+    'custom': '✏️',
+    'custom-advanced': '✏️',
+    'imported': '📄'
+};
+
+const sourceLabels = {
+    'sharepoint': 'SharePoint',
+    'tool-preset': 'Tool-Preset',
+    'custom': currentLang === 'de' ? 'Textfeld' : 'Text Field',
+    'custom-advanced': currentLang === 'de' ? 'Manuell ADV' : 'Custom ADV',
+    'imported': currentLang === 'de' ? 'Importiert' : 'Imported'
+};
+
+const sourceIcon = sourceIcons[source] || '✏️';
+const sourceLabel = sourceLabels[source] || label;
+
+// Add source badge with modified indicator and label-specific class
+const modifiedText = modified ? ` <em>${currentLang === 'de' ? '(modifiziert)' : '(modified)'}</em>` : '';
+// Add label-specific class for custom domain colors
+let badgeClass = `source-${source}`;
+const manualLabel = currentLang === 'de' ? 'Manuell' : 'Custom';
+if (label === manualLabel && source === 'custom') {
+    // Determine if allow or block based on rule action
+    if (rule.action === 1) {
+        badgeClass += ' label-custom-domain'; // Allow -> Green
+    } else {
+        badgeClass += ' label-blocked-domain'; // Block -> Red
+    }
+}
+const labelBadge = `<span class="source-badge ${badgeClass}" title="${sourceLabel}">
+    ${sourceIcon} ${label || sourceLabel}${modifiedText}
+</span>`;
+
+    // Add reset button for modified auto-generated rules
+    const resetButton = (modified && (source === 'tool-preset' || source === 'sharepoint'))
+        ? `<button class="btn-icon url-filter-reset" 
+                   data-index="${index}"
+                   title="${currentLang === 'de' ? 'Auf Standard zurücksetzen' : 'Reset to default'}">
+               ↺
+           </button>`
+        : '';
 
     card.innerHTML = `
-        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-            <label style="display: flex; align-items: center; gap: 0.5rem;">
-                <input type="checkbox" 
-                       class="url-filter-active" 
+        <div class="url-filter-card-container">
+            <!-- Zeile 1: Quelle, Aktiv, Regex, Papierkorb -->
+            <div class="url-filter-card-row">
+                ${labelBadge}
+                <label class="url-filter-label" for="${activeId}">
+                    <input type="checkbox" 
+                           id="${activeId}"
+                           class="url-filter-active" 
+                           data-index="${index}"
+                           ${rule.active ? 'checked' : ''}>
+                    <span>${currentLang === 'de' ? 'Aktiv' : 'Active'}</span>
+                </label>
+                <label class="url-filter-label" for="${regexId}">
+                    <input type="checkbox" 
+                           id="${regexId}"
+                           class="url-filter-regex" 
+                           data-index="${index}"
+                           ${rule.regex ? 'checked' : ''}>
+                    <span>Regex</span>
+                </label>
+                <div class="url-filter-card-row-right">
+                    ${resetButton}
+                    <button class="btn-icon url-filter-delete" 
+                            data-index="${index}"
+                            title="${currentLang === 'de' ? 'Regel löschen' : 'Delete rule'}">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+            <!-- Zeile 2: Aktion-Dropdown (schmal) + Expression (breit) -->
+            <div class="url-filter-card-row">
+                <select id="${actionId}"
+                        class="url-filter-action ${actionClass}" 
+                        data-index="${index}">
+                    <option value="1" ${rule.action === 1 ? 'selected' : ''}>${currentLang === 'de' ? '✓ Erlauben' : '✓ Allow'}</option>
+                    <option value="0" ${rule.action === 0 ? 'selected' : ''}>${currentLang === 'de' ? '✗ Blockieren' : '✗ Block'}</option>
+                </select>
+                <input type="text" 
+                       id="${expressionId}"
+                       class="url-filter-expression" 
                        data-index="${index}"
-                       ${rule.active ? 'checked' : ''}>
-                <span style="font-weight: 500;">${currentLang === 'de' ? 'Aktiv' : 'Active'}</span>
-            </label>
-            <label style="display: flex; align-items: center; gap: 0.5rem;">
-                <input type="checkbox" 
-                       class="url-filter-regex" 
-                       data-index="${index}"
-                       ${rule.regex ? 'checked' : ''}>
-                <span>Regex</span>
-            </label>
-            <input type="text" 
-                   class="url-filter-expression" 
-                   data-index="${index}"
-                   value="${(rule.expression || '').replace(/"/g, '&quot;')}"
-                   placeholder="${currentLang === 'de' ? 'URL-Pattern oder Regex...' : 'URL pattern or regex...'}"
-                   style="flex: 1; min-width: 200px; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-family: monospace;">
-            <select class="url-filter-action" 
-                    data-index="${index}"
-                    style="padding: 0.5rem; border: none; border-radius: 4px; background: ${actionColor}; color: white; font-weight: 500;">
-                <option value="1" ${rule.action === 1 ? 'selected' : ''}>${currentLang === 'de' ? '✓ Erlauben' : '✓ Allow'}</option>
-                <option value="0" ${rule.action === 0 ? 'selected' : ''}>${currentLang === 'de' ? '✗ Blockieren' : '✗ Block'}</option>
-            </select>
-            <button class="btn-icon url-filter-delete" 
-                    data-index="${index}"
-                    style="color: #f44336; padding: 0.5rem; cursor: pointer; border: none; background: transparent; font-size: 1.2rem;"
-                    title="${currentLang === 'de' ? 'Regel löschen' : 'Delete rule'}">
-                🗑️
-            </button>
+                       value="${(rule.expression || '').replace(/"/g, '&quot;')}"
+                       placeholder="${currentLang === 'de' ? 'URL-Pattern oder Regex...' : 'URL pattern or regex...'}">
+            </div>
         </div>
-    `;// Event listeners
+    `;// Helper: Promote custom rule to custom-advanced when edited
+const promoteCustomRule = (metaInfo) => {
+    if (metaInfo && metaInfo.source === 'custom') {
+        // Show warning toast
+        const message = currentLang === 'de'
+            ? `⚠️ Diese Regel wurde aus dem Textfeld übernommen und wird nun hier verwaltet. Änderungen im Textfeld werden diese Regel nicht mehr beeinflussen.`
+            : `⚠️ This rule was taken from the text field and will now be managed here. Changes in the text field will no longer affect this rule.`;
+        showTemporaryMessage(message, 'warning', 5000);
+        
+        // Promote to custom-advanced
+        metaInfo.source = 'custom-advanced';
+        metaInfo.label = currentLang === 'de' ? 'Manuell ADV' : 'Custom ADV';
+        debugLog(`   📌 Promoted custom → custom-advanced: ${rule.expression}`);
+    }
+};
+
+// Event listeners - update DOM directly
 card.querySelector('.url-filter-active').addEventListener('change', (e) => {
-    parsedDictStructures.urlFilterRules[index].active = e.target.checked;
-    debugLog(`URLFilter rule ${index} active: ${e.target.checked}`);
+    // Update in DOM
+    updateURLFilterRuleInDOM(index, { active: e.target.checked });
+    
+    // Get current expression from input field (not from closure - it may be stale)
+    const currentExpression = card.querySelector('.url-filter-expression').value;
+    const metaInfo = urlFilterMetaInfo[currentExpression];
+    
+    // Promote custom → custom-advanced
+    promoteCustomRule(metaInfo);
+    
+    // Mark as modified in meta-info if it's tool-preset
+    if (metaInfo && metaInfo.source === 'tool-preset') {
+        metaInfo.modified = true;
+        // Refresh view and re-render to show modified badge
+        refreshURLFilterViewFromDOM();
+        const container = document.querySelector('.url-filter-content');
+        if (container) renderURLFilterContent(container);
+    } else {
+        // Just refresh view for UI consistency
+        refreshURLFilterViewFromDOM();
+    }
     updatePreview();
 });
 
 card.querySelector('.url-filter-regex').addEventListener('change', (e) => {
-    parsedDictStructures.urlFilterRules[index].regex = e.target.checked;
-    debugLog(`URLFilter rule ${index} regex: ${e.target.checked}`);
+    // Update in DOM
+    updateURLFilterRuleInDOM(index, { regex: e.target.checked });
+    
+    // Get current expression from input field (not from closure - it may be stale)
+    const currentExpression = card.querySelector('.url-filter-expression').value;
+    const metaInfo = urlFilterMetaInfo[currentExpression];
+    
+    // Promote custom → custom-advanced
+    promoteCustomRule(metaInfo);
+    
+    // Mark as modified in meta-info if it's tool-preset
+    if (metaInfo && metaInfo.source === 'tool-preset') {
+        metaInfo.modified = true;
+        refreshURLFilterViewFromDOM();
+        const container = document.querySelector('.url-filter-content');
+        if (container) renderURLFilterContent(container);
+    } else {
+        refreshURLFilterViewFromDOM();
+    }
     updatePreview();
 });
 
-card.querySelector('.url-filter-expression').addEventListener('input', (e) => {
-    parsedDictStructures.urlFilterRules[index].expression = e.target.value;
-    debugLog(`URLFilter rule ${index} expression: ${e.target.value}`);
+// Expression changes: Only commit on blur (when user leaves field)
+card.querySelector('.url-filter-expression').addEventListener('blur', (e) => {
+    const newExpression = e.target.value.trim();
+    
+    // Find old expression from DOM (before we update it)
+    const currentRules = getURLFilterRulesFromDOM();
+    const currentRule = currentRules[index];
+    const oldExpression = currentRule ? currentRule.expression : '';
+    
+    // Skip if no change
+    if (oldExpression === newExpression) {
+        return;
+    }
+    
+    // Update in DOM
+    updateURLFilterRuleInDOM(index, { expression: newExpression });
+    
+    // Update meta-info key (expression changed!)
+    const metaInfo = urlFilterMetaInfo[oldExpression];
+    debugLog(`✏️ EXPRESSION CHANGED: index=${index}, old="${oldExpression}", new="${newExpression}", source=${metaInfo?.source || 'NO-META'}`);
+    if (metaInfo) {
+        delete urlFilterMetaInfo[oldExpression];
+        urlFilterMetaInfo[newExpression] = metaInfo;
+        
+        // Promote custom → custom-advanced
+        promoteCustomRule(metaInfo);
+        
+        // Mark as modified in meta-info if it's tool-preset
+        if (metaInfo.source === 'tool-preset') {
+            metaInfo.modified = true;
+            refreshURLFilterViewFromDOM();
+            const container = document.querySelector('.url-filter-content');
+            if (container) renderURLFilterContent(container);
+        } else {
+            refreshURLFilterViewFromDOM();
+        }
+    }
     updatePreview();
 });
 
-    card.querySelector('.url-filter-action').addEventListener('change', (e) => {
-        parsedDictStructures.urlFilterRules[index].action = parseInt(e.target.value);
-        debugLog(`URLFilter rule ${index} action: ${e.target.value}`);
-        // Update background color
-        const newColor = e.target.value === '1' ? '#4caf50' : '#f44336';
-        e.target.style.background = newColor;
-        updatePreview();
-    });card.querySelector('.url-filter-delete').addEventListener('click', () => {
+card.querySelector('.url-filter-action').addEventListener('change', (e) => {
+    const newAction = parseInt(e.target.value);
+    
+    // Update in DOM
+    updateURLFilterRuleInDOM(index, { action: newAction });
+    
+    // Get current expression from input field (not from closure - it may be stale)
+    const currentExpression = card.querySelector('.url-filter-expression').value;
+    const metaInfo = urlFilterMetaInfo[currentExpression];
+    
+    // Promote custom → custom-advanced
+    promoteCustomRule(metaInfo);
+    
+    // Mark as modified in meta-info if it's tool-preset
+    if (metaInfo && metaInfo.source === 'tool-preset') {
+        metaInfo.modified = true;
+        refreshURLFilterViewFromDOM();
+        const container = document.querySelector('.url-filter-content');
+        if (container) renderURLFilterContent(container);
+    } else {
+        refreshURLFilterViewFromDOM();
+    }
+    
+    // Update CSS class for color
+    if (newAction === 1) {
+        e.target.classList.remove('block');
+        e.target.classList.add('allow');
+    } else {
+        e.target.classList.remove('allow');
+        e.target.classList.add('block');
+    }
+    updatePreview();
+});
+
+// Reset button (only for modified auto-generated rules)
+const resetBtn = card.querySelector('.url-filter-reset');
+if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+        if (confirm(currentLang === 'de' ? 'Regel auf Standard zurücksetzen?' : 'Reset rule to default?')) {
+            // Delete from DOM - will be regenerated on next sync
+            deleteURLFilterRuleFromDOM(index);
+            
+            // Remove from meta-info
+            delete urlFilterMetaInfo[rule.expression];
+            
+            // Re-sync to regenerate default
+            syncAllURLFilterSources();
+            
+            // Update count in header
+            updateURLFilterCount();
+            
+            // Update preview
+            updatePreview();
+        }
+    });
+}
+
+// Delete button
+card.querySelector('.url-filter-delete').addEventListener('click', () => {
     if (confirm(currentLang === 'de' ? 'Regel wirklich löschen?' : 'Really delete this rule?')) {
-        parsedDictStructures.urlFilterRules.splice(index, 1);
+        // Delete from DOM
+        deleteURLFilterRuleFromDOM(index);
+        
+        // Remove from meta-info
+        delete urlFilterMetaInfo[rule.expression];
+        
+        // Refresh view from DOM
+        refreshURLFilterViewFromDOM();
+        
         // Re-render
         const container = document.querySelector('.url-filter-content');
         if (container) {
             renderURLFilterContent(container);
         }
+        
         // Update count in header
-        const countSpan = document.querySelector('.url-filter-header span');
-        if (countSpan) {
-            const ruleCount = parsedDictStructures.urlFilterRules.length;
-            const autoGenText = currentLang === 'de' 
-                ? `+ ${getAllDomains().length} automatisch generiert` 
-                : `+ ${getAllDomains().length} auto-generated`;
-            countSpan.textContent = `(${ruleCount} ${currentLang === 'de' ? 'manuell' : 'manual'} ${autoGenText})`;
-        }
+        updateURLFilterCount();
+        
         // Update preview
         updatePreview();
     }
@@ -1776,36 +3109,125 @@ card.querySelector('.url-filter-expression').addEventListener('input', (e) => {
 return card;
 }
 
+function updateURLFilterCount() {
+    // CRITICAL: Refresh view from DOM first (Single Source of Truth)
+    refreshURLFilterViewFromDOM();
+    
+    const countSpan = document.querySelector('.url-filter-header span');
+    if (countSpan) {
+        // Count rules by source from meta-info
+        let editableCount = 0;
+        let autoCount = 0;
+        
+        parsedDictStructures.urlFilterRules.forEach(rule => {
+            const metaInfo = urlFilterMetaInfo[rule.expression];
+            const source = metaInfo?.source || 'custom';
+            
+            // Count custom, custom-advanced, and imported as "manual"
+            if (source === 'custom' || source === 'custom-advanced' || source === 'imported') {
+                editableCount++;
+            } else {
+                autoCount++;
+            }
+        });
+        
+        const autoText = currentLang === 'de' 
+            ? `+ ${autoCount} automatisch` 
+            : `+ ${autoCount} auto`;
+        countSpan.textContent = `(${editableCount} ${currentLang === 'de' ? 'manuell' : 'manual'} ${autoText})`;
+    }
+}
+
+/**
+ * Check for duplicate URL filter rules and show warning
+ * Works with refreshed view from DOM (parsedDictStructures.urlFilterRules)
+ */
+function checkURLFilterDuplicates() {
+    // CRITICAL: Refresh view from DOM first (Single Source of Truth)
+    refreshURLFilterViewFromDOM();
+    
+    const warningDiv = document.getElementById('urlFilterDuplicateWarning');
+    const warningText = document.getElementById('urlFilterDuplicateWarningText');
+    
+    if (!warningDiv || !warningText) return;
+    
+    // Find duplicates by expression only - each expression must be unique
+    const seen = new Map(); // expression -> [indices]
+    const duplicates = new Map();
+    
+    parsedDictStructures.urlFilterRules.forEach((rule, index) => {
+        // No need to check for deleted - DOM doesn't have deleted rules
+        const key = rule.expression;
+        
+        if (seen.has(key)) {
+            // Duplicate found
+            if (!duplicates.has(key)) {
+                duplicates.set(key, [seen.get(key)[0], index]);
+            } else {
+                duplicates.get(key).push(index);
+            }
+        } else {
+            seen.set(key, [index]);
+        }
+    });
+    
+    if (duplicates.size > 0) {
+        // Build warning message
+        const duplicateList = Array.from(duplicates.entries())
+            .map(([expression, indices]) => {
+                return `<li><code>${expression}</code> (${indices.length + 1}×)</li>`;
+            })
+            .join('');
+        
+        const message = currentLang === 'de'
+            ? `Die folgenden Regeln sind mehrfach vorhanden. Duplikate werden automatisch entfernt beim Export:<ul>${duplicateList}</ul>`
+            : `The following rules are duplicated. Duplicates will be automatically removed during export:<ul>${duplicateList}</ul>`;
+        
+        warningText.innerHTML = message;
+        warningDiv.classList.remove('hidden');
+        
+        debugLog(`⚠️ Found ${duplicates.size} duplicate rule(s)`);
+    } else {
+        // No duplicates - hide warning
+        warningDiv.classList.add('hidden');
+    }
+}
+
 function addNewURLFilterRule() {
-const newRule = {
-    action: 1,  // Allow by default
-    active: true,
-    expression: '',
-    regex: false
-};
-
-parsedDictStructures.urlFilterRules.push(newRule);
-
-// Re-render
-const container = document.querySelector('.url-filter-content');
-if (container) {
-    renderURLFilterContent(container);
-}
-
-// Update count in header
-const countSpan = document.querySelector('.url-filter-header span');
-if (countSpan) {
-    const ruleCount = parsedDictStructures.urlFilterRules.length;
-    const autoGenText = currentLang === 'de' 
-        ? `+ ${getAllDomains().length} automatisch generiert` 
-        : `+ ${getAllDomains().length} auto-generated`;
-    countSpan.textContent = `(${ruleCount} ${currentLang === 'de' ? 'manuell' : 'manual'} ${autoGenText})`;
-}
-
-// Update preview
-updatePreview();
-
-debugLog('➕ New URL filter rule added');
+    const newRule = {
+        action: 1,  // Allow by default
+        active: true,
+        expression: '',
+        regex: false
+    };
+    
+    // Add to DOM (with temporary empty expression)
+    const currentRules = getURLFilterRulesFromDOM();
+    currentRules.push(newRule);
+    setURLFilterRulesInDOM(currentRules);
+    
+    // Add meta-info as custom-advanced (manually created in Advanced section)
+    urlFilterMetaInfo[''] = {
+        source: 'custom-advanced',
+        label: currentLang === 'de' ? 'Manuell ADV' : 'Custom ADV'
+    };
+    
+    debugLog('🆕 NEW CUSTOM-ADVANCED: Empty rule created, will be filled by user');
+    
+    // Refresh view from DOM
+    refreshURLFilterViewFromDOM();
+    
+    // Re-render
+    const container = document.querySelector('.url-filter-content');
+    if (container) {
+        renderURLFilterContent(container);
+    }
+    
+    // Update count in header
+    updateURLFilterCount();
+    
+    // Update preview
+    updatePreview();
 }
 
 // ============================================================================
@@ -1818,7 +3240,7 @@ if (!container) {
     return;
 }
 
-debugLog('📦 Container found, clearing content...');
+// debugLog('📦 Container found, clearing content...');
 container.innerHTML = '';
 
 // Info box
@@ -1826,20 +3248,53 @@ const infoBox = document.createElement('div');
 infoBox.classList.add('preset-info-box');
 infoBox.innerHTML = `<strong>ℹ️ ${t('allBooleanOptions')}</strong><br>${t('booleanOptionsInfo')}`;
 container.appendChild(infoBox);
-debugLog('ℹ️ Info box added');
+// debugLog('ℹ️ Info box added');
+
+// Translation toggle button
+const toggleContainer = document.createElement('div');
+toggleContainer.style.marginTop = '0.5rem';
+toggleContainer.style.marginBottom = '1rem';
+toggleContainer.style.display = 'flex';
+toggleContainer.style.alignItems = 'center';
+toggleContainer.style.gap = '0.5rem';
+
+const toggleLabel = document.createElement('label');
+toggleLabel.style.fontSize = '0.9rem';
+toggleLabel.style.cursor = 'pointer';
+toggleLabel.innerHTML = `
+    <input type="checkbox" id="translationToggle" name="translationToggle" ${showTranslatedLabels ? 'checked' : ''}>
+    ${currentLang === 'de' ? 'Übersetzte Bezeichnungen anzeigen' : 'Show translated labels'}
+`;
+
+const toggleCheckbox = toggleLabel.querySelector('#translationToggle');
+toggleCheckbox.addEventListener('change', (e) => {
+    showTranslatedLabels = e.target.checked;
+    try {
+        localStorage.setItem('sebConfigShowTranslations', JSON.stringify(showTranslatedLabels));
+    } catch (err) {
+        console.warn('Could not save translation preference:', err);
+    }
+    renderBooleanOptions(); // Re-render with new setting
+});
+
+toggleContainer.appendChild(toggleLabel);
+container.appendChild(toggleContainer);
+
+// Note: Favorites are now rendered in their own container outside Boolean Options
+// See renderFavoritesInMainUI()
 
 // Render each group
 const groupOrder = ['browser', 'security', 'interface', 'system', 'network', 'mobile', 'other'];
-debugLog('🔍 Processing groups:', groupOrder);
+// debugLog('🔍 Processing groups:', groupOrder);
 
 groupOrder.forEach(groupKey => {
     const group = parsedBooleanOptions.groups[groupKey];
-    debugLog(`  - Group ${groupKey}:`, group);
+    // debugLog(`  - Group ${groupKey}:`, group);
     if (!group || !group.options || group.options.length === 0) {
-        debugLog(`  ⚠️ Skipping ${groupKey} (no options)`);
+        // debugLog(`  ⚠️ Skipping ${groupKey} (no options)`);
         return;
     }
-    debugLog(`  ✅ Rendering ${groupKey} with ${group.options.length} options`);
+    // debugLog(`  ✅ Rendering ${groupKey} with ${group.options.length} options`);
     
     // Group container (collapsible)
     const groupDiv = document.createElement('div');
@@ -1862,67 +3317,45 @@ groupOrder.forEach(groupKey => {
         groupContent.classList.toggle('show');
     });
     
-    // Render options in grid
+    // Render options in grid using shared tiles
     const optionsGrid = document.createElement('div');
     optionsGrid.classList.add('bool-options-grid');
     
     group.options.forEach(opt => {
-        const optionDiv = document.createElement('div');
-        optionDiv.classList.add('bool-option-item');
+        const tile = createBooleanOptionTile(opt.key, true, `group-${group.name}`);
         
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `bool_${opt.key}`;
-        checkbox.checked = parsedBooleanOptions.userSelections[opt.key];
-        checkbox.classList.add('bool-option-checkbox');
-        checkbox.addEventListener('change', (e) => {
-            parsedBooleanOptions.userSelections[opt.key] = e.target.checked;
-        });
-        
-        const label = document.createElement('label');
-        label.htmlFor = `bool_${opt.key}`;
-        label.classList.add('bool-option-label');
-        
-        const labelText = document.createElement('div');
-        labelText.classList.add('bool-option-label-text');
-        labelText.textContent = generateOptionLabel(opt.key);
-        
-        const keyName = document.createElement('div');
-        keyName.classList.add('bool-option-key');
-        keyName.textContent = opt.key;
-        
-        const tooltip = document.createElement('div');
-        tooltip.classList.add('bool-option-tooltip');
-        
-        // Get English location (always shown as gray text)
-        const englishLocation = getOptionLocation(opt.key);
-        if (englishLocation) {
-            // Gray text: always English (matches SEB Config Tool)
-            tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${englishLocation}`;
+        // Add location tooltip to label
+        const label = tile.querySelector('.bool-option-label');
+        if (label && !label.querySelector('.bool-option-tooltip')) {
+            const tooltip = document.createElement('div');
+            tooltip.classList.add('bool-option-tooltip');
             
-            // Tooltip hover: German if language is DE, otherwise English
-            if (currentLang === 'de') {
-                const germanLocation = getLocalizedLocation(opt.key);
-                tooltip.title = germanLocation;
+            // Get English location (always shown as gray text)
+            const englishLocation = getOptionLocation(opt.key);
+            if (englishLocation) {
+                // Gray text: always English (matches SEB Config Tool)
+                tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${englishLocation}`;
+                
+                // Tooltip hover: German if language is DE, otherwise English
+                if (currentLang === 'de') {
+                    const germanLocation = getLocalizedLocation(opt.key);
+                    tooltip.title = germanLocation;
+                } else {
+                    tooltip.title = englishLocation;
+                }
             } else {
-                tooltip.title = englishLocation;
+                // Use translated hint texts for undocumented options
+                const notDocText = getTranslatedText('notDocumented');
+                const notDocHint = getTranslatedText('notDocumentedHint');
+                tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${notDocText}`;
+                tooltip.title = notDocHint;
+                tooltip.classList.add('undocumented');
             }
-        } else {
-            // Use translated hint texts for undocumented options
-            const notDocText = getTranslatedText('notDocumented');
-            const notDocHint = getTranslatedText('notDocumentedHint');
-            tooltip.textContent = `📍 ${t('sebConfigToolLocation')}: ${notDocText}`;
-            tooltip.title = notDocHint;
-            tooltip.classList.add('undocumented');
+            
+            label.appendChild(tooltip);
         }
         
-        label.appendChild(labelText);
-        label.appendChild(keyName);
-        label.appendChild(tooltip);
-        
-        optionDiv.appendChild(checkbox);
-        optionDiv.appendChild(label);
-        optionsGrid.appendChild(optionDiv);
+        optionsGrid.appendChild(tile);
     });
     
     groupContent.appendChild(optionsGrid);
@@ -2069,6 +3502,7 @@ searchDiv.classList.add('dict-search-bar');
 searchDiv.innerHTML = `
     <input type="text" 
            id="search_${type}" 
+           name="search_${type}"
            class="dict-search-input" 
            placeholder="🔍 Search processes by name or identifier...">
     <span class="search-count" id="searchCount_${type}"></span>
@@ -2365,7 +3799,7 @@ header.addEventListener('click', async () => {
         // Render certificate list
         content.innerHTML = '';
         if (parsedDictStructures.embeddedCertificates.length === 0) {
-            content.innerHTML = '<div class="preset-info-box" style="margin: 1rem;">' + 
+            content.innerHTML = '<div class="preset-info-box with-margin">' + 
                 (currentLang === 'de' 
                     ? 'Keine eingebetteten Zertifikate im Template vorhanden.' 
                     : 'No embedded certificates in template.') + 
@@ -2477,52 +3911,351 @@ const info = [];
 return info;
 }
 
-// Legacy function name for backwards compatibility - now returns restriction info
+// Consolidate all URL filter sources into parsedDictStructures.urlFilterRules
+function syncAllURLFilterSources() {
+    debugLog('🔄 syncAllURLFilterSources - DOM-First Implementation');
+    
+    // ========================================================================
+    // STEP 1: Remove all auto-generated rules from DOM (keep only imported/custom-advanced)
+    // ========================================================================
+    const currentRules = getURLFilterRulesFromDOM();
+    const preservedRules = [];
+    
+    // Track which expressions are preserved (for cleanup later)
+    const preservedExpressions = new Set();
+    
+    currentRules.forEach(rule => {
+        const metaInfo = urlFilterMetaInfo[rule.expression];
+        
+        // Preserve imported rules (from loaded .seb files)
+        if (metaInfo && metaInfo.source === 'imported') {
+            preservedRules.push(rule);
+            preservedExpressions.add(rule.expression);
+            // debugLog(`   ✅ Preserved imported: ${rule.expression}`);
+        }
+        // Preserve custom-advanced rules (manually created/edited in Advanced section)
+        else if (metaInfo && metaInfo.source === 'custom-advanced') {
+            preservedRules.push(rule);
+            preservedExpressions.add(rule.expression);
+            debugLog(`   ✅ PRESERVED: "${rule.expression}" (source: custom-advanced, action: ${rule.action === 1 ? 'allow' : 'block'})`);
+        }
+        // Remove: custom (textarea), tool-preset, sharepoint (will be regenerated)
+        else {
+            // debugLog(`   🗑️ REMOVED: "${rule.expression}" (source: ${metaInfo?.source || 'NO METAINFO'}, action: ${rule.action === 1 ? 'allow' : 'block'})`);
+        }
+    });
+    
+    // Write preserved rules back to DOM
+    setURLFilterRulesInDOM(preservedRules);
+    
+    // Clean up orphaned meta-info (expressions no longer in DOM)
+    Object.keys(urlFilterMetaInfo).forEach(expression => {
+        if (!preservedExpressions.has(expression)) {
+            // debugLog(`   🧹 Cleaned up orphaned meta-info: ${expression}`);
+            delete urlFilterMetaInfo[expression];
+        }
+    });
+    
+    // debugLog(`   📊 After cleanup: ${preservedRules.length} preserved rules`);
+    
+    // ========================================================================
+    // STEP 2: Add Tool Preset domains (auto-generated, allow + block)
+    // ========================================================================
+    selectedPresets.forEach(presetKey => {
+        const preset = PRESETS[presetKey];
+        if (!preset) return;
+        
+        const presetLabel = preset.name || presetKey;
+        
+        // Add allowed domains
+        if (preset.domains) {
+            preset.domains.forEach(domain => {
+                const added = addURLFilterRuleToDOM({
+                    expression: domain,
+                    regex: false,
+                    active: true,
+                    action: 1
+                }, 'tool-preset');
+                
+                if (added) {
+                    urlFilterMetaInfo[domain] = {
+                        source: 'tool-preset',
+                        label: presetLabel,
+                        presetKey: presetKey
+                    };
+                    // debugLog(`   ➕ Added preset (allow): ${domain} [${presetLabel}]`);
+                }
+            });
+        }
+        
+        // Add blocked domains
+        if (preset.blockedDomains) {
+            preset.blockedDomains.forEach(domain => {
+                const added = addURLFilterRuleToDOM({
+                    expression: domain,
+                    regex: false,
+                    active: true,
+                    action: 0
+                }, 'tool-preset');
+                
+                if (added) {
+                    urlFilterMetaInfo[domain] = {
+                        source: 'tool-preset',
+                        label: presetLabel,
+                        presetKey: presetKey
+                    };
+                    // debugLog(`   ➕ Added preset (block): ${domain} [${presetLabel}]`);
+                }
+            });
+        }
+    });
+    
+    // ========================================================================
+    // STEP 3: Add Custom domains from textarea (allow)
+    // ========================================================================
+    const customDomainsValue = document.getElementById('customDomains')?.value || '';
+    const customDomains = customDomainsValue
+        .split('\n')
+        .map(d => d.trim())
+        .filter(d => d && !d.startsWith('#'));
+    
+    customDomains.forEach(domain => {
+        const added = addURLFilterRuleToDOM({
+            expression: domain,
+            regex: false,
+            active: true,
+            action: 1
+        }, 'custom');
+        
+        if (added) {
+            urlFilterMetaInfo[domain] = {
+                source: 'custom',
+                label: currentLang === 'de' ? 'Manuell' : 'Custom'
+            };
+            // debugLog(`   ➕ Added custom (allow): ${domain}`);
+        }
+    });
+    
+    // ========================================================================
+    // STEP 4: Add Blocked domains from textarea (block)
+    // ========================================================================
+    const blockedDomainsValue = document.getElementById('blockedDomains')?.value || '';
+    const blockedDomains = blockedDomainsValue
+        .split('\n')
+        .map(d => d.trim())
+        .filter(d => d && !d.startsWith('#'));
+    
+    blockedDomains.forEach(domain => {
+        const added = addURLFilterRuleToDOM({
+            expression: domain,
+            regex: false,
+            active: true,
+            action: 0
+        }, 'custom');
+        
+        if (added) {
+            urlFilterMetaInfo[domain] = {
+                source: 'custom',
+                label: currentLang === 'de' ? 'Manuell' : 'Custom'
+            };
+            // debugLog(`   ➕ Added custom (block): ${domain}`);
+        }
+    });
+    
+    // ========================================================================
+    // STEP 5: Add SharePoint patterns (auto-generated based on restrictions)
+    // ========================================================================
+    const sharepointPatterns = getSharePointUrlPatterns();
+    // debugLog(`   📍 SharePoint patterns generated: ${sharepointPatterns.length}`);
+    
+    // Check if ANY SharePoint restriction checkbox is set
+    // If YES: remove *.sharepoint.com (generic wildcard from preset)
+    // If NO: keep *.sharepoint.com (so OneNote/Word can work without config)
+    let hasAnySharePointRestriction = false;
+    
+    ['onenote', 'word'].forEach(serviceType => {
+        const config = sharepointConfig[serviceType];
+        if (config?.parsedLink?.isSharePoint && config?.restrictions) {
+            const { restrictions } = config;
+            // Check if ANY restriction checkbox is checked
+            const hasChecked = restrictions.schoolSharepoint || 
+                             restrictions.teamsSite || 
+                             restrictions.notebook || 
+                             restrictions.section || 
+                             restrictions.page ||
+                             restrictions.folder || 
+                             restrictions.file;
+            if (hasChecked) {
+                hasAnySharePointRestriction = true;
+                // debugLog(`   ✓ ${serviceType}: Has active restriction checkbox`);
+            }
+        }
+    });
+    
+    // Remove generic *.sharepoint.com if ANY restriction is active
+    if (hasAnySharePointRestriction) {
+        const currentRulesBeforeRemoval = getURLFilterRulesFromDOM();
+        const filteredRules = currentRulesBeforeRemoval.filter(rule => {
+            if (rule.expression === '*.sharepoint.com') {
+                // debugLog(`   🗑️ Removed generic SharePoint wildcard (restriction active)`);
+                delete urlFilterMetaInfo['*.sharepoint.com'];
+                return false;
+            }
+            return true;
+        });
+        setURLFilterRulesInDOM(filteredRules);
+        // debugLog(`   📊 After *.sharepoint.com removal: ${filteredRules.length} rules`);
+    } else {
+        // debugLog(`   ✓ No SharePoint restrictions active - keeping *.sharepoint.com`);
+    }
+    
+    // Now add the SharePoint patterns
+    sharepointPatterns.forEach(pattern => {
+        const added = addURLFilterRuleToDOM({
+            expression: pattern.expression,
+            regex: pattern.regex || false,
+            active: pattern.active !== false,
+            action: pattern.action || 1
+        }, 'sharepoint');
+        
+        if (!added) return; // Skip if duplicate
+        
+        urlFilterMetaInfo[pattern.expression] = {
+            source: 'sharepoint',
+            label: pattern.label || 'SharePoint'
+        };
+        // debugLog(`   ➕ Added SharePoint: ${pattern.expression} [${pattern.label}]`);
+    });
+    
+    // ========================================================================
+    // STEP 6: Refresh UI view from DOM (Single Source of Truth)
+    // ========================================================================
+    refreshURLFilterViewFromDOM();
+    
+    // Update URL filter header count (even if collapsed)
+    updateURLFilterCount();
+    
+    // Re-render URL filter section if it's currently visible
+    const urlFilterContent = document.querySelector('.url-filter-content.show');
+    if (urlFilterContent) {
+        renderURLFilterContent(urlFilterContent);
+    }
+    
+    const finalCount = getURLFilterRulesFromDOM().length;
+    // debugLog(`✅ Synced all URL filter sources: ${finalCount} total rules in DOM`);
+}
+
+// Generate SharePoint URL filter patterns based on restriction levels
 function getSharePointUrlPatterns() {
 const patterns = [];
+
+// debugLog('🔍 getSharePointUrlPatterns called');
+// debugLog(`   sharepointConfig:`, sharepointConfig);
 
 // Check both OneNote and Word configurations
 ['onenote', 'word'].forEach(serviceType => {
     const config = sharepointConfig[serviceType];
-    if (!config.parsedLink || !config.parsedLink.isSharePoint) return;
+    // debugLog(`   Checking ${serviceType}:`, config);
     
-    const { parsedLink, restrictions } = config;
-    
-    // Build URL patterns based on enabled restrictions
-    if (restrictions.schoolSharepoint && parsedLink.domain) {
-        // Restrict to specific SharePoint domain
-        patterns.push({
-            expression: `*${parsedLink.domain}*`,
-            active: true,
-            action: 1, // Allow
-            label: currentLang === 'de' ? 'Schul-SharePoint' : 'School SharePoint',
-            name: parsedLink.domain || null
-        });
+    if (!config.parsedLink || !config.parsedLink.isSharePoint) {
+        // debugLog(`   ❌ ${serviceType}: No SharePoint link`);
+        return;
     }
     
-    if (restrictions.teamsSite && parsedLink.teamsSite) {
-        // Restrict to specific Teams site
+    const { parsedLink } = config;
+    const { domain } = parsedLink;
+    // debugLog(`   ✅ ${serviceType}: SharePoint domain = ${domain}`);
+    
+    // Initialize restrictions if not set
+    if (!config.restrictions) {
+        config.restrictions = {};
+        // debugLog(`   ⚠️ ${serviceType}: restrictions was undefined, initialized to {}`);
+    }
+    const { restrictions } = config;
+    // debugLog(`   📋 ${serviceType}: restrictions =`, restrictions);
+    
+    // Check if any restriction is actively set
+    const hasAnyRestriction = Object.keys(restrictions).some(key => restrictions[key] === true);
+    // debugLog(`   🔍 ${serviceType}: hasAnyRestriction = ${hasAnyRestriction}`);
+    
+    // NOTE: No auto-default fallback - schoolSharepoint checkbox is now set as default
+    
+    // Determine if we need any restrictions beyond school-level
+    const hasGranularRestrictions = restrictions.teamsSite || restrictions.notebook || 
+                                   restrictions.section || restrictions.page ||
+                                   restrictions.folder || restrictions.file;
+    
+    // School-level restriction: simple wildcard (no regex needed)
+    // ONLY add wildcard if no granular restrictions are set
+    if (restrictions.schoolSharepoint && domain && !hasGranularRestrictions) {
         patterns.push({
-            expression: `*/sites/${parsedLink.teamsSite}/*`,
+            expression: `*${domain}*`,
+            regex: false,
             active: true,
-            action: 1, // Allow
-            label: currentLang === 'de' ? 'Teams-Site' : 'Teams Site',
-            name: parsedLink.teamsSite || null
+            action: 1,
+            label: currentLang === 'de' ? 'Schul-SharePoint' : 'School SharePoint',
+            name: domain || null
+        });
+    }
+    // NOTE: If granular restrictions are set, we DON'T add the wildcard pattern
+    // because it would bypass the granular restrictions
+    
+    // For granular restrictions, add SharePoint infrastructure patterns
+    // These are required for authentication and page rendering
+    if (hasGranularRestrictions && domain) {
+        patterns.push({
+            expression: `^https?://${domain.replace(/\./g, '\\.')}/_forms/.*`,
+            regex: true,
+            active: true,
+            action: 1,
+            label: currentLang === 'de' ? 'SharePoint Auth' : 'SharePoint Auth',
+            name: '_forms' || null
+        });
+        
+        patterns.push({
+            expression: `^https?://${domain.replace(/\./g, '\\.')}/_layouts/.*`,
+            regex: true,
+            active: true,
+            action: 1,
+            label: currentLang === 'de' ? 'SharePoint Infra' : 'SharePoint Infra',
+            name: '_layouts' || null
         });
     }
     
     if (serviceType === 'onenote') {
-        // IMPORTANT: SEB opens OneNote pages via the web URL (_layouts/Doc.aspx?...),
-        // NOT via the onenote: protocol URL. Therefore, we must use GUIDs from the
-        // web link's wd=target(...) parameter, which contains:
-        // - Section GUID (937FFC30-10F8-7546-9E1D-BECCA08633E1)
-        // - Page GUID (F07BB273-C7EF-1548-9CFF-A866F644BE47)
+        // Extract short Teams-ID from teamsSite (e.g., msteams_763fd2 -> 763fd2)
+        let teamsId = null;
+        if (parsedLink.teamsSite) {
+            const match = parsedLink.teamsSite.match(/msteams_([a-z0-9]+)/i);
+            if (match) {
+                teamsId = match[1];
+            }
+        }
         
-        // Notebook restriction: Use notebook name in URL path
-        // The notebook name appears in the path as /SiteAssets/{NotebookName}/
-        if (restrictions.notebook && parsedLink.notebook) {
+        // Teams-Site level: match Teams-ID anywhere in URL
+        if (restrictions.teamsSite && teamsId && domain) {
             patterns.push({
-                expression: `*/SiteAssets/${encodeURIComponent(parsedLink.notebook)}/*`,
+                expression: `^https?://${domain.replace(/\./g, '\\.')}/.*${teamsId}.*`,
+                regex: true,
+                active: true,
+                action: 1,
+                label: currentLang === 'de' ? 'Teams-Site' : 'Teams Site',
+                name: parsedLink.teamsSite || null
+            });
+        }
+        
+        // Notebook level: use notebook name as identifier
+        if (restrictions.notebook && parsedLink.notebook && domain) {
+            // Extract shortest unique identifier from notebook name
+            // For "Englisch G22e-Notizbuch", we could use the full name
+            const notebookId = parsedLink.notebook.replace(/-Notizbuch$/i, '');
+            // Escape special regex characters
+            const escapedNotebookId = notebookId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // URL-encode spaces (spaces in URLs are always encoded as %20)
+            const urlEncodedNotebookId = escapedNotebookId.replace(/ /g, '%20');
+            patterns.push({
+                expression: `^https?://${domain.replace(/\./g, '\\.')}/.*${urlEncodedNotebookId}.*`,
+                regex: true,
                 active: true,
                 action: 1,
                 label: currentLang === 'de' ? 'Notizbuch' : 'Notebook',
@@ -2530,10 +4263,11 @@ const patterns = [];
             });
         }
         
-        if (restrictions.section && parsedLink.sectionId) {
-            // Match section GUID in wd=target(...) parameter
+        // Section level: use section GUID
+        if (restrictions.section && parsedLink.sectionId && domain) {
             patterns.push({
-                expression: `*${parsedLink.sectionId}*`,
+                expression: `^https?://${domain.replace(/\./g, '\\.')}/.*${parsedLink.sectionId}.*`,
+                regex: true,
                 active: true,
                 action: 1,
                 label: currentLang === 'de' ? 'Abschnitt' : 'Section',
@@ -2541,10 +4275,11 @@ const patterns = [];
             });
         }
         
-        if (restrictions.page && parsedLink.pageId) {
-            // Match page GUID in wd=target(...) parameter
+        // Page level: use page GUID
+        if (restrictions.page && parsedLink.pageId && domain) {
             patterns.push({
-                expression: `*${parsedLink.pageId}*`,
+                expression: `^https?://${domain.replace(/\./g, '\\.')}/.*${parsedLink.pageId}.*`,
+                regex: true,
                 active: true,
                 action: 1,
                 label: currentLang === 'de' ? 'Seite' : 'Page',
@@ -2554,9 +4289,10 @@ const patterns = [];
     }
     
     if (serviceType === 'word') {
-        if (restrictions.folder && parsedLink.folder) {
+        if (restrictions.folder && parsedLink.folder && domain) {
             patterns.push({
-                expression: `*/${encodeURIComponent(parsedLink.folder)}/*`,
+                expression: `^https?://${domain.replace(/\./g, '\\.')}/.*${encodeURIComponent(parsedLink.folder)}.*`,
+                regex: true,
                 active: true,
                 action: 1,
                 label: currentLang === 'de' ? 'Ordner' : 'Folder',
@@ -2564,9 +4300,10 @@ const patterns = [];
             });
         }
         
-        if (restrictions.file && parsedLink.fileId) {
+        if (restrictions.file && parsedLink.fileId && domain) {
             patterns.push({
-                expression: `*sourcedoc={${parsedLink.fileId}}*`,
+                expression: `^https?://${domain.replace(/\./g, '\\.')}/.*${parsedLink.fileId}.*`,
+                regex: true,
                 active: true,
                 action: 1,
                 label: currentLang === 'de' ? 'Datei' : 'File',
@@ -2628,75 +4365,82 @@ let specificSharePointDomain = null;
 let filteredPresetDomains = presetDomains;
 
 if (sharepointRestrictionLevel >= 1) {
-    // Level 1+: Remove SharePoint-related wildcards that would bypass restrictions
-    // NOTE: *.sharepointonline.com is removed here - needs integration testing to verify
-    // it's not required for 2FA/login. If login issues occur, may need to keep this wildcard.
+    // Level 1+: Remove broad SharePoint wildcards that would bypass restrictions
+    // but replace with specific tenant domain to allow infrastructure
     const sharePointWildcardsToRemove = [
         '*.sharepoint.com',
-        '*.sharepointonline.com'  // TODO: Verify not needed for 2FA during integration tests
+        '*.sharepointonline.com'
     ];
     
     filteredPresetDomains = filteredPresetDomains.filter(d => 
         !sharePointWildcardsToRemove.includes(d.toLowerCase())
     );
     
-    if (sharepointRestrictionLevel >= 2) {
-        // Level 2+: Also remove any tenant-specific wildcards (e.g., *.kshch0.sharepoint.com)
-        filteredPresetDomains = filteredPresetDomains.filter(d => {
-            const lowerD = d.toLowerCase();
-            // Remove anything that starts with *. and contains sharepoint
-            return !(lowerD.startsWith('*.') && (lowerD.includes('.sharepoint.com') || lowerD.includes('.sharepointonline.com')));
-        });
+    // Add specific tenant domain wildcard to allow SharePoint infrastructure
+    // This allows API calls, CDN, etc. for the specific tenant
+    let tenantDomain = null;
+    ['onenote', 'word'].forEach(serviceType => {
+        const config = sharepointConfig[serviceType];
+        if (config.parsedLink && config.parsedLink.isSharePoint && config.parsedLink.domain) {
+            tenantDomain = config.parsedLink.domain;
+        }
+    });
+    
+    if (tenantDomain) {
+        // Add wildcard for the specific tenant (e.g., *.kshch0.sharepoint.com)
+        // This allows all SharePoint infrastructure for this tenant
+        const tenantWildcard = `*.${tenantDomain}`;
+        if (!filteredPresetDomains.includes(tenantWildcard)) {
+            filteredPresetDomains.push(tenantWildcard);
+        }
     }
     
     // Add back specific SharePoint URLs based on restriction level
     // The more specific the restriction, the more specific the URL
-    if (sharepointRestrictionLevel >= 1) {
-        ['onenote', 'word'].forEach(serviceType => {
-            const config = sharepointConfig[serviceType];
-            if (!config.parsedLink || !config.parsedLink.isSharePoint) return;
-            
-            const { parsedLink, restrictions } = config;
-            
-            // Build the specific URL based on the most restrictive level
-            let specificUrl = `https://${parsedLink.domain}`;
-            
-            // Add Teams site if available
-            if (parsedLink.teamsSite && (restrictions.teamsSite || restrictions.notebook || restrictions.section || restrictions.page || restrictions.folder || restrictions.file)) {
-                specificUrl += `/sites/${parsedLink.teamsSite}`;
+    ['onenote', 'word'].forEach(serviceType => {
+        const config = sharepointConfig[serviceType];
+        if (!config.parsedLink || !config.parsedLink.isSharePoint) return;
+        
+        const { parsedLink, restrictions } = config;
+        
+        // Build the specific URL based on the most restrictive level
+        let specificUrl = `https://${parsedLink.domain}`;
+        
+        // Add Teams site if available
+        if (parsedLink.teamsSite && (restrictions.teamsSite || restrictions.notebook || restrictions.section || restrictions.page || restrictions.folder || restrictions.file)) {
+            specificUrl += `/sites/${parsedLink.teamsSite}`;
+        }
+        
+        if (serviceType === 'onenote') {
+            if (restrictions.page && parsedLink.pageId) {
+                // Most specific: Page level - use full _layouts URL with page ID
+                // This allows only this specific page
+                specificUrl += `/*wd=*${parsedLink.pageId}*`;
+            } else if (restrictions.section && parsedLink.sectionId) {
+                // Section level - use section ID in URL
+                specificUrl += `/*${parsedLink.sectionId}*`;
+            } else if (restrictions.notebook && parsedLink.notebook) {
+                // Notebook level - use SiteAssets path
+                specificUrl += `/SiteAssets/${encodeURIComponent(parsedLink.notebook)}/*`;
+            } else {
+                // School or Teams site level only
+                specificUrl += '/*';
             }
-            
-            if (serviceType === 'onenote') {
-                if (restrictions.page && parsedLink.pageId) {
-                    // Most specific: Page level - use full _layouts URL with page ID
-                    // This allows only this specific page
-                    specificUrl += `/*wd=*${parsedLink.pageId}*`;
-                } else if (restrictions.section && parsedLink.sectionId) {
-                    // Section level - use section ID in URL
-                    specificUrl += `/*${parsedLink.sectionId}*`;
-                } else if (restrictions.notebook && parsedLink.notebook) {
-                    // Notebook level - use SiteAssets path
-                    specificUrl += `/SiteAssets/${encodeURIComponent(parsedLink.notebook)}/*`;
-                } else {
-                    // School or Teams site level only
-                    specificUrl += '/*';
-                }
-            } else if (serviceType === 'word') {
-                if (restrictions.file && parsedLink.fileId) {
-                    // File level - use sourcedoc parameter
-                    specificUrl += `/*sourcedoc={${parsedLink.fileId}}*`;
-                } else if (restrictions.folder && parsedLink.folder) {
-                    // Folder level
-                    specificUrl += `/${encodeURIComponent(parsedLink.folder)}/*`;
-                } else {
-                    // School or Teams site level only
-                    specificUrl += '/*';
-                }
+        } else if (serviceType === 'word') {
+            if (restrictions.file && parsedLink.fileId) {
+                // File level - use sourcedoc parameter
+                specificUrl += `/*sourcedoc={${parsedLink.fileId}}*`;
+            } else if (restrictions.folder && parsedLink.folder) {
+                // Folder level
+                specificUrl += `/${encodeURIComponent(parsedLink.folder)}/*`;
+            } else {
+                // School or Teams site level only
+                specificUrl += '/*';
             }
-            
-            filteredPresetDomains.push(specificUrl);
-        });
-    }
+        }
+        
+        filteredPresetDomains.push(specificUrl);
+    });
 }
 
 // Combine and remove duplicates (case-insensitive)
@@ -2716,113 +4460,47 @@ return uniqueDomains;
 }
 
 function updatePreview() {
-const presetDomains = [];
-selectedPresets.forEach(presetKey => {
-    if (PRESETS[presetKey]) {
-        presetDomains.push(...PRESETS[presetKey].domains);
-    }
-});
-
-const customDomainsValue = document.getElementById('customDomains')?.value || '';
-const customDomains = customDomainsValue
-    .split('\n')
-    .map(d => d.trim())
-    .filter(d => d && !d.startsWith('#'));
-
-const allDomainsBeforeDedup = [...presetDomains, ...customDomains];
-const domains = getAllDomains();
-const duplicatesRemoved = allDomainsBeforeDedup.length - domains.length;
-
 const container = document.getElementById('domainPreview');
 const domainCountEl = document.getElementById('domainCount');
-if (domainCountEl) domainCountEl.textContent = domains.length;
+
+debugLog('🔄 updatePreview called');
 
 // Clear container safely
 container.innerHTML = '';
 
-// Show warning if duplicates were removed (add first)
-if (duplicatesRemoved > 0) {
-    const warningDiv = document.createElement('div');
-    warningDiv.classList.add('preview-warning');
-    const warningText = currentLang === 'de' 
-        ? `⚠️ ${duplicatesRemoved} doppelte Domain(s) wurden entfernt`
-        : `⚠️ ${duplicatesRemoved} duplicate domain(s) removed`;
-    warningDiv.textContent = warningText;
-    container.appendChild(warningDiv);
+// Read directly from parsedDictStructures (same logic as Moodle export)
+const allowedRules = [];
+const blockedRules = [];
+const regexAllowedRules = [];
+const regexBlockedRules = [];
+
+if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
+    parsedDictStructures.urlFilterRules.forEach(rule => {
+        // No need to skip deleted - DOM doesn't contain them
+        
+        // Only include active rules (same logic as Moodle export)
+        if (rule.active && rule.expression) {
+            // Regex rules
+            if (rule.regex && rule.action === 1) {
+                regexAllowedRules.push(rule.expression);
+            } else if (rule.regex && rule.action === 0) {
+                regexBlockedRules.push(rule.expression);
+            // Non-regex rules
+            } else if (!rule.regex && rule.action === 1) {
+                allowedRules.push(rule.expression);
+            } else if (!rule.regex && rule.action === 0) {
+                blockedRules.push(rule.expression);
+            }
+        }
+    });
 }
 
-// Show SharePoint restriction info if active
-let sharepointRestrictionLevel = 0;
-let specificSharePointDomain = null;
-let restrictionLabels = [];
+debugLog(`   📋 Results: ${allowedRules.length} allowed, ${blockedRules.length} blocked, ${regexAllowedRules.length} regex-allow, ${regexBlockedRules.length} regex-block`);
 
-['onenote', 'word'].forEach(serviceType => {
-    const config = sharepointConfig[serviceType];
-    if (config.parsedLink && config.parsedLink.isSharePoint && config.parsedLink.domain) {
-        const r = config.restrictions;
-        
-        // Determine level first
-        if (r.page || r.file) {
-            sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 4);
-        } else if (r.section || r.notebook || r.folder) {
-            sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 3);
-        } else if (r.teamsSite) {
-            sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 2);
-        } else if (r.schoolSharepoint) {
-            sharepointRestrictionLevel = Math.max(sharepointRestrictionLevel, 1);
-        }
-        
-        // Build hierarchical label list (all parent levels are implicitly active)
-        if (sharepointRestrictionLevel >= 1) {
-            specificSharePointDomain = config.parsedLink.domain;
-            restrictionLabels.push(currentLang === 'de' ? 'Schul-SharePoint' : 'School SharePoint');
-        }
-        if (sharepointRestrictionLevel >= 2 && r.teamsSite) {
-            restrictionLabels.push(currentLang === 'de' ? 'Teams-Site' : 'Teams Site');
-        }
-        if (sharepointRestrictionLevel >= 3) {
-            if (r.notebook) {
-                restrictionLabels.push(currentLang === 'de' ? 'Notizbuch' : 'Notebook');
-            }
-            if (r.section) {
-                restrictionLabels.push(currentLang === 'de' ? 'Abschnitt' : 'Section');
-            }
-            if (r.folder) {
-                restrictionLabels.push(currentLang === 'de' ? 'Ordner' : 'Folder');
-            }
-        }
-        if (sharepointRestrictionLevel >= 4) {
-            if (r.page) {
-                restrictionLabels.push(currentLang === 'de' ? 'Seite' : 'Page');
-            }
-            if (r.file) {
-                restrictionLabels.push(currentLang === 'de' ? 'Datei' : 'File');
-            }
-        }
-    }
-});
+// Update domain count (only non-regex allowed domains)
+if (domainCountEl) domainCountEl.textContent = allowedRules.length;
 
-if (sharepointRestrictionLevel > 0 && restrictionLabels.length > 0) {
-    const spInfoDiv = document.createElement('div');
-    spInfoDiv.classList.add('preview-sp-info');
-    
-    let spInfoText = '';
-    if (sharepointRestrictionLevel === 1) {
-        spInfoText = currentLang === 'de'
-            ? `🔒 SharePoint: *.sharepoint.com → ${specificSharePointDomain}`
-            : `🔒 SharePoint: *.sharepoint.com → ${specificSharePointDomain}`;
-    } else if (sharepointRestrictionLevel >= 2) {
-        const restrictionText = restrictionLabels.join(' → ');
-        spInfoText = currentLang === 'de'
-            ? `🔒 Einschränkungen: ${restrictionText} (Wildcards entfernt)`
-            : `🔒 Restrictions: ${restrictionText} (wildcards removed)`;
-    }
-    
-    spInfoDiv.textContent = spInfoText;
-    container.appendChild(spInfoDiv);
-}
-
-// Show selected services/tools info
+// Show selected services/tools info (kept for quick overview)
 if (selectedPresets.length > 0) {
     const serviceNames = selectedPresets.map(key => 
         t('preset' + key.charAt(0).toUpperCase() + key.slice(1))
@@ -2834,37 +4512,15 @@ if (selectedPresets.length > 0) {
         : `✓ Selected: ${serviceNames}`;
     infoDiv.textContent = infoText;
     container.appendChild(infoDiv);
-} else if (customDomains.length > 0) {
-    // Show info when only custom domains are used
-    const infoDiv = document.createElement('div');
-    infoDiv.classList.add('preview-info');
-    const infoText = currentLang === 'de'
-        ? `ℹ️ Nur benutzerdefinierte Domains`
-        : `ℹ️ Custom domains only`;
-    infoDiv.textContent = infoText;
-    container.appendChild(infoDiv);
 }
 
-// Add allowed domains (XSS-safe with textContent)
-domains.forEach(domain => {
+// Display allowed domains (directly from DOM - no deduplication needed)
+allowedRules.forEach(domain => {
     const div = document.createElement('div');
     div.className = 'domain-item';
     div.textContent = `✓ ${domain}`;
     container.appendChild(div);
 });
-
-// Add manual URL filter rules (allowed, non-regex) from advanced settings
-if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
-    parsedDictStructures.urlFilterRules.forEach(rule => {
-        if (rule.active && rule.expression && rule.action === 1 && !rule.regex) {
-            const div = document.createElement('div');
-            div.className = 'domain-item';
-            const label = t('urlFilterAllowLabel');
-            div.textContent = `✓ ${rule.expression} ${label}`;
-            container.appendChild(div);
-        }
-    });
-}
 
 // Show SharePoint restriction info box if active
 const restrictionInfo = getSharePointRestrictionInfo();
@@ -2924,38 +4580,8 @@ if (restrictionInfo.length > 0) {
     container.appendChild(restrictionSectionDiv);
 }
 
-// Show blocked domains if any
-const blockedDomains = [];
-selectedPresets.forEach(presetKey => {
-    const preset = PRESETS[presetKey];
-    if (preset && preset.blockedDomains) {
-        blockedDomains.push(...preset.blockedDomains);
-    }
-});
-
-// Add manual URL filter rules (blocked, non-regex) from advanced settings
-const urlFilterBlockedRules = [];
-if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
-    parsedDictStructures.urlFilterRules.forEach(rule => {
-        if (rule.active && rule.expression && rule.action === 0 && !rule.regex) {
-            urlFilterBlockedRules.push(rule.expression);
-        }
-    });
-}
-
-// Add custom blocked domains from user input
-const MAX_BLOCKED_DOMAINS = 500;  // Limit blocked domains to prevent performance issues
-const customBlockedInput = document.getElementById('blockedDomains')?.value || '';
-if (customBlockedInput.trim()) {
-    const customBlockedDomains = customBlockedInput
-        .split('\n')
-        .slice(0, MAX_BLOCKED_DOMAINS)  // Limit number of lines
-        .map(domain => domain.trim())
-        .filter(domain => domain && !domain.startsWith('#'));
-    blockedDomains.push(...customBlockedDomains);
-}
-
-if (blockedDomains.length > 0 || urlFilterBlockedRules.length > 0) {
+// Display blocked domains (directly from DOM - no deduplication needed)
+if (blockedRules.length > 0) {
     const blockedTitleDiv = document.createElement('div');
     blockedTitleDiv.classList.add('preview-blocked-title');
     const blockedTitleStrong = document.createElement('strong');
@@ -2966,40 +4592,16 @@ if (blockedDomains.length > 0 || urlFilterBlockedRules.length > 0) {
     blockedTitleDiv.appendChild(blockedTitleStrong);
     container.appendChild(blockedTitleDiv);
     
-    // Add blocked domains (XSS-safe with textContent)
-    blockedDomains.forEach(domain => {
+    blockedRules.forEach(domain => {
         const div = document.createElement('div');
         div.className = 'domain-item blocked';
         div.textContent = `✗ ${domain}`;
         container.appendChild(div);
     });
-    
-    // Add URL filter blocked rules with label
-    urlFilterBlockedRules.forEach(domain => {
-        const div = document.createElement('div');
-        div.className = 'domain-item blocked';
-        const label = t('urlFilterBlockLabel');
-        div.textContent = `✗ ${domain} ${label}`;
-        container.appendChild(div);
-    });
 }
 
-// Show regex rules from URL filter if any
-const regexAllowed = [];
-const regexBlocked = [];
-if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
-    parsedDictStructures.urlFilterRules.forEach(rule => {
-        if (rule.active && rule.expression && rule.regex) {
-            if (rule.action === 1) {
-                regexAllowed.push(rule.expression);
-            } else if (rule.action === 0) {
-                regexBlocked.push(rule.expression);
-            }
-        }
-    });
-}
-
-if (regexAllowed.length > 0) {
+// Display regex allowed rules (directly from DOM)
+if (regexAllowedRules.length > 0) {
     const regexTitleDiv = document.createElement('div');
     regexTitleDiv.classList.add('preview-blocked-title');
     const regexTitleStrong = document.createElement('strong');
@@ -3008,7 +4610,7 @@ if (regexAllowed.length > 0) {
     regexTitleDiv.appendChild(regexTitleStrong);
     container.appendChild(regexTitleDiv);
     
-    regexAllowed.forEach(pattern => {
+    regexAllowedRules.forEach(pattern => {
         const div = document.createElement('div');
         div.className = 'domain-item';
         div.textContent = `✓ ${pattern}`;
@@ -3016,7 +4618,7 @@ if (regexAllowed.length > 0) {
     });
 }
 
-if (regexBlocked.length > 0) {
+if (regexBlockedRules.length > 0) {
     const regexTitleDiv = document.createElement('div');
     regexTitleDiv.classList.add('preview-blocked-title');
     const regexTitleStrong = document.createElement('strong');
@@ -3025,7 +4627,7 @@ if (regexBlocked.length > 0) {
     regexTitleDiv.appendChild(regexTitleStrong);
     container.appendChild(regexTitleDiv);
     
-    regexBlocked.forEach(pattern => {
+    regexBlockedRules.forEach(pattern => {
         const div = document.createElement('div');
         div.className = 'domain-item blocked';
         div.textContent = `✗ ${pattern}`;
@@ -3054,71 +4656,14 @@ if (!isValidURL(startUrlInput)) {
 const startUrl = startUrlInput;
 
 // Build URL filter rules XML (whitelist - action: 1)
+// Consolidate all URL filter sources before export
+syncAllURLFilterSources();
+
+// Export all URL filter rules directly from DOM (Single Source of Truth)
+// No need to filter deleted rules - DOM doesn't contain them
 let urlFilterRulesXML = '';
-domains.forEach(domain => {
-    urlFilterRulesXML += `\t\t<dict>
-\t\t\t<key>action</key>
-\t\t\t<integer>1</integer>
-\t\t\t<key>active</key>
-\t\t\t<true/>
-\t\t\t<key>expression</key>
-\t\t\t<string>${escapeXML(domain)}</string>
-\t\t\t<key>regex</key>
-\t\t\t<false/>
-\t\t</dict>
-`;
-});
-
-// NOTE: SharePoint restrictions are now handled via specific URLs in the whitelist above
-// No separate URL filter patterns needed - this prevents conflicts with login/2FA domains
-
-// Add blocked domains (blacklist - action: 0) from selected presets
-selectedPresets.forEach(presetKey => {
-    const preset = PRESETS[presetKey];
-    if (preset && preset.blockedDomains) {
-        preset.blockedDomains.forEach(domain => {
-            urlFilterRulesXML += `\t\t<dict>
-\t\t\t<key>action</key>
-\t\t\t<integer>0</integer>
-\t\t\t<key>active</key>
-\t\t\t<true/>
-\t\t\t<key>expression</key>
-\t\t\t<string>${escapeXML(domain)}</string>
-\t\t\t<key>regex</key>
-\t\t\t<false/>
-\t\t</dict>
-`;
-        });
-    }
-});
-
-// Add custom blocked domains (blacklist - action: 0) from user input
-const customBlockedInput = document.getElementById('blockedDomains')?.value || '';
-if (customBlockedInput.trim()) {
-    const MAX_BLOCKED_DOMAINS = 500;  // Limit blocked domains to prevent performance issues
-    const customBlockedDomains = customBlockedInput
-        .split('\n')
-        .slice(0, MAX_BLOCKED_DOMAINS)  // Limit number of lines
-        .map(domain => domain.trim())
-        .filter(domain => domain && !domain.startsWith('#'));
-    
-    customBlockedDomains.forEach(domain => {
-        urlFilterRulesXML += `\t\t<dict>
-\t\t\t<key>action</key>
-\t\t\t<integer>0</integer>
-\t\t\t<key>active</key>
-\t\t\t<true/>
-\t\t\t<key>expression</key>
-\t\t\t<string>${escapeXML(domain)}</string>
-\t\t\t<key>regex</key>
-\t\t\t<false/>
-\t\t</dict>
-`;
-    });
-}
-
-// Add manual URL filter rules from advanced settings
-parsedDictStructures.urlFilterRules.forEach(rule => {
+const exportRules = getURLFilterRulesFromDOM();
+exportRules.forEach(rule => {
     urlFilterRulesXML += `\t\t<dict>
 \t\t\t<key>action</key>
 \t\t\t<integer>${rule.action}</integer>
@@ -3132,264 +4677,128 @@ parsedDictStructures.urlFilterRules.forEach(rule => {
 `;
 });
 
-// Generate complete plist XML with version info
-const buildDateFormatted = formatBuildDate('en'); // Use international format for file
-const xml = `<?xml version="1.0" encoding="UTF-8"?>
+// ============================================================================
+// STEP 1: Serialize complete DOM (all values, arrays, dicts)
+// ============================================================================
+if (!configState.loaded) {
+    console.error('❌ DOM not loaded, cannot export');
+    return null;
+}
+
+// Clone the DOM to avoid modifying the original
+const exportDoc = configState.xmlDoc.cloneNode(true);
+const exportRootDict = exportDoc.querySelector('plist > dict');
+
+if (!exportRootDict) {
+    console.error('❌ Root dict not found in cloned DOM');
+    return null;
+}
+
+// ============================================================================
+// STEP 2: Override specific keys that are dynamically generated or user input
+// ============================================================================
+
+// Helper function to set/update a key in the export DOM
+const setExportValue = (key, value, type = 'string') => {
+    const { children } = exportRootDict;
+    let keyFound = false;
+    
+    for (let i = 0; i < children.length; i++) {
+        if (children[i].tagName === 'key' && children[i].textContent.trim() === key) {
+            keyFound = true;
+            const nextElement = children[i].nextElementSibling;
+            
+            // Create new element with correct type
+            let newElement;
+            if (type === 'boolean') {
+                newElement = exportDoc.createElement(value ? 'true' : 'false');
+            } else if (type === 'integer') {
+                newElement = exportDoc.createElement('integer');
+                newElement.textContent = value;
+            } else {
+                newElement = exportDoc.createElement('string');
+                newElement.textContent = value;
+            }
+            
+            // Replace or insert
+            if (nextElement) {
+                exportRootDict.replaceChild(newElement, nextElement);
+            } else {
+                exportRootDict.appendChild(newElement);
+            }
+            break;
+        }
+    }
+    
+    // If key doesn't exist, add it
+    if (!keyFound) {
+        const keyElement = exportDoc.createElement('key');
+        keyElement.textContent = key;
+        exportRootDict.appendChild(keyElement);
+        
+        let valueElement;
+        if (type === 'boolean') {
+            valueElement = exportDoc.createElement(value ? 'true' : 'false');
+        } else if (type === 'integer') {
+            valueElement = exportDoc.createElement('integer');
+            valueElement.textContent = value;
+        } else {
+            valueElement = exportDoc.createElement('string');
+            valueElement.textContent = value;
+        }
+        exportRootDict.appendChild(valueElement);
+    }
+}
+
+// Override 1: startURL (User Input)
+setExportValue('startURL', escapeXML(startUrl), 'string');
+
+// Override 2: originatorVersion (Dynamic)
+const buildDateFormatted = formatBuildDate('en');
+const originatorValue = `SEB_Config_Generator_${APP_VERSION}_${buildDateFormatted.replace(/[/:]/g, '-').replace(/ /g, '_')}`;
+setExportValue('originatorVersion', originatorValue, 'string');
+
+// Override 3: URLFilterEnable (Dynamic - based on whether we have rules)
+setExportValue('URLFilterEnable', urlFilterRulesXML.length > 0, 'boolean');
+
+// Override 4: URLFilterRules (Dynamic - merge existing + new rules)
+// Find and replace the URLFilterRules array in the export DOM
+for (let i = 0; i < exportRootDict.children.length; i++) {
+    if (exportRootDict.children[i].tagName === 'key' && 
+        exportRootDict.children[i].textContent.trim() === 'URLFilterRules') {
+        const nextElement = exportRootDict.children[i].nextElementSibling;
+        if (nextElement && nextElement.tagName === 'array') {
+            // Clear existing array and rebuild with new rules
+            nextElement.innerHTML = '\n\t\t' + urlFilterRulesXML + '\t';
+        }
+        break;
+    }
+}
+
+// ============================================================================
+// STEP 3: Serialize complete DOM to XML string
+// ============================================================================
+const serializer = new XMLSerializer();
+let finalXML = serializer.serializeToString(exportDoc);
+
+// Add comment header with proper XML declaration and DOCTYPE
+const buildComment = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- Generated by SEB Config Generator ${APP_VERSION} (Build: ${buildDateFormatted}) -->
 <!-- https://github.com/markuskiller/SEBConfigGenerator -->
-<plist version="1.0">
-<dict>
-\t<key>URLFilterEnable</key>
-\t<${urlFilterRulesXML.length > 0 ? 'true' : 'false'}/>
-\t<key>URLFilterEnableContentFilter</key>
-\t<false/>
-\t<key>URLFilterRules</key>
-\t<array>
-${urlFilterRulesXML}\t</array>
-\t<key>allowAudioCapture</key>
-\t<false/>
-\t<key>allowBrowsingBackForward</key>
-\t<${document.getElementById('allowBackForward').checked ? 'true' : 'false'}/>
-\t<key>allowDictionaryLookup</key>
-\t<false/>
-\t<key>allowDownUploads</key>
-\t<${document.getElementById('allowDownloads').checked ? 'true' : 'false'}/>
-\t<key>allowDownloads</key>
-\t<${document.getElementById('allowDownloads').checked ? 'true' : 'false'}/>
-\t<key>allowFlashFullscreen</key>
-\t<false/>
-\t<key>allowPreferencesWindow</key>
-\t<false/>
-\t<key>allowQuit</key>
-\t<${securitySettings.allowQuit ? 'true' : 'false'}/>
-\t<key>allowSpellCheck</key>
-\t<${document.getElementById('allowSpellCheck').checked ? 'true' : 'false'}/>
-\t<key>allowSwitchToApplications</key>
-\t<${securitySettings.allowSwitchToApplications ? 'true' : 'false'}/>
-\t<key>allowVideoCapture</key>
-\t<false/>
-\t<key>browserViewMode</key>
-\t<integer>${securitySettings.browserViewMode}</integer>
-\t<key>browserWindowAllowReload</key>
-\t<${document.getElementById('showReloadButton').checked ? 'true' : 'false'}/>
-\t<key>enableBrowserWindowToolbar</key>
-\t<${securitySettings.enableBrowserWindowToolbar ? 'true' : 'false'}/>
-\t<key>enablePlugIns</key>
-\t<true/>
-\t<key>enableSebBrowser</key>
-\t<true/>
-\t<key>enableZoomPage</key>
-\t<true/>
-\t<key>enableZoomText</key>
-\t<true/>
-\t<key>examSessionClearCookiesOnEnd</key>
-\t<true/>
-\t<key>examSessionClearCookiesOnStart</key>
-\t<true/>
-\t<key>newBrowserWindowAllowReload</key>
-\t<${document.getElementById('showReloadButton').checked ? 'true' : 'false'}/>
-\t<key>originatorVersion</key>
-\t<string>SEB_Config_Generator_${APP_VERSION}_${buildDateFormatted.replace(/[/:]/g, '-').replace(/ /g, '_')}</string>
-\t<key>removeBrowserProfile</key>
-\t<false/>
-\t<key>showMenuBar</key>
-\t<${securitySettings.showMenuBar ? 'true' : 'false'}/>
-\t<key>showReloadButton</key>
-\t<${document.getElementById('showReloadButton').checked ? 'true' : 'false'}/>
-\t<key>startURL</key>
-\t<string>${escapeXML(startUrl)}</string>
-\t<key>touchOptimized</key>
-\t<false/>`;
+`;
 
-// Add all boolean options from parsed XML (dynamically loaded)
-// This includes ALL true/false options that were parsed from the template
-let booleanOptionsXML = '';
-if (parsedBooleanOptions.options && Object.keys(parsedBooleanOptions.options).length > 0) {
-    // Sort keys alphabetically for consistent output
-    const sortedKeys = Object.keys(parsedBooleanOptions.userSelections).sort();
-    sortedKeys.forEach(key => {
-        const value = parsedBooleanOptions.userSelections[key];
-        booleanOptionsXML += `\n\t<key>${escapeXML(key)}</key>\n\t<${value ? 'true' : 'false'}/>`;
-    });
+// Remove XML declaration and DOCTYPE from serialized output (we add our own clean version)
+finalXML = finalXML.replace(/<\?xml[^?]*\?>/, ''); // Remove XML declaration
+finalXML = finalXML.replace(/<!DOCTYPE[^>]*>/, ''); // Remove DOCTYPE
+
+return buildComment + finalXML;
 }
-
-// Add dict structures (process lists, certificates, etc.)
-let dictStructuresXML = '';
-if (parsedDictStructures.loaded) {
-    dictStructuresXML += generateDictStructuresXML();
-}
-
-return xml + booleanOptionsXML + dictStructuresXML + `
-</dict>
-</plist>`;
-}
-
 // ============================================================================
-// GENERATE DICT STRUCTURES XML (Process Lists, Certificates, etc.)
+// LEGACY CODE REMOVED
 // ============================================================================
-function generateDictStructuresXML() {
-let xml = '';
-
-// Generate prohibited processes
-if (parsedDictStructures.prohibitedProcesses.length > 0) {
-    xml += `\n\t<key>prohibitedProcesses</key>\n\t<array>`;
-    
-    parsedDictStructures.prohibitedProcesses.forEach(proc => {
-        xml += `\n\t\t<dict>`;
-        xml += `\n\t\t\t<key>active</key>`;
-        xml += `\n\t\t\t<${proc.active ? 'true' : 'false'}/>`;
-        
-        if (proc.allowedExecutables !== undefined) {
-            xml += `\n\t\t\t<key>allowedExecutables</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.allowedExecutables)}</string>`;
-        }
-        
-        xml += `\n\t\t\t<key>currentUser</key>`;
-        xml += `\n\t\t\t<${proc.currentUser ? 'true' : 'false'}/>`;
-        
-        if (proc.description !== undefined) {
-            xml += `\n\t\t\t<key>description</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.description)}</string>`;
-        }
-        
-        if (proc.executable) {
-            xml += `\n\t\t\t<key>executable</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.executable)}</string>`;
-        }
-        
-        if (proc.identifier) {
-            xml += `\n\t\t\t<key>identifier</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.identifier)}</string>`;
-        }
-        
-        xml += `\n\t\t\t<key>ignoreInAAC</key>`;
-        xml += `\n\t\t\t<${proc.ignoreInAAC ? 'true' : 'false'}/>`;
-        
-        if (proc.originalName !== undefined) {
-            xml += `\n\t\t\t<key>originalName</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.originalName)}</string>`;
-        }
-        
-        if (proc.os !== undefined) {
-            xml += `\n\t\t\t<key>os</key>`;
-            xml += `\n\t\t\t<integer>${proc.os}</integer>`;
-        }
-        
-        xml += `\n\t\t\t<key>strongKill</key>`;
-        xml += `\n\t\t\t<${proc.strongKill ? 'true' : 'false'}/>`;
-        
-        if (proc.user !== undefined) {
-            xml += `\n\t\t\t<key>user</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.user)}</string>`;
-        }
-        
-        if (proc.windowHandlingProcess !== undefined) {
-            xml += `\n\t\t\t<key>windowHandlingProcess</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.windowHandlingProcess)}</string>`;
-        }
-        
-        xml += `\n\t\t</dict>`;
-    });
-    
-    xml += `\n\t</array>`;
-}
-
-// Generate permitted processes (if any exist)
-if (parsedDictStructures.permittedProcesses.length > 0) {
-    xml += `\n\t<key>permittedProcesses</key>\n\t<array>`;
-    
-    parsedDictStructures.permittedProcesses.forEach(proc => {
-        xml += `\n\t\t<dict>`;
-        // Same structure as prohibited processes
-        xml += `\n\t\t\t<key>active</key>`;
-        xml += `\n\t\t\t<${proc.active ? 'true' : 'false'}/>`;
-        
-        if (proc.allowedExecutables !== undefined) {
-            xml += `\n\t\t\t<key>allowedExecutables</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.allowedExecutables)}</string>`;
-        }
-        
-        xml += `\n\t\t\t<key>currentUser</key>`;
-        xml += `\n\t\t\t<${proc.currentUser ? 'true' : 'false'}/>`;
-        
-        if (proc.description !== undefined) {
-            xml += `\n\t\t\t<key>description</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.description)}</string>`;
-        }
-        
-        if (proc.executable) {
-            xml += `\n\t\t\t<key>executable</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.executable)}</string>`;
-        }
-        
-        if (proc.identifier) {
-            xml += `\n\t\t\t<key>identifier</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.identifier)}</string>`;
-        }
-        
-        xml += `\n\t\t\t<key>ignoreInAAC</key>`;
-        xml += `\n\t\t\t<${proc.ignoreInAAC ? 'true' : 'false'}/>`;
-        
-        if (proc.originalName !== undefined) {
-            xml += `\n\t\t\t<key>originalName</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.originalName)}</string>`;
-        }
-        
-        if (proc.os !== undefined) {
-            xml += `\n\t\t\t<key>os</key>`;
-            xml += `\n\t\t\t<integer>${proc.os}</integer>`;
-        }
-        
-        xml += `\n\t\t\t<key>strongKill</key>`;
-        xml += `\n\t\t\t<${proc.strongKill ? 'true' : 'false'}/>`;
-        
-        if (proc.user !== undefined) {
-            xml += `\n\t\t\t<key>user</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.user)}</string>`;
-        }
-        
-        if (proc.windowHandlingProcess !== undefined) {
-            xml += `\n\t\t\t<key>windowHandlingProcess</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(proc.windowHandlingProcess)}</string>`;
-        }
-        
-        xml += `\n\t\t</dict>`;
-    });
-    
-    xml += `\n\t</array>`;
-}
-
-// Generate embedded certificates (if any exist)
-if (parsedDictStructures.embeddedCertificates.length > 0) {
-    xml += `\n\t<key>embeddedCertificates</key>\n\t<array>`;
-    
-    parsedDictStructures.embeddedCertificates.forEach(cert => {
-        xml += `\n\t\t<dict>`;
-        
-        if (cert.certificateDataBase64) {
-            xml += `\n\t\t\t<key>certificateDataBase64</key>`;
-            xml += `\n\t\t\t<data>${cert.certificateDataBase64}</data>`;
-        }
-        
-        if (cert.name) {
-            xml += `\n\t\t\t<key>name</key>`;
-            xml += `\n\t\t\t<string>${escapeXML(cert.name)}</string>`;
-        }
-        
-        if (cert.type !== undefined) {
-            xml += `\n\t\t\t<key>type</key>`;
-            xml += `\n\t\t\t<integer>${cert.type}</integer>`;
-        }
-        
-        xml += `\n\t\t</dict>`;
-    });
-    
-    xml += `\n\t</array>`;
-}
-
-return xml;
-}
+// generateConfigXML_OLD() - Replaced by DOM serialization in generateConfigXML()
+// generateDictStructuresXML() - No longer needed, all structures exported from DOM
 
 function escapeXML(str) {
 return str
@@ -3460,219 +4869,87 @@ navigator.clipboard.writeText(domains).then(() => {
 // BROWSER HELPER FUNCTIONALITY
 // ============================================================================
 function showBrowserHelper() {
-// Get current preset domains for filtering
-const presetDomains = [];
-selectedPresets.forEach(presetKey => {
-    if (PRESETS[presetKey]) {
-        presetDomains.push(...PRESETS[presetKey].domains);
-    }
-});
-const presetDomainsJSON = JSON.stringify([...new Set(presetDomains)]);
-
-const script = `// SEB Domain Capture Script - Run AFTER fully logging in and using the service
-(function() {
-console.clear();
-console.log('%c🛡️ SEB Domain Capture', 'font-size:20px; color:#5e72e4; font-weight:bold;');
-console.log('%c' + '='.repeat(60), 'color:#ccc;');
-
-// Preset domains from current configuration
-const presetDomains = ${presetDomainsJSON};
-const presetSet = new Set(presetDomains.map(d => d.toLowerCase()));
-
-const allDomains = new Set();
-
-// Capture all network requests
-performance.getEntries().forEach(entry => {
-    try {
-        const url = new URL(entry.name);
-        if (url.hostname && !url.hostname.match(/^(localhost|127\\\\.0\\\\.0\\\\.1|::1)$/)) {
-            allDomains.add(url.hostname.toLowerCase());
+    // Get current preset domains for filtering
+    const presetDomains = [];
+    selectedPresets.forEach(presetKey => {
+        if (PRESETS[presetKey]) {
+            presetDomains.push(...PRESETS[presetKey].domains);
         }
-    } catch (e) {}
-});
+    });
+    const presetDomainsJSON = JSON.stringify([...new Set(presetDomains)]);
 
-// Filter out domains already in preset
-const newDomains = [...allDomains].filter(domain => {
-    // Check exact match
-    if (presetSet.has(domain)) return false;
-    
-    // Check if domain matches any preset wildcard
-    for (let preset of presetDomains) {
-        if (preset.startsWith('*.')) {
-            const suffix = preset.substring(1); // Remove *
-            if (domain.endsWith(suffix) || domain === suffix.substring(1)) {
-                return false;
-            }
-        }
-    }
-    return true;
-}).sort();
+    // Get translations
+    const t = TRANSLATIONS[currentLang].browserCapture;
 
-console.log(\`\\n📊 Total captured: \${allDomains.size} domains\`);
-console.log(\`✓ Already in preset: \${allDomains.size - newDomains.length} domains\`);
-console.log(\`🆕 New domains found: \${newDomains.length} domains\\n\`);
+    // Build console script from template
+    const script = BROWSER_CAPTURE_TEMPLATE.scriptTemplate.replace('${PRESET_DOMAINS_JSON}', presetDomainsJSON);
+    const bookmarklet = BROWSER_CAPTURE_TEMPLATE.bookmarkletTemplate;
 
-if (newDomains.length === 0) {
-    console.log('%c✅ NO NEW DOMAINS NEEDED!', 'color:#2dce89; font-size:18px; font-weight:bold;');
-    console.log('%cAll captured domains are already in the preset.', 'color:#666;');
-    console.log('\\n' + '='.repeat(60) + '\\n');
-    return;
-}
+    // Create modal
+    const modal = document.createElement('div');
+    modal.classList.add('browser-helper-modal');
 
-// Generate wildcards for new domains only
-const wildcards = new Set();
-newDomains.forEach(domain => {
-    const parts = domain.split('.');
-    if (parts.length > 2) {
-        wildcards.add('*.' + parts.slice(-2).join('.'));
-    } else {
-        wildcards.add(domain);
-    }
-});
+    const content = document.createElement('div');
+    content.classList.add('browser-helper-content');
 
-const output = [...wildcards].sort().join('\\n');
-
-console.log('='.repeat(60));
-console.log('%c📋 COPY THESE NEW DOMAINS:', 'color:#f5365c; font-size:16px; font-weight:bold;');
-console.log('='.repeat(60) + '\\n');
-console.log(output);
-console.log('\\n' + '='.repeat(60));
-
-console.log('\\n%c📝 HOW TO USE:', 'color:#5e72e4; font-weight:bold;');
-console.log('  1. Select the domain list above (click & drag)');
-console.log('  2. Right-click → Copy (or Ctrl+C / Cmd+C)');
-console.log('  3. Paste into "Custom Domains" field in SEB Generator');
-console.log('\\n' + '='.repeat(60) + '\\n');
-})();`;
-
-const bookmarklet = `javascript:(function(){const domains=new Set();performance.getEntries().forEach(e=>{try{const u=new URL(e.name);if(u.hostname&&!u.hostname.match(/^(localhost|127\\\\.0\\\\.0\\\\.1|::1)$/)){domains.add(u.hostname)}}catch(err){}});const sorted=[...domains].sort();let output='SEB Domain Capture\\n'+'='.repeat(50)+'\\n\\n';output+='Total domains: '+sorted.length+'\\n\\n';output+='DOMAINS:\\n'+'-'.repeat(50)+'\\n';output+=sorted.join('\\n')+'\\n';output+='-'.repeat(50)+'\\n\\n';output+='Wildcards (recommended):\\n'+'-'.repeat(50)+'\\n';const wildcards=new Set();sorted.forEach(d=>{const parts=d.split('.');if(parts.length>2){wildcards.add('*.'+parts.slice(-2).join('.'))}else{wildcards.add(d)}});output+=[...wildcards].sort().join('\\n');const modal=document.createElement('div');modal.className='domain-capture-modal';const pre=document.createElement('pre');pre.className='domain-capture-output';pre.textContent=output;const btnContainer=document.createElement('div');btnContainer.className='domain-capture-buttons';const copyBtn=document.createElement('button');copyBtn.className='domain-capture-copy-btn';copyBtn.textContent='📋 Copy';copyBtn.addEventListener('click',()=>{navigator.clipboard.writeText(sorted.join('\\n')).then(()=>{copyBtn.textContent='✓ Copied!';setTimeout(()=>copyBtn.textContent='📋 Copy',2000)})});const closeBtn=document.createElement('button');closeBtn.className='domain-capture-close-btn';closeBtn.textContent='✕';closeBtn.addEventListener('click',()=>modal.remove());btnContainer.appendChild(copyBtn);btnContainer.appendChild(closeBtn);modal.appendChild(pre);modal.appendChild(btnContainer);document.body.appendChild(modal)})();`;
-
-const instructions = currentLang === 'de' 
-    ? {
-        title: '🌐 Browser-basierte Domain-Erfassung',
-        method1: 'Methode 1: Console Script (Empfohlen)',
-        method1Steps: [
-            '⚠️ WICHTIG: Zuerst Browser-Cache leeren (Strg+Shift+Entf / Cmd+Shift+Entf)',
-            '1. Öffnen Sie den Dienst (z.B. OneNote) in einem neuen Tab',
-            '2. Nutzen Sie den Dienst vollständig (einloggen, arbeiten)',
-            '3. Drücken Sie F12 um DevTools zu öffnen',
-            '4. Gehen Sie zum Tab "Konsole"',
-            '5. Kopieren Sie das Skript unten und fügen Sie es ein',
-            '6. Drücken Sie Enter',
-            '7. Zeigt nur NEUE Domains (nicht bereits in Preset)',
-            '8. Wählen Sie die Domains aus und kopieren Sie sie manuell',
-            '9. Fügen Sie sie ins Feld "Benutzerdefinierte Domains" ein'
-        ],
-        method2: 'Methode 2: Bookmarklet',
-        method2Steps: [
-            '1. Erstellen Sie ein neues Lesezeichen',
-            '2. Kopieren Sie den Bookmarklet-Code unten',
-            '3. Fügen Sie ihn als URL des Lesezeichens ein',
-            '4. Öffnen Sie Ihren Dienst und klicken Sie das Lesezeichen',
-            '5. Ein Dialog zeigt alle Domains'
-        ],
-        consoleLabel: 'Console Script:',
-        bookmarkletLabel: 'Bookmarklet Code:',
-        copyScript: '📋 Script kopieren',
-        copyBookmarklet: '📋 Bookmarklet kopieren',
-        fullGuide: '📖 Vollständige Anleitung',
-        close: 'Schließen'
-    }
-    : {
-        title: '🌐 Browser-Based Domain Capture',
-        method1: 'Method 1: Console Script (Recommended)',
-        method1Steps: [
-            '⚠️ IMPORTANT: First clear browser cache (Ctrl+Shift+Delete / Cmd+Shift+Delete)',
-            '1. Open your service (e.g., OneNote) in a new tab',
-            '2. Use the service fully (login, work normally)',
-            '3. Press F12 to open DevTools',
-            '4. Go to the "Console" tab',
-            '5. Copy the script below and paste it',
-            '6. Press Enter',
-            '7. Shows only NEW domains (not already in preset)',
-            '8. Select the domains and copy them manually',
-            '9. Paste them into the "Custom Domains" field'
-        ],
-        method2: 'Method 2: Bookmarklet',
-        method2Steps: [
-            '1. Create a new bookmark',
-            '2. Copy the bookmarklet code below',
-            '3. Paste it as the bookmark URL',
-            '4. Open your service and click the bookmark',
-            '5. A dialog will show all domains'
-        ],
-        consoleLabel: 'Console Script:',
-        bookmarkletLabel: 'Bookmarklet Code:',
-        copyScript: '📋 Copy Script',
-        copyBookmarklet: '📋 Copy Bookmarklet',
-        fullGuide: '📖 Full Guide',
-        close: 'Close'
-    };
-
-const modal = document.createElement('div');
-modal.classList.add('browser-helper-modal');
-
-const content = document.createElement('div');
-content.classList.add('browser-helper-content');
-
-content.innerHTML = `
-    <h2 class="browser-helper-title">${instructions.title}</h2>
-    
-    <div class="browser-helper-method">
-        <h3>${instructions.method1}</h3>
-        ${instructions.method1Steps.map(step => `<div class="browser-helper-step">${step}</div>`).join('')}
+    content.innerHTML = `
+        <h2 class="browser-helper-title">${t.title}</h2>
         
-        <div class="browser-helper-input-group">
-            <label class="browser-helper-label">${instructions.consoleLabel}</label>
-            <textarea readonly class="browser-helper-textarea">${script}</textarea>
-            <button id="copyScriptBtn" class="browser-helper-copy-btn">${instructions.copyScript}</button>
+        <div class="browser-helper-method">
+            <h3>${t.method1Title}</h3>
+            ${t.method1Steps.map(step => `<div class="browser-helper-step">${step}</div>`).join('')}
+            
+            <div class="browser-helper-input-group">
+                <label class="browser-helper-label" for="browserHelperScript">${t.consoleLabel}</label>
+                <textarea id="browserHelperScript" name="browserHelperScript" readonly class="browser-helper-textarea">${script}</textarea>
+                <button id="copyScriptBtn" class="browser-helper-copy-btn">${t.copyScript}</button>
+            </div>
         </div>
-    </div>
-    
-    <div class="browser-helper-method secondary">
-        <h3>${instructions.method2}</h3>
-        ${instructions.method2Steps.map(step => `<div class="browser-helper-step">${step}</div>`).join('')}
         
-        <div class="browser-helper-input-group">
-            <label class="browser-helper-label">${instructions.bookmarkletLabel}</label>
-            <textarea readonly class="browser-helper-textarea bookmarklet">${bookmarklet}</textarea>
-            <button id="copyBookmarkletBtn" class="browser-helper-copy-btn">${instructions.copyBookmarklet}</button>
+        <div class="browser-helper-method secondary">
+            <h3>${t.method2Title}</h3>
+            ${t.method2Steps.map(step => `<div class="browser-helper-step">${step}</div>`).join('')}
+            
+            <div class="browser-helper-input-group">
+                <label class="browser-helper-label" for="browserHelperBookmarklet">${t.bookmarkletLabel}</label>
+                <textarea id="browserHelperBookmarklet" name="browserHelperBookmarklet" readonly class="browser-helper-textarea bookmarklet">${bookmarklet}</textarea>
+                <button id="copyBookmarkletBtn" class="browser-helper-copy-btn">${t.copyBookmarklet}</button>
+            </div>
         </div>
-    </div>
-    
-    <div class="browser-helper-actions">
-        <a href="https://github.com/markuskiller/SEBConfigGenerator/blob/main/docs/${currentLang}/BROWSER_CAPTURE_${currentLang === 'de' ? 'ANLEITUNG' : 'GUIDE'}.md" target="_blank" rel="noopener noreferrer" class="browser-helper-guide-link">${instructions.fullGuide}</a>
-        <button id="closeBrowserHelperBtn" class="browser-helper-close-btn">${instructions.close}</button>
-    </div>
-`;
+        
+        <div class="browser-helper-actions">
+            <a href="https://github.com/markuskiller/SEBConfigGenerator/blob/main/docs/${currentLang}/BROWSER_CAPTURE_${currentLang === 'de' ? 'ANLEITUNG' : 'GUIDE'}.md" target="_blank" rel="noopener noreferrer" class="browser-helper-guide-link">${t.fullGuide}</a>
+            <button id="closeBrowserHelperBtn" class="browser-helper-close-btn">${t.close}</button>
+        </div>
+    `;
 
-modal.appendChild(content);
-document.body.appendChild(modal);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
 
-// Event listeners
-document.getElementById('copyScriptBtn').addEventListener('click', () => {
-    navigator.clipboard.writeText(script);
-    const btn = document.getElementById('copyScriptBtn');
-    const original = btn.textContent;
-    btn.textContent = '✓ ' + (currentLang === 'de' ? 'Kopiert!' : 'Copied!');
-    setTimeout(() => btn.textContent = original, 2000);
-});
+    // Event listeners
+    document.getElementById('copyScriptBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(script);
+        const btn = document.getElementById('copyScriptBtn');
+        const original = btn.textContent;
+        btn.textContent = '✓ ' + t.copied;
+        setTimeout(() => btn.textContent = original, 2000);
+    });
 
-document.getElementById('copyBookmarkletBtn').addEventListener('click', () => {
-    navigator.clipboard.writeText(bookmarklet);
-    const btn = document.getElementById('copyBookmarkletBtn');
-    const original = btn.textContent;
-    btn.textContent = '✓ ' + (currentLang === 'de' ? 'Kopiert!' : 'Copied!');
-    setTimeout(() => btn.textContent = original, 2000);
-});
+    document.getElementById('copyBookmarkletBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(bookmarklet);
+        const btn = document.getElementById('copyBookmarkletBtn');
+        const original = btn.textContent;
+        btn.textContent = '✓ ' + t.copied;
+        setTimeout(() => btn.textContent = original, 2000);
+    });
 
-document.getElementById('closeBrowserHelperBtn').addEventListener('click', () => {
-    modal.remove();
-});
+    document.getElementById('closeBrowserHelperBtn').addEventListener('click', () => {
+        modal.remove();
+    });
 
-modal.addEventListener('click', (e) => {
-    if (e.target === modal) modal.remove();
-});
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
 }
 
 // ============================================================================
@@ -3795,9 +5072,12 @@ if (sharepointRestrictionLevel >= 1) {
 // Add filtered preset domains to config
 config.expressionsAllowed.push(...filteredPresetDomains);
 
-// Add manual URL filter rules from advanced settings (if loaded)
-if (parsedDictStructures.urlFilterRules && Array.isArray(parsedDictStructures.urlFilterRules)) {
-    parsedDictStructures.urlFilterRules.forEach(rule => {
+// Add manual URL filter rules from advanced settings (directly from DOM)
+const urlFilterRules = getURLFilterRulesFromDOM();
+if (urlFilterRules && Array.isArray(urlFilterRules)) {
+    urlFilterRules.forEach(rule => {
+        // No need to skip deleted - DOM doesn't contain them
+        
         // Only include active rules
         if (rule.active && rule.expression) {
             // Regex rules
@@ -4066,8 +5346,14 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
 // Main actions
 document.getElementById('generateBtn').addEventListener('click', downloadConfig);
 document.getElementById('copyBtn').addEventListener('click', copyDomains);
-document.getElementById('customDomains').addEventListener('input', updatePreview);
-document.getElementById('blockedDomains').addEventListener('input', updatePreview);
+document.getElementById('customDomains').addEventListener('blur', () => {
+    syncAllURLFilterSources();
+    updatePreview();
+});
+document.getElementById('blockedDomains').addEventListener('blur', () => {
+    syncAllURLFilterSources();
+    updatePreview();
+});
 document.getElementById('startUrl').addEventListener('input', updatePreview);
 
 // Export format selection
@@ -4139,6 +5425,8 @@ document.getElementById('sharepointLink').addEventListener('input', function() {
         const parsed = parseSharePointLink(url, serviceType);
         sharepointConfig[serviceType].parsedLink = parsed;
         renderSharePointOptions(serviceType, parsed);
+        // Sync all URL filter sources when link is parsed
+        syncAllURLFilterSources();
     }
 });
 
@@ -4147,6 +5435,51 @@ document.getElementById('browserHelperBtn').addEventListener('click', showBrowse
 
 // Advanced section toggle
 document.getElementById('advancedHeader').addEventListener('click', toggleAdvancedSection);
+
+// Advanced URL Filter link (expand sections and scroll)
+const advancedURLFilterLink = document.getElementById('advancedURLFilterLink');
+if (advancedURLFilterLink) {
+    advancedURLFilterLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        
+        // 1. Expand advanced section ONLY if currently collapsed
+        const advancedContent = document.getElementById('advancedContent');
+        const wasCollapsed = advancedContent && !advancedContent.classList.contains('expanded');
+        
+        if (wasCollapsed) {
+            document.getElementById('advancedHeader')?.click();
+            // Wait for animation
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+        
+        // 2. Find and expand URL filter section if not already expanded
+        const urlFilterSection = document.querySelector('.url-filter-section');
+        if (urlFilterSection) {
+            const urlFilterHeader = urlFilterSection.querySelector('.url-filter-header');
+            const urlFilterContent = urlFilterSection.querySelector('.url-filter-content');
+            
+            if (urlFilterContent && !urlFilterContent.classList.contains('show')) {
+                urlFilterHeader?.click();
+                // Wait for lazy loading and animation
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            // 3. Scroll to URL filter section with optimal positioning
+            urlFilterSection.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+            
+            // Add visual highlight (fade effect)
+            urlFilterSection.style.outline = '3px solid #2196f3';
+            urlFilterSection.style.outlineOffset = '8px';
+            setTimeout(() => {
+                urlFilterSection.style.outline = '';
+                urlFilterSection.style.outlineOffset = '';
+            }, 2000);
+        }
+    });
+}
 
 // Platform selection buttons (Boolean Options)
 document.querySelectorAll('.platform-btn').forEach(btn => {
@@ -4293,10 +5626,36 @@ if (content.classList.contains('expanded')) {
             await renderDictStructures();
             debugLog('✅ Dict structures rendered');
             
-            // Render URL filter rules shell AFTER dict structures (collapsed, will lazy load on expand)
+            // Render URL filter rules shell AFTER dict structures (collapsed)
             debugLog('🌐 Rendering URL filter rules shell...');
             renderURLFilterRules();
             debugLog('✅ URL filter rules shell rendered');
+            
+            // Load URL filter rules content immediately (not lazy)
+            // This is needed because the preview section uses the DOM cards
+            debugLog('🔄 Loading URL filter rules content...');
+            if (!parsedDictStructures.loaded) {
+                await parseXMLDictArrays();
+                parsedDictStructures.loaded = true;
+                debugLog('✅ Dict structures loaded');
+            }
+            
+            // Sync URL filter sources BEFORE rendering
+            // This populates parsedDictStructures.urlFilterRules from presets/custom/sharepoint
+            debugLog('🔄 Syncing URL filter sources...');
+            syncAllURLFilterSources();
+            debugLog('✅ URL filter sources synced');
+            
+            const urlFilterContent = document.querySelector('.url-filter-content');
+            if (urlFilterContent) {
+                renderURLFilterContent(urlFilterContent);
+                updateURLFilterCount();
+                debugLog('✅ URL filter rules content loaded');
+            }
+            
+            // Update preview after URL filter cards are loaded
+            updatePreview();
+            debugLog('✅ Preview updated with URL filter cards');
             
             // Setup global search after both are rendered
             setupGlobalSearch();
@@ -4433,6 +5792,17 @@ const initialLang = urlLang || savedLang || 'de';
 
 setLanguage(initialLang);
 
+// Initialize XML DOM (Single Source of Truth)
+if (!configState.loaded) {
+    initializeConfigDOM();
+}
+
+// Sync UI checkboxes with DOM values
+syncUICheckboxesFromDOM();
+
+// Render favorites in main UI
+renderFavoritesInMainUI();
+
 // Initialize export format buttons visibility (default: .seb selected)
 document.getElementById('generateBtn')?.classList.remove('hidden');
 document.getElementById('generateMoodleBtn')?.classList.add('hidden');
@@ -4450,6 +5820,7 @@ function setupGlobalSearch() {
 const globalSearchContainer = document.getElementById('globalSearchContainer');
 const globalSearchInput = document.getElementById('globalSearch');
 const globalSearchCount = document.getElementById('globalSearchCount');
+const globalSearchClear = document.getElementById('globalSearchClear');
 
 if (!globalSearchContainer || !globalSearchInput || !globalSearchCount) {
     console.warn('⚠️ Global search elements not found');
@@ -4466,7 +5837,30 @@ globalSearchInput.placeholder = currentLang === 'de'
 
 debugLog('🔍 Setting up global search...');
 
+// Clear button functionality
+if (globalSearchClear) {
+    globalSearchClear.addEventListener('click', () => {
+        globalSearchInput.value = '';
+        globalSearchClear.classList.add('hidden');
+        globalSearchCount.textContent = '';
+        collapseAllSections();
+        globalSearchInput.focus();
+    });
+}
+
+// Toggle clear button visibility
+const toggleClearButton = () => {
+    if (globalSearchClear) {
+        if (globalSearchInput.value) {
+            globalSearchClear.classList.remove('hidden');
+        } else {
+            globalSearchClear.classList.add('hidden');
+        }
+    }
+};
+
 globalSearchInput.addEventListener('input', async (e) => {
+    toggleClearButton();
     const searchTerm = e.target.value.toLowerCase();
     
     // Lazy load dict structures if user is searching and they're not loaded yet

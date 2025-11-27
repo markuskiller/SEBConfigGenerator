@@ -1,0 +1,33 @@
+{
+  "moodle": {
+    "name": "Moodle Quiz Settings",
+    "description": "URL filter configuration for Moodle Safe Exam Browser",
+    "fields": {
+      "expressionsAllowed": {
+        "label": "Allowed Expressions",
+        "type": "textarea",
+        "joinWith": "\\n"
+      },
+      "expressionsBlocked": {
+        "label": "Blocked Expressions",
+        "type": "textarea",
+        "joinWith": "\\n"
+      },
+      "regexAllowed": {
+        "label": "Allowed Regex",
+        "type": "textarea",
+        "joinWith": "\\n",
+        "example": "^https://moodle\\.example\\.com/mod/resource/view\\.php\\?id=\\d+$"
+      },
+      "regexBlocked": {
+        "label": "Blocked Regex",
+        "type": "textarea",
+        "joinWith": "\\n",
+        "example": "^https://.*\\.(facebook|twitter|instagram)\\.com/.*$"
+      }
+    },
+    "textExport": {
+      "template": "MOODLE QUIZ CONFIGURATION - Safe Exam Browser URL Filters\\n\\n⚠️ IMPORTANT: In Moodle quiz settings, 'Allow URL filtering' must be set to 'Yes'\\nfor the URL fields to be visible.\\n\\n{sections}"
+    }
+  }
+}

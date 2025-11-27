@@ -112,6 +112,7 @@ Pattern: `Subject_Class_Date_Topic`
 **Privacy:** 
 - ✅ 100% local - no data transmission
 - ✅ Can be used offline
+- 💾 Local storage: Language setting, favorites, translation display, URL filter (preferences only, no configuration data)
 
 **Preparation:**
 - Test the configuration yourself first

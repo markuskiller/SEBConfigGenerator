@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="css/app.css">
     
     <!-- Load template data as JavaScript (works offline!) -->
-    <script src="templates/xml-data.js"></script>
+    <script src="templates/generated/xml-data.js"></script>
     <script src="templates/generated/seb-options-windows.js"></script>
     <script src="templates/generated/seb-options-macos.js"></script>
     <script src="templates/generated/seb-options-ipados.js"></script>
@@ -58,7 +58,7 @@
                 </a>
             </p>
             <div class="privacy-notice">
-                <strong>🔒 <span data-i18n="privacyTitle">Datenschutz:</span></strong> <span data-i18n="privacyText">Alle Daten werden ausschließlich lokal in Ihrem Browser verarbeitet. Es werden keine Konfigurationsdaten oder Eingaben an unseren Server gesendet oder gespeichert. Nur Ihre Sprachpräferenz wird lokal im Browser gespeichert.</span>
+                <strong>🔒 <span data-i18n="privacyTitle">Datenschutz:</span></strong> <span data-i18n="privacyText">Alle Daten werden ausschliesslich lokal in Ihrem Browser verarbeitet. Es werden keine Konfigurationsdaten oder Eingaben an unseren Server gesendet oder gespeichert. Nur Ihre Sprachpräferenz wird lokal im Browser gespeichert.</span>
             </div>
             <p class="suggest-service">
                 <a href="https://github.com/markuskiller/SEBConfigGenerator/issues/new" target="_blank" rel="noopener noreferrer">
@@ -75,10 +75,13 @@
                 <h2><span data-i18n="step2">2. Konfigurationseinstellungen</span></h2>
                 <div class="form-group">
                     <label for="startUrl" data-i18n="startUrl">Start-URL</label>
-                    <div id="startUrlSelectorContainer" class="start-url-selector-container">
-                        <select id="startUrlSelector" class="start-url-selector">
+                    <div id="startUrlSelectorContainer" class="start-url-selector-container dropdown-container single-choice">
+                        <button type="button" id="startUrlDropdownBtn" class="dropdown-btn">
+                            <span data-i18n="selectStartUrl">Start-URL wählen</span>
+                        </button>
+                        <div id="startUrlDropdownMenu" class="dropdown-menu hidden">
                             <!-- Options will be populated dynamically -->
-                        </select>
+                        </div>
                     </div>
                     <input type="url" id="startUrl" placeholder="https://sites.google.com/view/your-secret-page-xyz123">
                 </div>
@@ -102,6 +105,7 @@
                     </div>
                 </div>
                 
+                <!-- Additional Options (Static Checkboxes) -->
                 <div class="form-group">
                     <div class="form-group-label" data-i18n="additionalOptions">Zusätzliche Optionen</div>
                     <div class="checkbox-group">
@@ -109,7 +113,7 @@
                         <label for="allowDownloads" data-i18n="allowDownloads">Datei-Downloads erlauben</label>
                     </div>
                     <div class="checkbox-group">
-                        <input type="checkbox" id="allowSpellCheck" checked>
+                        <input type="checkbox" id="allowSpellCheck">
                         <label for="allowSpellCheck" data-i18n="allowSpellCheck">Rechtschreibprüfung erlauben</label>
                     </div>
                     <div class="checkbox-group">
@@ -117,13 +121,23 @@
                         <label for="showReloadButton" data-i18n="showReloadButton">Neu-Laden-Button anzeigen</label>
                     </div>
                     <div class="checkbox-group">
-                        <input type="checkbox" id="allowBackForward" checked>
+                        <input type="checkbox" id="allowBackForward">
                         <label for="allowBackForward" data-i18n="allowBackForward">Vor/Zurück-Navigation erlauben</label>
                     </div>
                 </div>
+                
+                <!-- My Favorites (Dynamic Tiles) -->
+                <div id="myFavoritesContainer" class="form-group">
+                    <!-- Favorites tiles will be rendered here dynamically -->
+                </div>
             </div>
             <div class="section">
-                <h2><span data-i18n="step3">3. Benutzerdefinierte Domains (Optional)</span></h2>
+                <h2>
+                    <span data-i18n="step3">3. Benutzerdefinierte Domains (Optional)</span>
+                    <a href="#" id="advancedURLFilterLink" class="advanced-url-filter-link" title="Zu erweiterten URL-Einstellungen">
+                        🔗 <span data-i18n="advancedURLFilterLinkText">URL-Einstellungen für Fortgeschrittene</span>
+                    </a>
+                </h2>
                 <div class="form-group">
                     <label for="customDomains" data-i18n="customDomainsLabel">Zusätzliche erlaubte Domains hinzufügen (eine pro Zeile)</label>
                     <textarea id="customDomains" data-i18n-placeholder="customDomainsPlaceholder" placeholder="beispiel.de&#10;*.schule-domain.de"></textarea>
@@ -150,13 +164,8 @@
                         <div class="section">
                             <h2><span data-i18n="allBooleanOptions">Erweiterte Optionen (für fortgeschrittene Anwender)</span></h2>
                             
-                            <!-- Experimental Warning -->
-                            <div class="boolean-warning">
-                                <strong>⚠️ <span data-i18n="experimentalFeature">Experimentelle Funktion</span></strong><br>
-                                <span data-i18n="booleanOptionsWarning">
-                                    Diese Funktion befindet sich in Entwicklung. Die Menü-Referenzen werden schrittweise für alle Plattformen ergänzt. Verwenden Sie diese Optionen mit Vorsicht und testen Sie die generierte Konfiguration gründlich.
-                                </span>
-                            </div>
+                            <!-- URL Filter Rules (TOP PRIORITY - after title) -->
+                            <div id="urlFilterPlaceholder"></div>
                             
                             <!-- Platform Selection for Boolean Options -->
                             <div class="platform-selector">
@@ -176,19 +185,29 @@
                                 </div>
                             </div>
                             
+                            <!-- Experimental Warning -->
+                            <div class="boolean-warning">
+                                <strong>⚠️ <span data-i18n="experimentalFeature">Experimentelle Funktion</span></strong><br>
+                                <span data-i18n="booleanOptionsWarning">
+                                    Diese Funktion befindet sich in Entwicklung. Die Menü-Referenzen werden schrittweise für alle Plattformen ergänzt. Verwenden Sie diese Optionen mit Vorsicht und testen Sie die generierte Konfiguration gründlich.
+                                </span>
+                            </div>
+                            
                             <!-- Global Search for all Boolean Options & Process Lists -->
                             <div id="globalSearchContainer" class="global-search-container hidden">
-                                <input type="text" 
-                                       id="globalSearch" 
-                                       class="global-search-input" 
-                                       placeholder="🔍 Search all settings and processes...">
+                                <div class="search-input-wrapper">
+                                    <input type="text" 
+                                           id="globalSearch" 
+                                           class="global-search-input" 
+                                           placeholder="🔍 Search all settings and processes..."
+                                           autocomplete="on"
+                                           name="global-search">
+                                    <button class="search-clear-btn hidden" id="globalSearchClear" title="Clear search">✕</button>
+                                </div>
                                 <span class="global-search-count" id="globalSearchCount"></span>
                             </div>
                             
                             <div id="booleanOptionsContainer"></div>
-                            
-                            <!-- URL Filter Rules (inserted here by JS) -->
-                            <div id="urlFilterPlaceholder"></div>
                             
                             <!-- Dict Structures (Process Lists, Certificates, etc.) -->
                             <div id="dictStructuresContainer"></div>
@@ -198,11 +217,14 @@
                         <div class="section">
                             <h2><span data-i18n="securityLevel">Sicherheitsstufe</span></h2>
                             <div class="security-level" id="securityLevel"></div>
+                            
+                            <!-- Security Level Affected Options (collapsible) -->
+                            <div id="securityLevelDetailsContainer" class="bool-group-container security-level-details"></div>
                         </div>
                         
                         <!-- Preview & Download -->
                         <div class="section">
-                            <h2><span data-i18n="previewAndDownload">Vorschau & Download</span></h2>
+                            <h2><span data-i18n="previewAndDownload">Vorschau</span></h2>
                             <div class="preview">
                                 <h3><span data-i18n="allowedDomains">Erlaubte Domains</span> <span class="badge" id="domainCount">0</span></h3>
                                 <div class="domain-list" id="domainPreview"></div>
@@ -222,7 +244,7 @@
                                     Benötigen Sie Hilfe beim Erfassen von Netzwerk-Domains? Wählen Sie die passende Methode für Ihr System:
                                 </p>
                                 <div class="helper-buttons">
-                                    <a href="scripts/capture-helper.ps1" download class="btn btn-secondary">
+                                    <a href="scripts/capture-helper.ps1" download target="_blank" class="btn btn-secondary">
                                         <span data-i18n="downloadHelperBtn">⬇️ PowerShell (Windows)</span>
                                     </a>
                                     <button class="btn btn-secondary" id="browserHelperBtn">
@@ -274,7 +296,7 @@
                     <button class="btn btn-primary btn-full-width" id="generateBtn">
                         <span data-i18n="downloadBtn">📥 SEB Konfiguration herunterladen (.seb)</span>
                     </button>
-                    <button class="btn btn-secondary btn-full-width" id="generateMoodleBtn">
+                    <button class="btn btn-primary btn-full-width" id="generateMoodleBtn">
                         <span data-i18n="generateMoodleBtn">📋 Moodle-Konfiguration anzeigen</span>
                     </button>
                 </div>
@@ -333,6 +355,7 @@
                 <details class="moodle-section" open>
                     <summary><strong data-i18n="moodleExpressionsAllowed">Expressions allowed</strong></summary>
                     <div class="moodle-field">
+                        <label for="moodleExpressionsAllowed" class="visually-hidden" data-i18n="moodleExpressionsAllowed">Expressions allowed</label>
                         <textarea id="moodleExpressionsAllowed" readonly></textarea>
                         <button class="btn btn-copy" data-field="moodleExpressionsAllowed">
                             📋 <span data-i18n="copyBtn">Kopieren</span>
@@ -345,6 +368,7 @@
                     <summary><strong data-i18n="moodleRegexAllowed">Regex allowed</strong> <span class="moodle-hint" data-i18n="moodleRegexHint">(meist leer)</span></summary>
                     <div class="moodle-field">
                         <p class="moodle-example-note" data-i18n="moodleRegexExampleNote">⚠️ Beispiel (nicht kopieren): Für spezifische URL-Muster wie Moodle-Ressourcen</p>
+                        <label for="moodleRegexAllowed" class="visually-hidden" data-i18n="moodleRegexAllowed">Regex allowed</label>
                         <textarea id="moodleRegexAllowed" readonly class="moodle-example">^https://moodle\.example\.com/mod/resource/view\.php\?id=\d+$</textarea>
                         <button class="btn btn-copy moodle-copy-regex hidden" data-field="moodleRegexAllowed">
                             📋 <span data-i18n="copyBtn">Kopieren</span>
@@ -356,6 +380,7 @@
                 <details class="moodle-section" id="moodleExpressionsBlockedSection">
                     <summary><strong data-i18n="moodleExpressionsBlocked">Blockierte Ausdrücke</strong></summary>
                     <div class="moodle-field">
+                        <label for="moodleExpressionsBlocked" class="visually-hidden" data-i18n="moodleExpressionsBlocked">Blockierte Ausdrücke</label>
                         <textarea id="moodleExpressionsBlocked" readonly></textarea>
                         <button class="btn btn-copy" data-field="moodleExpressionsBlocked">
                             📋 <span data-i18n="copyBtn">Kopieren</span>
@@ -368,6 +393,7 @@
                     <summary><strong data-i18n="moodleRegexBlocked">Regex blocked</strong> <span class="moodle-hint" data-i18n="moodleRegexHint">(meist leer)</span></summary>
                     <div class="moodle-field">
                         <p class="moodle-example-note" data-i18n="moodleRegexExampleNote">⚠️ Beispiel (nicht kopieren): Zum Blockieren spezifischer URL-Muster</p>
+                        <label for="moodleRegexBlocked" class="visually-hidden" data-i18n="moodleRegexBlocked">Regex blocked</label>
                         <textarea id="moodleRegexBlocked" readonly class="moodle-example">^https://.*\.(facebook|twitter|instagram)\.com/.*$</textarea>
                         <button class="btn btn-copy moodle-copy-regex hidden" data-field="moodleRegexBlocked">
                             📋 <span data-i18n="copyBtn">Kopieren</span>
@@ -390,6 +416,11 @@
     <script src="templates/generated/presets.js"></script>
     <script src="templates/generated/preset-groups.js"></script>
     <script src="templates/generated/subjects.js"></script>
+    <script src="templates/generated/security-levels.js"></script>
+    <script src="templates/generated/browser-capture.js"></script>
+    
+    <!-- DOM URL Filter Management (Single Source of Truth) -->
+    <script src="js/dom-url-filter.js"></script>
     
     <!-- Main Application Script -->
     <script src="js/app.js"></script>
