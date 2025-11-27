@@ -122,25 +122,25 @@ if [ "$SKIP_VERSION" != "true" ]; then
     
     # Update js/app.js
     APP_FILE="js/app.js"
-    sed -i '' "3s|^// Version: .*|// Version: $NEW_VERSION|" "$APP_FILE"
-    sed -i '' "4s|^// Build: .*|// Build: $BUILD_TIMESTAMP|" "$APP_FILE"
-    sed -i '' "s|const APP_VERSION = 'v[^']*';|const APP_VERSION = '$NEW_VERSION';|" "$APP_FILE"
-    sed -i '' "s|const BUILD_DATE = new Date('[^']*');|const BUILD_DATE = new Date('$BUILD_ISO');|" "$APP_FILE"
+    sed -i.bak "3s|^// Version: .*|// Version: ${NEW_VERSION}|" "${APP_FILE}" && rm -f "${APP_FILE}.bak"
+    sed -i.bak "4s|^// Build: .*|// Build: ${BUILD_TIMESTAMP}|" "${APP_FILE}" && rm -f "${APP_FILE}.bak"
+    sed -i.bak "s|const APP_VERSION = 'v[^']*';|const APP_VERSION = '${NEW_VERSION}';|" "${APP_FILE}" && rm -f "${APP_FILE}.bak"
+    sed -i.bak "s|const BUILD_DATE = new Date('[^']*');|const BUILD_DATE = new Date('${BUILD_ISO}');|" "${APP_FILE}" && rm -f "${APP_FILE}.bak"
     
     # Update config files if they exist
-    [ -f "configs/apache/.htaccess" ] && sed -i '' "s|^# Version: v.*|# Version: $NEW_VERSION|" "configs/apache/.htaccess"
-    [ -f "configs/nginx/sebconfiggenerator.conf" ] && sed -i '' "s|^# Version: v.*|# Version: $NEW_VERSION|" "configs/nginx/sebconfiggenerator.conf"
-    [ -f "configs/README.md" ] && sed -i '' "s|^\*\*Version:\*\* v.*|**Version:** $NEW_VERSION  |" "configs/README.md"
-    [ -f "_headers" ] && sed -i '' "s|^# Version: v.*|# Version: $NEW_VERSION|" "_headers"
+    [ -f "configs/apache/.htaccess" ] && sed -i.bak "s|^# Version: v.*|# Version: ${NEW_VERSION}|" "configs/apache/.htaccess" && rm -f "configs/apache/.htaccess.bak"
+    [ -f "configs/nginx/sebconfiggenerator.conf" ] && sed -i.bak "s|^# Version: v.*|# Version: ${NEW_VERSION}|" "configs/nginx/sebconfiggenerator.conf" && rm -f "configs/nginx/sebconfiggenerator.conf.bak"
+    [ -f "configs/README.md" ] && sed -i.bak "s|^\*\*Version:\*\* v.*|**Version:** ${NEW_VERSION}  |" "configs/README.md" && rm -f "configs/README.md.bak"
+    [ -f "_headers" ] && sed -i.bak "s|^# Version: v.*|# Version: ${NEW_VERSION}|" "_headers" && rm -f "_headers.bak"
     
     # Update README.md badges based on branch
     if [ -f "README.md" ]; then
         if [ "$CURRENT_BRANCH" = "dev" ]; then
             # Update dev badge (line 4) - replace any version or "dev" with new version
-            sed -i '' "4s|badge/Cloudflare%20Dev-[^-]*-orange|badge/Cloudflare%20Dev-${NEW_VERSION}-orange|" "README.md"
+            sed -i.bak "4s|badge/Cloudflare%20Dev-[^-]*-orange|badge/Cloudflare%20Dev-${NEW_VERSION}-orange|" "README.md" && rm -f "README.md.bak"
         elif [ "$CURRENT_BRANCH" = "main" ]; then
             # Update stable/main badge (line 3) - replace any version or "stable" with new version
-            sed -i '' "3s|badge/Cloudflare%20Stable-[^-]*-brightgreen|badge/Cloudflare%20Stable-${NEW_VERSION}-brightgreen|" "README.md"
+            sed -i.bak "3s|badge/Cloudflare%20Stable-[^-]*-brightgreen|badge/Cloudflare%20Stable-${NEW_VERSION}-brightgreen|" "README.md" && rm -f "README.md.bak"
         fi
     fi
     
