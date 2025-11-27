@@ -1386,6 +1386,7 @@ if (!experimentalWarning) {
     
     const warningLink = document.createElement('a');
     warningLink.href = '#networkCaptureHelper';
+    warningLink.setAttribute('aria-label', 'Network Capture Helper'); // Accessibility: Provide text for empty link
     experimentalWarning.appendChild(warningLink);
     
     container.appendChild(experimentalWarning);
@@ -1437,7 +1438,7 @@ container.appendChild(group3Title);
 const subjectSelector = document.createElement('div');
 subjectSelector.classList.add('preset-subject-selector', 'dropdown-container', 'single-choice');
 
-const subjectLabel = document.createElement('label');
+const subjectLabel = document.createElement('span');
 subjectLabel.classList.add('preset-subject-label');
 subjectLabel.textContent = `${t('selectSubject')}:`;
 subjectSelector.appendChild(subjectLabel);
@@ -1760,7 +1761,7 @@ labelEl.classList.add('preset-option-label');
 labelEl.textContent = label;
 
 const infoEl = document.createElement('div');
-infoEl.classList.add('preset-option-info');
+infoEl.classList.add('preset-option-info', 'sharepoint-detected-value');
 infoEl.textContent = detectedInfo;
 
 div.appendChild(checkbox);
@@ -2559,7 +2560,7 @@ const applyFilters = () => {
 const sourceFilterWrapper = document.createElement('div');
 sourceFilterWrapper.classList.add('url-filter-source-wrapper', 'dropdown-container', 'single-choice');
 
-const sourceLabel = document.createElement('label');
+const sourceLabel = document.createElement('span');
 sourceLabel.classList.add('url-filter-dropdown-label');
 sourceLabel.textContent = currentLang === 'de' ? '🔍 Quelle:' : '🔍 Source:';
 sourceFilterWrapper.appendChild(sourceLabel);
@@ -2618,7 +2619,7 @@ sourceFilterWrapper.appendChild(sourceDropdown);
 // Create Action filter (buttons)
 const actionFilterWrapper = document.createElement('div');
 actionFilterWrapper.classList.add('url-filter-action-wrapper');
-const actionLabel = document.createElement('label');
+const actionLabel = document.createElement('span');
 actionLabel.classList.add('url-filter-dropdown-label');
 actionLabel.textContent = currentLang === 'de' ? '⚡ Aktion:' : '⚡ Action:';
 actionFilterWrapper.appendChild(actionLabel);
@@ -2649,7 +2650,7 @@ actionFilterWrapper.appendChild(actionButtonsContainer);
 const labelFilterWrapper = document.createElement('div');
 labelFilterWrapper.classList.add('url-filter-label-wrapper', 'dropdown-container');
 
-const labelLabel = document.createElement('label');
+const labelLabel = document.createElement('span');
 labelLabel.classList.add('url-filter-dropdown-label');
 labelLabel.textContent = currentLang === 'de' ? '🏷️ Tools:' : '🏷️ Tools:';
 labelFilterWrapper.appendChild(labelLabel);
@@ -2680,7 +2681,7 @@ if (sortedLabels.length > 0) {
     const allOption = document.createElement('label');
     allOption.classList.add('dropdown-option', 'special');
     allOption.innerHTML = `
-        <input type="checkbox" value="" ${activeLabelFilters.size === 0 ? 'checked' : ''}>
+        <input type="checkbox" id="label-filter-all" name="label-filter-all" value="" ${activeLabelFilters.size === 0 ? 'checked' : ''}>
         <span>${currentLang === 'de' ? '✓ Alle auswählen' : '✓ Select all'}</span>
     `;
     allOption.querySelector('input').addEventListener('change', (e) => {
@@ -2699,8 +2700,9 @@ if (sortedLabels.length > 0) {
     sortedLabels.forEach(label => {
         const option = document.createElement('label');
         option.classList.add('dropdown-option');
+        const filterId = `label-filter-${label.replace(/[^a-zA-Z0-9]/g, '-')}`;
         option.innerHTML = `
-            <input type="checkbox" value="${label}" ${activeLabelFilters.has(label) ? 'checked' : ''}>
+            <input type="checkbox" id="${filterId}" name="${filterId}" value="${label}" ${activeLabelFilters.has(label) ? 'checked' : ''}>
             <span>${label}</span>
         `;
         option.querySelector('input').addEventListener('change', (e) => {
@@ -3260,7 +3262,7 @@ const toggleLabel = document.createElement('label');
 toggleLabel.style.fontSize = '0.9rem';
 toggleLabel.style.cursor = 'pointer';
 toggleLabel.innerHTML = `
-    <input type="checkbox" id="translationToggle" ${showTranslatedLabels ? 'checked' : ''}>
+    <input type="checkbox" id="translationToggle" name="translationToggle" ${showTranslatedLabels ? 'checked' : ''}>
     ${currentLang === 'de' ? 'Übersetzte Bezeichnungen anzeigen' : 'Show translated labels'}
 `;
 
@@ -3500,6 +3502,7 @@ searchDiv.classList.add('dict-search-bar');
 searchDiv.innerHTML = `
     <input type="text" 
            id="search_${type}" 
+           name="search_${type}"
            class="dict-search-input" 
            placeholder="🔍 Search processes by name or identifier...">
     <span class="search-count" id="searchCount_${type}"></span>
@@ -4897,8 +4900,8 @@ function showBrowserHelper() {
             ${t.method1Steps.map(step => `<div class="browser-helper-step">${step}</div>`).join('')}
             
             <div class="browser-helper-input-group">
-                <label class="browser-helper-label">${t.consoleLabel}</label>
-                <textarea readonly class="browser-helper-textarea">${script}</textarea>
+                <label class="browser-helper-label" for="browserHelperScript">${t.consoleLabel}</label>
+                <textarea id="browserHelperScript" name="browserHelperScript" readonly class="browser-helper-textarea">${script}</textarea>
                 <button id="copyScriptBtn" class="browser-helper-copy-btn">${t.copyScript}</button>
             </div>
         </div>
@@ -4908,8 +4911,8 @@ function showBrowserHelper() {
             ${t.method2Steps.map(step => `<div class="browser-helper-step">${step}</div>`).join('')}
             
             <div class="browser-helper-input-group">
-                <label class="browser-helper-label">${t.bookmarkletLabel}</label>
-                <textarea readonly class="browser-helper-textarea bookmarklet">${bookmarklet}</textarea>
+                <label class="browser-helper-label" for="browserHelperBookmarklet">${t.bookmarkletLabel}</label>
+                <textarea id="browserHelperBookmarklet" name="browserHelperBookmarklet" readonly class="browser-helper-textarea bookmarklet">${bookmarklet}</textarea>
                 <button id="copyBookmarkletBtn" class="browser-helper-copy-btn">${t.copyBookmarklet}</button>
             </div>
         </div>

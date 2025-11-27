@@ -244,7 +244,7 @@
                                     Benötigen Sie Hilfe beim Erfassen von Netzwerk-Domains? Wählen Sie die passende Methode für Ihr System:
                                 </p>
                                 <div class="helper-buttons">
-                                    <a href="scripts/capture-helper.ps1" download class="btn btn-secondary">
+                                    <a href="scripts/capture-helper.ps1" download target="_blank" class="btn btn-secondary">
                                         <span data-i18n="downloadHelperBtn">⬇️ PowerShell (Windows)</span>
                                     </a>
                                     <button class="btn btn-secondary" id="browserHelperBtn">
@@ -355,6 +355,7 @@
                 <details class="moodle-section" open>
                     <summary><strong data-i18n="moodleExpressionsAllowed">Expressions allowed</strong></summary>
                     <div class="moodle-field">
+                        <label for="moodleExpressionsAllowed" class="visually-hidden" data-i18n="moodleExpressionsAllowed">Expressions allowed</label>
                         <textarea id="moodleExpressionsAllowed" readonly></textarea>
                         <button class="btn btn-copy" data-field="moodleExpressionsAllowed">
                             📋 <span data-i18n="copyBtn">Kopieren</span>
@@ -367,6 +368,7 @@
                     <summary><strong data-i18n="moodleRegexAllowed">Regex allowed</strong> <span class="moodle-hint" data-i18n="moodleRegexHint">(meist leer)</span></summary>
                     <div class="moodle-field">
                         <p class="moodle-example-note" data-i18n="moodleRegexExampleNote">⚠️ Beispiel (nicht kopieren): Für spezifische URL-Muster wie Moodle-Ressourcen</p>
+                        <label for="moodleRegexAllowed" class="visually-hidden" data-i18n="moodleRegexAllowed">Regex allowed</label>
                         <textarea id="moodleRegexAllowed" readonly class="moodle-example">^https://moodle\.example\.com/mod/resource/view\.php\?id=\d+$</textarea>
                         <button class="btn btn-copy moodle-copy-regex hidden" data-field="moodleRegexAllowed">
                             📋 <span data-i18n="copyBtn">Kopieren</span>
@@ -378,6 +380,7 @@
                 <details class="moodle-section" id="moodleExpressionsBlockedSection">
                     <summary><strong data-i18n="moodleExpressionsBlocked">Blockierte Ausdrücke</strong></summary>
                     <div class="moodle-field">
+                        <label for="moodleExpressionsBlocked" class="visually-hidden" data-i18n="moodleExpressionsBlocked">Blockierte Ausdrücke</label>
                         <textarea id="moodleExpressionsBlocked" readonly></textarea>
                         <button class="btn btn-copy" data-field="moodleExpressionsBlocked">
                             📋 <span data-i18n="copyBtn">Kopieren</span>
@@ -390,6 +393,7 @@
                     <summary><strong data-i18n="moodleRegexBlocked">Regex blocked</strong> <span class="moodle-hint" data-i18n="moodleRegexHint">(meist leer)</span></summary>
                     <div class="moodle-field">
                         <p class="moodle-example-note" data-i18n="moodleRegexExampleNote">⚠️ Beispiel (nicht kopieren): Zum Blockieren spezifischer URL-Muster</p>
+                        <label for="moodleRegexBlocked" class="visually-hidden" data-i18n="moodleRegexBlocked">Regex blocked</label>
                         <textarea id="moodleRegexBlocked" readonly class="moodle-example">^https://.*\.(facebook|twitter|instagram)\.com/.*$</textarea>
                         <button class="btn btn-copy moodle-copy-regex hidden" data-field="moodleRegexBlocked">
                             📋 <span data-i18n="copyBtn">Kopieren</span>

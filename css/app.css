@@ -88,6 +88,19 @@
     display: none !important;
 }
 
+/* Accessibility: Visually hidden but available to screen readers */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 body { 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; 
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%); 
@@ -398,6 +411,7 @@ textarea {
     
     cursor: pointer; 
     transition: all var(--transition-base); 
+    -webkit-user-select: none;
     user-select: none; 
 }
 
@@ -427,7 +441,7 @@ textarea {
 
 /* Secondary Button - Sekundäre Aktionen */
 .btn-secondary { 
-    background: var(--color-primary); 
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%); 
     color: var(--color-surface); 
     border-color: var(--color-primary); 
 }
@@ -608,7 +622,8 @@ textarea {
     margin-bottom: var(--spacing-sm); 
 }
 
-.info-box p { 
+.info-box p,
+.info-box span { 
     color: var(--color-text-primary); 
     font-size: var(--font-size-sm); 
     line-height: 1.6; 
@@ -680,6 +695,7 @@ textarea {
     align-items: center;
     justify-content: space-between;
     transition: all 0.3s;
+    -webkit-user-select: none;
     user-select: none;
 }
 
@@ -793,8 +809,9 @@ textarea {
     background: var(--color-warning-light);
     border-left: 4px solid var(--color-warning);
     border-radius: 4px;
-    font-size: 0.9em;
+    font-size: var(--font-size-sm);
     color: var(--color-text-primary);
+    line-height: 1.6;
     white-space: pre-line; /* Allow \n\n line breaks */
 }
 
@@ -824,7 +841,8 @@ textarea {
 
 .boolean-warning span {
     color: var(--color-text-primary);
-    font-size: 0.9em;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
 }
 
 /* Platform selector */
@@ -879,6 +897,11 @@ textarea {
     text-decoration: none;
     flex: 1;
     min-width: 200px;
+}
+
+.helper-buttons a span,
+.helper-buttons button span {
+    color: inherit;
 }
 
 /* Help section */
@@ -952,6 +975,7 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    -webkit-user-select: none;
     user-select: none;
     border-bottom: 1px solid var(--color-gray-light);
 }
@@ -1224,8 +1248,8 @@ textarea {
 }
 
 .preset-experimental-warning p {
-    font-size: 0.95em;
-    line-height: 1.5;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
     margin-bottom: 8px;
 }
 
@@ -1341,6 +1365,13 @@ textarea {
     color: var(--color-primary-lighter);
 }
 
+/* SharePoint Detected Values - Darker and more prominent */
+.sharepoint-detected-value {
+    color: var(--color-success-dark);
+    font-weight: 450;
+    font-size: 0.85em;
+}
+
 /* Preset Category Warning */
 .preset-category-warning {
     background: var(--color-warning-light);
@@ -1349,7 +1380,8 @@ textarea {
     margin-top: 15px;
     border-radius: 4px;
     color: var(--color-text-primary);
-    font-size: 0.9em;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
 }
 
 .preset-category-warning strong {
@@ -1365,7 +1397,8 @@ textarea {
     margin-bottom: 20px;
     border-radius: 4px;
     color: var(--color-primary);
-    font-size: 0.9em;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
 }
 
 /* Domain Preview - Warning Box */
@@ -1376,7 +1409,8 @@ textarea {
     margin-bottom: 10px;
     border-radius: 4px;
     color: var(--color-text-primary);
-    font-size: 0.9em;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
 }
 
 /* Domain Preview - SharePoint Info */
@@ -1387,7 +1421,8 @@ textarea {
     margin-bottom: 10px;
     border-radius: 4px;
     color: var(--color-primary);
-    font-size: 0.9em;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
 }
 
 /* Domain Preview - Success Info */
@@ -1398,7 +1433,8 @@ textarea {
     margin-bottom: 10px;
     border-radius: 4px;
     color: var(--color-success-dark);
-    font-size: 0.9em;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
 }
 
 /* Domain Preview - General Info */
@@ -1409,7 +1445,8 @@ textarea {
     margin-bottom: 10px;
     border-radius: 4px;
     color: var(--color-primary);
-    font-size: 0.9em;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
 }
 
 /* Domain Preview - Restriction Section */
@@ -1735,6 +1772,7 @@ textarea {
     padding: 15px 20px;
     background: var(--color-surface);
     cursor: pointer;
+    -webkit-user-select: none;
     user-select: none;
     font-size: 1em;
     color: var(--color-primary);
@@ -1826,9 +1864,9 @@ textarea {
 }
 
 .btn-secondary {
-    background: var(--color-text-secondary);
-    color: white;
-    border: none;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    color: var(--color-surface);
+    border: 2px solid var(--color-primary);
     padding: 12px 24px;
     border-radius: 6px;
     cursor: pointer;
@@ -1837,9 +1875,11 @@ textarea {
 }
 
 .btn-secondary:hover {
-    background: var(--color-text-secondary);
+    background: var(--color-accent-light);
+    color: var(--color-primary);
+    border-color: var(--color-accent);
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(126, 184, 230, 0.3);
 }
 
 /* ============================================================================
@@ -1875,6 +1915,7 @@ textarea {
 
 .dict-section-header.collapsible {
     cursor: pointer;
+    -webkit-user-select: none;
     user-select: none;
     display: flex;
     align-items: center;
@@ -1949,6 +1990,7 @@ textarea {
 
 .dict-category-header {
     cursor: pointer;
+    -webkit-user-select: none;
     user-select: none;
     display: flex;
     align-items: center;
@@ -2075,6 +2117,7 @@ textarea {
 .process-checkbox-item label {
     cursor: pointer;
     color: var(--color-text-secondary);
+    -webkit-user-select: none;
     user-select: none;
 }
 
@@ -2305,6 +2348,7 @@ textarea {
 .url-filter-dropdown-option {
     padding: 8px 12px;
     cursor: pointer;
+    -webkit-user-select: none;
     user-select: none;
 }
 
@@ -2433,6 +2477,8 @@ textarea {
     padding: 1rem;
     margin-bottom: 1.5rem;
     border-radius: 4px;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
 }
 
 /* ========== URL FILTER BARS - VEREINHEITLICHT ========== */
@@ -2499,10 +2545,38 @@ textarea {
     transition: all 0.2s ease;
 }
 
+/* Inactive/Unselected State - 'Erlauben' Button (lightest green) */
+.action-filter-btn[data-action="allow"]:not(.active) {
+    background: var(--color-success-light);
+    border-color: var(--color-success);
+    color: var(--color-success-dark);
+}
+
+/* Inactive/Unselected State - 'Blockieren' Button (lightest red) */
+.action-filter-btn[data-action="block"]:not(.active) {
+    background: var(--color-error-light);
+    border-color: var(--color-error);
+    color: var(--color-text-primary);
+}
+
 /* Hover States */
 .action-filter-btn:hover {
     border-color: var(--color-accent);
     background: var(--color-background);
+}
+
+/* Hover States - Specific for Allow (darker green on hover) */
+.action-filter-btn[data-action="allow"]:not(.active):hover {
+    background: var(--color-success);
+    border-color: var(--color-success-dark);
+    color: var(--color-surface);
+}
+
+/* Hover States - Specific for Block (darker red on hover) */
+.action-filter-btn[data-action="block"]:not(.active):hover {
+    background: var(--color-error);
+    border-color: var(--color-error);
+    color: var(--color-surface);
 }
 
 /* Active State - 'Erlauben' Button (grün wie Badge) */
@@ -2693,6 +2767,7 @@ textarea {
 /* Option Text */
 .dropdown-option span {
     flex: 1;
+    -webkit-user-select: none;
     user-select: none;
     color: var(--color-text-primary);
 }
