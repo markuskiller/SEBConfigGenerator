@@ -1,5 +1,5 @@
 # Cloudflare Pages Security Headers
-# Version: v0.24.0a1
+# Version: v0.24.0a2
 # 
 # This file configures HTTP security headers for Cloudflare Pages deployment.
 # Documentation: https://developers.cloudflare.com/pages/configuration/headers/
