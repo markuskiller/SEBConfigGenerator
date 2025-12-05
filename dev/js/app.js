@@ -1274,7 +1274,12 @@ if (versionInfo) {
     const versionLabel = t('versionLabel');
     const buildLabel = t('buildLabel');
     const buildDate = formatBuildDate(lang);
-    versionInfo.innerHTML = `${versionLabel}: ${APP_VERSION} | ${buildLabel}: ${buildDate}`;
+    
+    // Dynamic copyright year range
+    const currentYear = new Date().getFullYear();
+    const copyrightYear = currentYear > 2025 ? `2025-${currentYear}` : '2025';
+    
+    versionInfo.innerHTML = `${versionLabel}: ${APP_VERSION} | ${buildLabel}: ${buildDate} | &copy; ${copyrightYear} Markus Killer`;
 }
 }
 

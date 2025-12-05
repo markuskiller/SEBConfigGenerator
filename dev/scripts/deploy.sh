@@ -144,6 +144,32 @@ if [ "$SKIP_VERSION" != "true" ]; then
         fi
     fi
     
+    # Update LICENSE copyright year
+    if [ -f "LICENSE" ]; then
+        CURRENT_YEAR=$(date +"%Y")
+        # Check if copyright already has year range format (e.g., "2025-2026")
+        if grep -q "Copyright (c) 2025-" "LICENSE"; then
+            # Update end year in range
+            sed -i.bak "s|Copyright (c) 2025-[0-9]*|Copyright (c) 2025-${CURRENT_YEAR}|" "LICENSE" && rm -f "LICENSE.bak"
+        elif grep -q "Copyright (c) 2025" "LICENSE" && [ "$CURRENT_YEAR" != "2025" ]; then
+            # Convert single year to range
+            sed -i.bak "s|Copyright (c) 2025|Copyright (c) 2025-${CURRENT_YEAR}|" "LICENSE" && rm -f "LICENSE.bak"
+        fi
+    fi
+    
+    # Update README.md copyright footer
+    if [ -f "README.md" ]; then
+        CURRENT_YEAR=$(date +"%Y")
+        # Check if copyright already has year range format
+        if grep -q "(c) 2025-" "README.md"; then
+            # Update end year in range
+            sed -i.bak "s|(c) 2025-[0-9]*|(c) 2025-${CURRENT_YEAR}|" "README.md" && rm -f "README.md.bak"
+        elif grep -q "(c) 2025" "README.md" && [ "$CURRENT_YEAR" != "2025" ]; then
+            # Convert single year to range
+            sed -i.bak "s|(c) 2025|(c) 2025-${CURRENT_YEAR}|" "README.md" && rm -f "README.md.bak"
+        fi
+    fi
+    
     print_success "Version updated to $NEW_VERSION"
     echo ""
 fi
