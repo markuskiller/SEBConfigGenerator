@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.23.0
-// Build: 2025-11-27 23:49
+// Version: v0.24.0a2
+// Build: 2025-12-05 16:55
 
 // ============================================================================
 
@@ -1098,8 +1098,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.23.0';
-const BUILD_DATE = new Date('2025-11-27T23:49:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.24.0a2';
+const BUILD_DATE = new Date('2025-12-05T16:55:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -5680,9 +5680,8 @@ function updateDevBanner() {
         return;
     }
     
-    // Hide banner for production releases
+    // Only show banner for development versions (starts hidden in HTML)
     if (!isDevelopmentVersion) {
-        devBanner.classList.add('hidden');
         return;
     }
     
