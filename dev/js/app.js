@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.24.0a6
-// Build: 2026-04-17 21:46
+// Version: v0.25.0a1
+// Build: 2026-04-17 22:06
 
 // ============================================================================
 
@@ -1098,8 +1098,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.24.0a6';
-const BUILD_DATE = new Date('2026-04-17T21:46:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.25.0a1';
+const BUILD_DATE = new Date('2026-04-17T22:06:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1269,17 +1269,21 @@ localStorage.setItem('sebConfigLang', lang);
 }
 
 function updateVersionInfo(lang) {
+// Dynamic copyright year range (shared by version bar and footer)
+const currentYear = new Date().getFullYear();
+const copyrightYear = currentYear > 2025 ? `2025-${currentYear}` : '2025';
+
 const versionInfo = document.getElementById('versionInfo');
 if (versionInfo) {
     const versionLabel = t('versionLabel');
     const buildLabel = t('buildLabel');
     const buildDate = formatBuildDate(lang);
     
-    // Dynamic copyright year range
-    const currentYear = new Date().getFullYear();
-    const copyrightYear = currentYear > 2025 ? `2025-${currentYear}` : '2025';
-    
     versionInfo.innerHTML = `${versionLabel}: ${APP_VERSION} | ${buildLabel}: ${buildDate} | &copy; ${copyrightYear} Markus Killer`;
+}
+const footerYear = document.getElementById('footerCopyrightYear');
+if (footerYear) {
+    footerYear.textContent = copyrightYear;
 }
 }
 
