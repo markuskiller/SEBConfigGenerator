@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.23.1
-// Build: 2025-12-05 16:58
+// Version: v0.24.0
+// Build: 2026-04-17 22:05
 
 // ============================================================================
 
@@ -1098,8 +1098,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.23.1';
-const BUILD_DATE = new Date('2025-12-05T16:58:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.24.0';
+const BUILD_DATE = new Date('2026-04-17T22:05:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -1269,12 +1269,21 @@ localStorage.setItem('sebConfigLang', lang);
 }
 
 function updateVersionInfo(lang) {
+// Dynamic copyright year range (shared by version bar and footer)
+const currentYear = new Date().getFullYear();
+const copyrightYear = currentYear > 2025 ? `2025-${currentYear}` : '2025';
+
 const versionInfo = document.getElementById('versionInfo');
 if (versionInfo) {
     const versionLabel = t('versionLabel');
     const buildLabel = t('buildLabel');
     const buildDate = formatBuildDate(lang);
-    versionInfo.innerHTML = `${versionLabel}: ${APP_VERSION} | ${buildLabel}: ${buildDate}`;
+    
+    versionInfo.innerHTML = `${versionLabel}: ${APP_VERSION} | ${buildLabel}: ${buildDate} | &copy; ${copyrightYear} Markus Killer`;
+}
+const footerYear = document.getElementById('footerCopyrightYear');
+if (footerYear) {
+    footerYear.textContent = copyrightYear;
 }
 }
 
@@ -4963,6 +4972,14 @@ const config = {
     regexBlocked: []
 };
 
+// Prepend the Moodle instance URL so the quiz page itself is always allowed
+const moodleBaseUrl = document.getElementById('moodleBaseUrl')?.value?.trim();
+if (moodleBaseUrl) {
+    // Strip any trailing slash or wildcard the user may have typed
+    const cleanHost = moodleBaseUrl.replace(/^https?:\/\//, '').replace(/\/\*?$/, '').replace(/\/$/, '');
+    config.expressionsAllowed.push(`${cleanHost}/*`);
+}
+
 // Collect domains from selected services
 let presetDomains = [];
 selectedPresets.forEach(presetId => {
@@ -5126,22 +5143,37 @@ const sebBtn = document.getElementById('generateBtn');
 const moodleBtn = document.getElementById('generateMoodleBtn');
 const sebWarning = document.getElementById('sebWarningBox');
 const nextStepsBox = document.getElementById('nextStepsBox');
+const moodleBaseUrlSection = document.getElementById('moodleBaseUrlSection');
 
 if (format === 'moodle') {
     sebBtn.classList.add('hidden');
     moodleBtn.classList.remove('hidden');
     sebWarning.classList.add('hidden');
     nextStepsBox.classList.add('hidden');
+    moodleBaseUrlSection.classList.remove('hidden');
 } else {
     sebBtn.classList.remove('hidden');
     moodleBtn.classList.add('hidden');
     sebWarning.classList.remove('hidden');
     nextStepsBox.classList.remove('hidden');
+    moodleBaseUrlSection.classList.add('hidden');
+    document.getElementById('moodleBaseUrlError').classList.add('hidden');
 }
 }
 
 function showMoodleModal() {
 debugLog('🔵 showMoodleModal called');
+
+// Validate Moodle base URL
+const moodleBaseUrlInput = document.getElementById('moodleBaseUrl');
+const moodleBaseUrlError = document.getElementById('moodleBaseUrlError');
+if (!moodleBaseUrlInput?.value?.trim()) {
+    moodleBaseUrlError?.classList.remove('hidden');
+    moodleBaseUrlInput?.focus();
+    return;
+}
+moodleBaseUrlError?.classList.add('hidden');
+
 const config = generateMoodleUrlConfig();
 debugLog('📊 Moodle config generated:', config);
 
@@ -5361,6 +5393,9 @@ document.querySelectorAll('input[name="exportFormat"]').forEach(radio => {
     radio.addEventListener('change', handleExportFormatChange);
 });
 document.getElementById('generateMoodleBtn').addEventListener('click', showMoodleModal);
+document.getElementById('moodleBaseUrl').addEventListener('input', () => {
+    document.getElementById('moodleBaseUrlError').classList.add('hidden');
+});
 document.getElementById('downloadMoodleTxt').addEventListener('click', downloadMoodleTxt);
 
 // Modal close handlers

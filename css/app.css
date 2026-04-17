@@ -947,6 +947,29 @@ textarea {
     font-size: var(--font-size-sm);
 }
 
+.footer-legal {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+.footer-legal a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+}
+
+.footer-github-icon {
+    width: 0.9em;
+    height: 0.9em;
+    vertical-align: -0.1em;
+    fill: currentColor;
+}
+
+.footer-legal a:hover {
+    text-decoration: underline;
+}
+
 /* Help section with extra top margin (bottom of page) */
 .help-section-spaced {
     margin-top: 20px;
@@ -1606,6 +1629,12 @@ textarea {
 
 .export-format-option input[type="radio"]:checked + span strong {
     color: var(--color-primary-light);
+}
+
+.input-error {
+    color: var(--color-error);
+    font-size: 0.85em;
+    margin-top: 4px;
 }
 
 /* Moodle Modal */
