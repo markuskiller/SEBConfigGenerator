@@ -1269,17 +1269,21 @@ localStorage.setItem('sebConfigLang', lang);
 }
 
 function updateVersionInfo(lang) {
+// Dynamic copyright year range (shared by version bar and footer)
+const currentYear = new Date().getFullYear();
+const copyrightYear = currentYear > 2025 ? `2025-${currentYear}` : '2025';
+
 const versionInfo = document.getElementById('versionInfo');
 if (versionInfo) {
     const versionLabel = t('versionLabel');
     const buildLabel = t('buildLabel');
     const buildDate = formatBuildDate(lang);
     
-    // Dynamic copyright year range
-    const currentYear = new Date().getFullYear();
-    const copyrightYear = currentYear > 2025 ? `2025-${currentYear}` : '2025';
-    
     versionInfo.innerHTML = `${versionLabel}: ${APP_VERSION} | ${buildLabel}: ${buildDate} | &copy; ${copyrightYear} Markus Killer`;
+}
+const footerYear = document.getElementById('footerCopyrightYear');
+if (footerYear) {
+    footerYear.textContent = copyrightYear;
 }
 }
 

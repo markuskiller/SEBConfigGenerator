@@ -959,6 +959,13 @@ textarea {
     text-decoration: none;
 }
 
+.footer-github-icon {
+    width: 0.9em;
+    height: 0.9em;
+    vertical-align: -0.1em;
+    fill: currentColor;
+}
+
 .footer-legal a:hover {
     text-decoration: underline;
 }
