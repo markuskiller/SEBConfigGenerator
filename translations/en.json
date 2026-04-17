@@ -212,6 +212,8 @@
   "urlFilterBlockLabel": "(URL filter: block, active, non-regex)",
   "previewRegexAllowedTitle": "🔤 Allowed Regex Patterns (URL Filter)",
   "previewRegexBlockedTitle": "🔤 Blocked Regex Patterns (URL Filter)",
+  "footerNoCookies": "No cookies · No tracking",
+  "footerPrivacyLink": "Privacy & Legal",
   "browserCapture": {
     "title": "🌐 Browser-Based Domain Capture",
     "method1Title": "Method 1: Console Script (Recommended)",

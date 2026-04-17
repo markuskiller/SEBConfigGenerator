@@ -212,6 +212,8 @@
   "urlFilterBlockLabel": "(URL-Filter: blockieren, aktiv, nicht-regex)",
   "previewRegexAllowedTitle": "🔤 Erlaubte Regex-Patterns (URL-Filter)",
   "previewRegexBlockedTitle": "🔤 Blockierte Regex-Patterns (URL-Filter)",
+  "footerNoCookies": "Keine Cookies · Kein Tracking",
+  "footerPrivacyLink": "Datenschutz & Impressum",
   "browserCapture": {
     "title": "🌐 Browser-basierte Domain-Erfassung",
     "method1Title": "Methode 1: Console Script (Empfohlen)",
