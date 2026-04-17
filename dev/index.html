@@ -292,6 +292,16 @@
                     </div>
                 </div>
 
+                <!-- Moodle Base URL Input (shown only when Moodle format is selected) -->
+                <div id="moodleBaseUrlSection" class="form-group hidden">
+                    <label for="moodleBaseUrl" data-i18n="moodleBaseUrlLabel">URL Ihrer Moodle-Instanz</label>
+                    <input type="text" id="moodleBaseUrl"
+                        data-i18n-placeholder="moodleBaseUrlPlaceholder"
+                        placeholder="z.B. moodle.schule.ch"
+                        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                    <p id="moodleBaseUrlError" class="input-error hidden" data-i18n="moodleBaseUrlError">Bitte geben Sie die URL Ihrer Moodle-Instanz ein.</p>
+                </div>
+
                 <div class="btn-container">
                     <button class="btn btn-primary btn-full-width" id="generateBtn">
                         <span data-i18n="downloadBtn">📥 SEB Konfiguration herunterladen (.seb)</span>

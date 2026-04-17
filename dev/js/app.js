@@ -1,7 +1,7 @@
 // ============================================================================
 // SEB Config Generator - Main Application
-// Version: v0.24.0a3
-// Build: 2025-12-05 16:59
+// Version: v0.24.0a4
+// Build: 2026-04-17 21:32
 
 // ============================================================================
 
@@ -1098,8 +1098,8 @@ function generateOptionLabel(key) {
 // ============================================================================
 // VERSION & BUILD INFO
 // ============================================================================
-const APP_VERSION = 'v0.24.0a3';
-const BUILD_DATE = new Date('2025-12-05T16:59:00'); // Format: YYYY-MM-DDTHH:mm:ss
+const APP_VERSION = 'v0.24.0a4';
+const BUILD_DATE = new Date('2026-04-17T21:32:00'); // Format: YYYY-MM-DDTHH:mm:ss
 
 function formatBuildDate(lang) {
 const day = String(BUILD_DATE.getDate()).padStart(2, '0');
@@ -4968,6 +4968,14 @@ const config = {
     regexBlocked: []
 };
 
+// Prepend the Moodle instance URL so the quiz page itself is always allowed
+const moodleBaseUrl = document.getElementById('moodleBaseUrl')?.value?.trim();
+if (moodleBaseUrl) {
+    // Strip any trailing slash or wildcard the user may have typed
+    const cleanHost = moodleBaseUrl.replace(/^https?:\/\//, '').replace(/\/\*?$/, '').replace(/\/$/, '');
+    config.expressionsAllowed.push(`${cleanHost}/*`);
+}
+
 // Collect domains from selected services
 let presetDomains = [];
 selectedPresets.forEach(presetId => {
@@ -5131,22 +5139,37 @@ const sebBtn = document.getElementById('generateBtn');
 const moodleBtn = document.getElementById('generateMoodleBtn');
 const sebWarning = document.getElementById('sebWarningBox');
 const nextStepsBox = document.getElementById('nextStepsBox');
+const moodleBaseUrlSection = document.getElementById('moodleBaseUrlSection');
 
 if (format === 'moodle') {
     sebBtn.classList.add('hidden');
     moodleBtn.classList.remove('hidden');
     sebWarning.classList.add('hidden');
     nextStepsBox.classList.add('hidden');
+    moodleBaseUrlSection.classList.remove('hidden');
 } else {
     sebBtn.classList.remove('hidden');
     moodleBtn.classList.add('hidden');
     sebWarning.classList.remove('hidden');
     nextStepsBox.classList.remove('hidden');
+    moodleBaseUrlSection.classList.add('hidden');
+    document.getElementById('moodleBaseUrlError').classList.add('hidden');
 }
 }
 
 function showMoodleModal() {
 debugLog('🔵 showMoodleModal called');
+
+// Validate Moodle base URL
+const moodleBaseUrlInput = document.getElementById('moodleBaseUrl');
+const moodleBaseUrlError = document.getElementById('moodleBaseUrlError');
+if (!moodleBaseUrlInput?.value?.trim()) {
+    moodleBaseUrlError?.classList.remove('hidden');
+    moodleBaseUrlInput?.focus();
+    return;
+}
+moodleBaseUrlError?.classList.add('hidden');
+
 const config = generateMoodleUrlConfig();
 debugLog('📊 Moodle config generated:', config);
 
@@ -5366,6 +5389,9 @@ document.querySelectorAll('input[name="exportFormat"]').forEach(radio => {
     radio.addEventListener('change', handleExportFormatChange);
 });
 document.getElementById('generateMoodleBtn').addEventListener('click', showMoodleModal);
+document.getElementById('moodleBaseUrl').addEventListener('input', () => {
+    document.getElementById('moodleBaseUrlError').classList.add('hidden');
+});
 document.getElementById('downloadMoodleTxt').addEventListener('click', downloadMoodleTxt);
 
 // Modal close handlers
