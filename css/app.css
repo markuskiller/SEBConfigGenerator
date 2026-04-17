@@ -1608,8 +1608,13 @@ textarea {
     color: var(--color-primary-light);
 }
 
+.input-error {
+    color: var(--color-error);
+    font-size: 0.85em;
+    margin-top: 4px;
+}
+
 /* Moodle Modal */
-.modal {
     display: block;
     position: fixed;
     z-index: 1000;
