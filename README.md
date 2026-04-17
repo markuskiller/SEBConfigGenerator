@@ -222,4 +222,4 @@ Safe Exam Browser (SEB) is a secure browser environment for taking online exams.
 
 ---
 
-**`(c) 2025 Markus Killer (focusmode.ch)`** 🎓
+**`(c) 2025-2026 Markus Killer (focusmode.ch)`** 🎓
